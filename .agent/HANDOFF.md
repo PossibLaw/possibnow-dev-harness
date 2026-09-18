@@ -21,3 +21,5 @@ Validation: 172 tests passed through scripts/verify-pack.sh, including new insta
 Next: after updating the plugin, project owners run `/optimize` to review their migration. Marketplace distribution must identify 4.1.0; verify remote main during release. Do not silently migrate existing projects or alter global model defaults.
 
 Previous handoff is preserved verbatim and hash-verified in HISTORY.md. PLAN, TEST, and REVIEW hold the implementation evidence and limitations.
+
+Recovered pre-release local continuity is preserved under `.agent/archives/`; see HISTORY.md for provenance and the sync limitation. Future checkout updates must use `--no-overwrite-ignore` and inspect ignored continuity first.

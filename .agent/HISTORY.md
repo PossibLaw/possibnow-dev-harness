@@ -144,3 +144,13 @@ Trazomo's first real Tier 2 build showed the docs described the upstream `/graph
 - Validation: `./scripts/verify-pack.sh` PASS; marketplace validation PASS.
 - Note: the `task-planner`/`test-agent` compatibility wrappers kept then were removed in the v3 refresh.
 <!-- END PREVIOUS HANDOFF -->
+
+## Recovered pre-release local continuity
+
+During the primary checkout fast-forward, Git replaced an ignored local continuity file when that path became tracked. The last recorded copy was recovered from a project-scoped session record. Its byte count matches the September 16 inventory; no pre-sync content hash existed, so later unrecorded edits cannot be ruled out. The current release checkpoint remains current; the recovered record is historical.
+
+- Archive: `archives/pre-4.1-local-PLAN.md`
+- Recovered original bytes: 2799
+- Original SHA-256: `9fed36f6545a7c04dbbe1cf50921a712de50f2e4a81f987a5799e4ac96954552`
+- Shared archive SHA-256: `9fed36f6545a7c04dbbe1cf50921a712de50f2e4a81f987a5799e4ac96954552`
+- Provenance: recorded full PLAN read, June 29, 2026.
