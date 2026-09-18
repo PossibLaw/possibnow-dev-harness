@@ -373,3 +373,7 @@ docs/
 
 ## Notes
 - Launch support is macOS and Linux only. Scripts are bash-only; Windows/PowerShell support has been dropped.
+
+## Maintainer checkout updates
+
+Before updating a checkout to a newer Git revision, inspect ignored continuity paths as well as ordinary status. A clean `git status` does not protect ignored files. Use `git merge --ff-only --no-overwrite-ignore` (after fetching) or an equivalent refusing operation. If it blocks, preserve and review those local records before integrating; never silently overwrite or discard them.

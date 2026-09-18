@@ -144,3 +144,43 @@ Trazomo's first real Tier 2 build showed the docs described the upstream `/graph
 - Validation: `./scripts/verify-pack.sh` PASS; marketplace validation PASS.
 - Note: the `task-planner`/`test-agent` compatibility wrappers kept then were removed in the v3 refresh.
 <!-- END PREVIOUS HANDOFF -->
+
+## Recovered pre-release local continuity
+
+During the primary checkout fast-forward, Git replaced an ignored local continuity file when that path became tracked. The last recorded copy was recovered from a project-scoped session record. Its byte count matches the September 16 inventory; no pre-sync content hash existed, so later unrecorded edits cannot be ruled out. The current release checkpoint remains current; the recovered record is historical.
+
+- Archive: `archives/pre-4.1-local-PLAN.md`
+- Recovered original bytes: 2799
+- Original SHA-256: `9fed36f6545a7c04dbbe1cf50921a712de50f2e4a81f987a5799e4ac96954552`
+- Shared archive SHA-256: `9fed36f6545a7c04dbbe1cf50921a712de50f2e4a81f987a5799e4ac96954552`
+- Provenance: recorded full PLAN read, June 29, 2026.
+
+## Release checkpoint before recovery note
+
+Original SHA-256: `cdb4f495ea432319eb5417f0edb01d5463537ac80505c4fd75a26659b774a40f`
+
+<!-- BEGIN RELEASE CHECKPOINT -->
+---
+contract_version: 1
+artifact_type: handoff
+status: IN_PROGRESS
+depends_on: [.agent/PLAN.md, .agent/TEST.md, .agent/REVIEW.md]
+produces: [next_actions, historical_checkpoint_link]
+feeds_into: []
+memory:
+  include_in_memory: true
+  tags: [handoff]
+---
+
+# Current Handoff
+
+Checkpoint: 4.1.0 optimization and shared continuity, September 18, 2026.
+
+Implemented `/possibnow-dev-harness:optimize` as a preview-first agent workflow with reviewed apply, bundled policy 2026-09-18.1, unchanged incumbent models without quality evidence, validation, and rollback. All relevant sanitized continuity now ships with the work. HANDOFF is current-only; HISTORY preserves exact old checkpoints. The installer preserves existing state on every rerun, makes dry-run read-only, and retires exact obsolete ignore rules. The direct Git guard covers named continuity, content records, historical archives, and existing history; it is best-effort, not a general shell security boundary.
+
+Validation: 172 tests passed through scripts/verify-pack.sh, including new installer and commit-guard regressions. Plugin manifest validation and both revised skill validators passed. No paid agent/model eval or live target migration was performed.
+
+Next: after updating the plugin, project owners run `/optimize` to review their migration. Marketplace distribution must identify 4.1.0; verify remote main during release. Do not silently migrate existing projects or alter global model defaults.
+
+Previous handoff is preserved verbatim and hash-verified in HISTORY.md. PLAN, TEST, and REVIEW hold the implementation evidence and limitations.
+<!-- END RELEASE CHECKPOINT -->
