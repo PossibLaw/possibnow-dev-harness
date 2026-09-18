@@ -6,7 +6,7 @@ Use this workflow when consistency and handoff quality matter more than speed.
 
 This pack is a progressive harness. You start in **Tier 1** and the harness raises you to **Tier 2** as the codebase grows.
 
-- **Tier 1 — Starter (default, every project):** the pipeline below (`PLAN → TEST → REVIEW → HANDOFF`), single-file continuity, guardrails, and the simplicity ladder. Designed for small apps and non-developers.
+- **Tier 1 — Starter (default, every project):** the pipeline below (`PLAN → TEST → REVIEW → HANDOFF`), current/historical continuity, guardrails, and the simplicity ladder. Designed for small apps and non-developers.
 - **Tier 2 — Scale (opt-in, gated as the codebase grows):** indexed retrieval (Graphify), wiki orientation, and tighter review. The harness suggests Scale mode when a project outgrows Tier 1; see `docs/workflows/graphify.md` and the `Scale Mode` section below. Tier 2 is additive — Tier 1 rules still apply.
 
 ## Canonical Pipeline
@@ -18,7 +18,7 @@ Always run state artifacts in this order:
 3. `.agent/REVIEW.md`
 4. `.agent/HANDOFF.md`
 
-Assumptions/constraints and the working task checklist live as sections inside `.agent/PLAN.md` (there are no separate `CONTEXT.md` or `TASKS.md` files).
+The starter keeps assumptions and task checklists in PLAN. Preserve existing CONTEXT/TASKS records in adopted projects.
 
 ## Typed State Artifact Header (Required)
 
@@ -59,23 +59,23 @@ memory:
 - `HANDOFF.md` must summarize decisions, open questions, and next actions from prior artifacts.
 - Do not mark work `DONE` when required upstream artifacts are missing or unresolved.
 
-## Single-File Continuity Contract (Required)
+## Current and Historical Continuity Contract (Required)
 
-Project state uses **two newest-first files**:
-- the local working **goal** lives in `.agent/PLAN.md` (what we are building, milestones, eval IDs)
-- shared **continuity** lives in the version-controlled `.agent/HANDOFF.md` (current state + next actions on top; the newest-first session timeline below the archive marker)
+- `.agent/HANDOFF.md` contains one current checkpoint, with evidence links and the next action.
+- `.agent/HISTORY.md` preserves exact prior handoffs, newest first. Read it only for a specific historical question.
+- PLAN, CONTEXT, TASKS, TEST, REVIEW, LEARNINGS, WIKI, content continuity, archives, and an existing project history remain committed when present. Do not remove existing records merely because the starter template combines some roles.
 
-`.agent/HANDOFF.md` is the single continuity file. It replaces the older split between a separate handoff file and a separate session-history timeline — keep both the active baton and the dated timeline in this one file. Do not create alternate continuity sidecars (extra handoff append files, dated handoff files, separate active-plan files, or a separate history file). If such a file already exists, fold any still-current facts into `HANDOFF.md` and leave stale details below the archive boundary.
+Before replacing HANDOFF, prepare the new current checkpoint and preserve every still-active constraint and open question. Archive the entire old HANDOFF with a unique checkpoint ID, timestamp, and SHA-256 hash. Verify the archived copy before replacement. Skip an already archived identical checkpoint; conflicting IDs or an intervening edit require reconciliation. If archival fails, keep the current handoff intact. Preserve legacy history files and link them rather than deleting them.
 
-Every commit must carry the current `HANDOFF.md`: stage it (`git add .agent/HANDOFF.md`) with the work it describes so every contributor and every coding agent receives the same current state. In Claude Code the `validate-bash` guardrail refuses a `git commit` that would leave `.agent/HANDOFF.md` untracked or with unstaged edits; other hosts follow the same rule by contract. Keep the other `.agent/*.md` working-state files local unless team policy explicitly says otherwise.
+Migrate a legacy combined file by first archiving it intact, then reviewing the latest authoritative state to construct the current handoff. Do not split mechanically at the first STOP marker: old current batons can occur above it. The STOP marker in PLAN can still bound older planning detail; HANDOFF itself has no historical tail.
 
-Keep the latest active state at the top of each continuity file. Preserve older entries below this exact marker:
+### What Gets Committed
 
-```text
-STOP: normal resume context ends here; older entries below are archive.
-```
+Commit sanitized project continuity and archives **with the work they describe**. Include changed current/history handoffs, plan/context/tasks, test/review summaries, learnings, wiki, content continuity, and existing project history. Review for secrets and raw sensitive data before staging explicit paths. Credential stores, environment files, transient locks, and raw runtime caches remain private. Never bulk-add ignored directories or force-add unchecked records.
 
-For ordinary resume, handoff, or context recovery, read only the newest active section and stop at that marker. Read below it only when the user explicitly asks for history or archaeology. (This bounded read is the pack's first token-management lever — see `docs/workflows/token-management.md`.)
+The Claude Bash guard checks common direct Git commits for omitted named continuity, content records, and archives. It is a best-effort workflow guard, not a general shell security boundary; other hosts enforce the same contract through instructions and review. Stage reviewed files, make the focused commit, push/merge the work to main, and verify the remote files before claiming shared delivery.
+
+Broad custom ignore rules are retained by the installer and reported for review. Narrow them deliberately without exposing private files. Exact obsolete harness exclusions are removed on installation.
 
 ## Continuity Checkpoints (Required)
 
@@ -83,11 +83,11 @@ Run a continuity checkpoint when:
 - a sprint is complete or paused
 - the session is about to end
 - the work is entering a git or PR cycle
-- context feels roughly 50% full and summarization pressure is rising
+- context pressure threatens preserving current decisions (no universal percentage is a quality threshold)
 
 At each checkpoint:
 - update `.agent/PLAN.md` with the latest active plan state above the archive marker
-- update `.agent/HANDOFF.md`: refresh current state, decisions, and next actions at the top, and prepend a short dated timeline entry to the archive section
+- archive and verify the previous HANDOFF in HISTORY, then replace HANDOFF with the reviewed current checkpoint
 - update `.agent/LEARNINGS.md` only when learning mode is `CAPTURE` or `APPLY`, and only for lessons that pass the promotion gate (see `.agent/LEARNINGS.md`)
 
 The optional local helper `.agent/integrations/run-checkpoint.sh` prints the required updates as a checklist; it does not write state for you.

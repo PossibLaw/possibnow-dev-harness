@@ -57,11 +57,41 @@ The plugin also adds runtime guardrails (destructive-command blocker, sensitive-
 
 Optional user-level defaults (Codex/Claude global files) are covered under [Optional Global Setup](#optional-global-setup).
 
+## Optimize an Existing Project
+
+After updating the plugin, run:
+
+```text
+/possibnow-dev-harness:optimize
+```
+
+The default is read-only: inspect one project and prepare an evidence-backed
+configuration diff. Review the proposal once, then run:
+
+```text
+/possibnow-dev-harness:optimize apply
+```
+
+The agent rechecks for intervening edits, backs up affected files, applies only
+the reviewed changes, validates them, and records rollback instructions. Existing
+model/effort choices stay unchanged unless task-specific quality evidence supports
+a change. This is an agent workflow, not a deterministic installer or an automatic
+router; no savings are guaranteed. It uses bundled policy `2026-09-18.1`, with no
+private research access or always-on research hook.
+
+For Codex/other hosts after project installation, ask: "Follow
+`docs/workflows/optimization.md` to optimize this project." The namespaced slash
+command itself is Claude Code-specific.
+
+Update an installed Claude plugin with `/plugin update possibnow-dev-harness@possiblaw-plugins`,
+then start a new session or use the host's plugin reload mechanism. Existing
+projects are not silently migrated; `/optimize` prepares their changes.
+
 ## Two Tiers (How This Pack Grows With You)
 
 The harness is built for non-developer legal users and starts simple. It has two tiers, and it grows with your codebase instead of overwhelming you up front.
 
-- **Tier 1 — Starter (default):** the everyday workflow most projects ever need — `PLAN → TEST → REVIEW → HANDOFF`, a single continuity file, runtime guardrails, the **simplicity ladder** (prefer the simplest thing that works: reuse before writing new code), and always-on token discipline.
+- **Tier 1 — Starter (default):** the everyday workflow most projects ever need — `PLAN → TEST → REVIEW → HANDOFF`, current HANDOFF plus historical HISTORY, runtime guardrails, the **simplicity ladder** (prefer the simplest thing that works: reuse before writing new code), and always-on token discipline.
 - **Tier 2 — Scale (opt-in, gated as the codebase grows):** indexed retrieval with Graphify, wiki orientation, and deeper review. When a repo gets large the harness suggests `/possibnow-dev-harness:scale`; you opt in. Tier 2 never removes Tier 1 rules — it only adds to them.
 
 Learnings are **validation-gated**: auto-captured notes land in an Inbox, and a lesson is promoted into a category in `.agent/LEARNINGS.md` only if it recurred at least twice or you explicitly confirmed it. The template opens with a compass (what to capture / what not to), organizes promoted lessons into categories, and includes a review loop — so the learnings file stays small, trustworthy, and reviewable.
@@ -90,7 +120,8 @@ The dev harness is the canonical home for host-agnostic delivery roles.
 - `.agent/PLAN.md`: Working plan template — objective, assumptions, milestones, risks, and acceptance criteria (now also absorbs the former CONTEXT and TASKS checklists).
 - `.agent/REVIEW.md`: Structured review rubric focused on correctness, regressions, and security findings.
 - `.agent/TEST.md`: Validation contract with TDD/eval evidence requirements and security test checklist.
-- `.agent/HANDOFF.md`: Single continuity file — current baton pass on top, a newest-first dated Session Timeline below a STOP marker.
+- `.agent/HANDOFF.md`: current checkpoint only.
+- `.agent/HISTORY.md`: verified archive of previous handoffs, loaded on demand.
 - `.agent/WIKI.md`: Optional wiki-mode config with Obsidian vault path and wiki sync rules (Tier 2).
 - `.agent/LEARNINGS.md`: Optional, validation-gated learning log (default off) for reusable observations and proposed skill/plugin/instruction improvements.
 - `.agent/integrations/*`: Local advisory checkpoint helper (`run-checkpoint.sh`) that prints the PLAN/HANDOFF updates to make.
@@ -170,7 +201,7 @@ The project installer auto-detects likely commands from repo signals (`package.j
   --build "pnpm build"
 ```
 
-The project installer keeps `.agent/HANDOFF.md` trackable so every developer and every coding agent receives the current baton and session history; the other `.agent/*.md` working-state files stay local and ignored by default. When re-run in a repo created by an older pack version, it removes the exact legacy `.agent/HANDOFF.md` ignore rule while preserving unrelated rules. Do not put credentials, secrets, or raw private client data in the shared handoff.
+The installer keeps project continuity trackable and preserves existing state on every rerun. It removes exact obsolete harness exclusions while retaining broader custom and private rules for explicit review. Commit current/history handoffs, plan/context/tasks, test/review summaries, learnings, wiki, content continuity, archives, and existing project history with the work. Review for secrets and raw sensitive data before staging.
 
 **Every commit must carry the handoff.** Refresh the Current Baton, run `git add .agent/HANDOFF.md`, then commit. In Claude Code the `validate-bash` guardrail refuses a `git commit` that would leave `.agent/HANDOFF.md` untracked or with unstaged edits (it honors `git commit -a` and an inline `git add` that covers the file, and never fires in repos without a handoff). Codex and other AGENTS.md-aware tools have no runtime hook, so `AGENTS.md` and `docs/workflows/contracts.md` state the same rule for them.
 
@@ -221,7 +252,7 @@ Install only one tool:
 - `docs/workflows/graphify.md`
 - `docs/workflows/token-management.md`
 - `docs/glossary.md`
-- `.gitignore` updates: `.agent/*.md` working state stays local; `.agent/HANDOFF.md` is shared and must ride in every commit (guardrail-enforced in Claude Code)
+- `.gitignore` updates: exact obsolete continuity exclusions are removed; unrelated private rules remain. Broad rules hiding continuity produce a warning.
 
 `Learning Mode` defaults to `OFF`. Turn it on per task by setting `Learning Mode: CAPTURE` or `Learning Mode: APPLY` in `.agent/PLAN.md` (or by explicit prompt instruction).
 Continuity checkpoints default to sprint closeout, pre-git-cycle, session end, and "context feels ~50% full" as a heuristic trigger.
@@ -243,14 +274,14 @@ Continuity checkpoints default to sprint closeout, pre-git-cycle, session end, a
 ## Memory
 - `docs/architecture/memory-and-indexing-guide.md` explains which memory/indexing layer owns which facts and when to enable optional layers.
 - Source code, tests, runtime behavior, and active state artifacts remain the source of truth.
-- Continuity is **one file**: `.agent/HANDOFF.md` carries the current baton pass on top, with a newest-first dated Session Timeline below a STOP marker. `.agent/PLAN.md` holds the goal, assumptions, and task checklist.
+- Current state is `.agent/HANDOFF.md`; `.agent/HISTORY.md` preserves prior handoffs verbatim. PLAN holds the goal, assumptions, and task checklist. All relevant continuity ships with the work.
 - `.agent/LEARNINGS.md` is default-off and validation-gated: capture a reusable observation only when `Learning Mode` is `CAPTURE` or `APPLY`. Auto-captured notes stage in an Inbox and are promoted into a category only after a lesson recurs at least twice or you confirm it. The template opens with a compass (what to capture / what not to) and carries a review loop for periodic triage.
 - `.agent/integrations/run-checkpoint.sh` is an advisory printer — it lists the required `PLAN`/`HANDOFF` updates at sprint closeout, pre-git-cycle, or context pressure. It does not write state.
 - Wiki mode and Graphify are Tier 2 orientation/indexing layers; generated claims stay advisory until verified against source.
 
 Examples:
 - Local artifact: a handoff records that matter records are created only after `conflict_check.status = approved`, why draft matters for rejected intakes were rejected, what tests proved it, and what remains open.
-- Session timeline: the same `.agent/HANDOFF.md` keeps a short, newest-first dated entry below the STOP marker so a future session can recover what happened without rereading every artifact.
+- Historical checkpoints: archive and hash-verify the old handoff in HISTORY before replacement; do not load that archive during normal resume.
 - Manual wiki (Tier 2): use curated pages for stable codebase maps, domain glossary, architecture notes, and cross-links that humans may want to edit.
 - Graphify (Tier 2): read the generated wiki layer (`graphify-out/wiki/index.md`) and run focused graph queries for first-pass orientation on larger repos, then verify the result in source before implementation.
 - Non-developer path: ask the agent to "index this codebase with Graphify" (or run `/possibnow-dev-harness:scale`). The project contract tells the agent to configure `.agent/WIKI.md`, create safe ignore rules, install Graphify only with approval if missing, run the graph build, and report where the output lives.
@@ -309,7 +340,7 @@ Flag a sprint-closeout or pre-git checkpoint in a target repo:
 /path/to/your/repo/.agent/integrations/run-checkpoint.sh /path/to/your/repo --reason pre-git-cycle
 ```
 
-The helper does not invent summaries. It is an advisory checklist printer: it flags the required `.agent/PLAN.md` and `.agent/HANDOFF.md` updates (Current Baton plus a prepended Session Timeline entry), reads learning mode, and shows git scope. It does not write state and does not call any backend.
+The helper does not invent summaries. It is an advisory checklist printer: it flags the required `.agent/PLAN.md` and `.agent/HANDOFF.md` updates (archive/verify old HANDOFF in HISTORY, then replace the current checkpoint), reads learning mode, and shows git scope. It does not write state and does not call any backend.
 
 ## Repository Layout
 

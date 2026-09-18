@@ -16,7 +16,7 @@ Options:
   --lint "<lint_command>"
   --typecheck "<typecheck_command>"
   --build "<build_command>"
-  --preserve-progress   Do not overwrite existing progress files (.agent/*)
+  --preserve-progress   Preserve existing progress files (now always the default)
   --adopt               Adopt into an existing/older repo (alias for --preserve-progress).
                         Also assesses codebase size and recommends Tier 2 Scale mode (Graphify)
                         when the repo is large.
@@ -45,6 +45,8 @@ if [[ ! -d "$TARGET_DIR" ]]; then
   exit 1
 fi
 
+TARGET_DIR="$(cd "$TARGET_DIR" && pwd -P)"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PACK_ROOT="$REPO_ROOT/packs/project"
@@ -69,7 +71,7 @@ USER_LINT_COMMAND=""
 USER_TYPECHECK_COMMAND=""
 USER_BUILD_COMMAND=""
 DRY_RUN=0
-PRESERVE_PROGRESS=0
+PRESERVE_PROGRESS=1
 SCALE_THRESHOLD=50
 SRC_COUNT=0
 
@@ -78,13 +80,19 @@ PROGRESS_REL_FILES=(
   ".agent/REVIEW.md"
   ".agent/TEST.md"
   ".agent/HANDOFF.md"
+  ".agent/HISTORY.md"
   ".agent/WIKI.md"
   ".agent/LEARNINGS.md"
 )
 
-# Working state stays local. HANDOFF.md is intentionally excluded because it is
-# the shared continuity record for everyone developing in the repository.
-LOCAL_STATE_REL_FILES=(
+# Exact legacy continuity exclusions to retire; never remove broad custom rules.
+SHARED_STATE_REL_FILES=(
+  ".agent/CONTENT-PLAN.md"
+  ".agent/CONTENT-HANDOFF.md"
+  ".agent/CONTINUITY.md"
+  ".agent/OPTIMIZATION.md"
+  ".agent/HANDOFF.md"
+  ".agent/HISTORY.md"
   ".claude/history.md"
   ".agent/PLAN.md"
   ".agent/CONTEXT.md"
@@ -320,6 +328,21 @@ if [[ -z "${LINT_COMMAND// }" ]]; then LINT_COMMAND="UNCONFIRMED"; fi
 if [[ -z "${TYPECHECK_COMMAND// }" ]]; then TYPECHECK_COMMAND="UNCONFIRMED"; fi
 if [[ -z "${BUILD_COMMAND// }" ]]; then BUILD_COMMAND="UNCONFIRMED"; fi
 
+assert_local_write_path() {
+  local current="$1"
+  while [[ "$current" != "$TARGET_DIR" ]]; do
+    if [[ -L "$current" ]]; then
+      echo "BLOCKED: refusing to write through a symlink: $current"
+      exit 1
+    fi
+    current="$(dirname "$current")"
+  done
+}
+
+for path in "$TARGET_DIR/.agent" "$TARGET_DIR/.claude" "$TARGET_DIR/docs" "$TARGET_DIR/.gitignore"; do
+  assert_local_write_path "$path"
+done
+
 LAST_COPY_STATUS=0
 
 copy_with_backup() {
@@ -328,15 +351,16 @@ copy_with_backup() {
   local rel="$3"
 
   LAST_COPY_STATUS=0
+  assert_local_write_path "$dst"
 
   if [[ ! -f "$src" ]]; then
     echo "BLOCKED: source file missing: $src"
     exit 1
   fi
 
-  mkdir -p "$(dirname "$dst")"
+  if [[ "$DRY_RUN" -eq 0 ]]; then mkdir -p "$(dirname "$dst")"; fi
 
-  if [[ "$PRESERVE_PROGRESS" -eq 1 && -e "$dst" ]] && is_progress_rel_file "$rel"; then
+  if [[ -e "$dst" ]] && is_progress_rel_file "$rel"; then
     if [[ "$DRY_RUN" -eq 1 ]]; then
       echo "DRY_RUN preserve: $dst (existing progress file)"
     else
@@ -366,86 +390,30 @@ copy_with_backup() {
 
 ensure_state_ignore_policy() {
   local gitignore="$TARGET_DIR/.gitignore"
+  [[ -f "$gitignore" ]] || return 0
+  local line rel remove tmp
   local old_header="# Local agent continuity files (keep local; do not commit)"
-  local header="# Local agent working state; HANDOFF.md is shared with the team"
-  local shared_handoff=".agent/HANDOFF.md"
-  local removals=("$old_header" "$shared_handoff")
-  local removal
-  local rel
-  local line
-  local keep_line
-  local updated=0
-  local tmp
-
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    if [[ ! -e "$gitignore" ]]; then
-      echo "DRY_RUN create: $gitignore"
-    fi
-    for removal in "${removals[@]}"; do
-      if [[ -f "$gitignore" ]] && grep -Fxq "$removal" "$gitignore"; then
-        echo "DRY_RUN remove: $gitignore :: $removal"
-      fi
+  local newer_header="# Local agent working state; HANDOFF.md is shared with the team"
+  if [[ "$DRY_RUN" -eq 0 ]]; then tmp="$(mktemp "${gitignore}.tmp.XXXXXX")"; fi
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    remove=0
+    if [[ "$line" == "$old_header" || "$line" == "$newer_header" ]]; then remove=1; fi
+    for rel in "${SHARED_STATE_REL_FILES[@]}"; do
+      if [[ "$line" == "$rel" || "$line" == "/$rel" ]]; then remove=1; fi
     done
-    if [[ ! -f "$gitignore" ]] || ! grep -Fxq "$header" "$gitignore"; then
-      echo "DRY_RUN append: $gitignore :: $header"
+    if [[ "$remove" -eq 1 ]]; then
+      echo "Remove obsolete continuity ignore rule: $line"
+    elif [[ "$DRY_RUN" -eq 0 ]]; then
+      printf '%s\n' "$line" >>"$tmp"
     fi
-    for rel in "${LOCAL_STATE_REL_FILES[@]}"; do
-      if [[ ! -f "$gitignore" ]] || ! grep -Fxq "$rel" "$gitignore"; then
-        echo "DRY_RUN append: $gitignore :: $rel"
-      fi
-    done
-    return 0
-  fi
-
-  if [[ ! -e "$gitignore" ]]; then
-    touch "$gitignore"
-    echo "Created: $gitignore"
-    updated=1
-  fi
-
-  for removal in "${removals[@]}"; do
-    if grep -Fxq "$removal" "$gitignore"; then
-      updated=1
+  done <"$gitignore"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    if cmp -s "$tmp" "$gitignore"; then
+      rm "$tmp"
+    else
+      cp "$gitignore" "${gitignore}.bak.${TS}"
+      mv "$tmp" "$gitignore"
     fi
-  done
-
-  if [[ "$updated" -eq 1 && -s "$gitignore" ]]; then
-    tmp="$(mktemp "${gitignore}.tmp.XXXXXX")"
-    while IFS= read -r line || [[ -n "$line" ]]; do
-      keep_line=1
-      for removal in "${removals[@]}"; do
-        if [[ "$line" == "$removal" ]]; then
-          keep_line=0
-          break
-        fi
-      done
-      if [[ "$keep_line" -eq 1 ]]; then
-        printf '%s\n' "$line" >>"$tmp"
-      fi
-    done <"$gitignore"
-    mv "$tmp" "$gitignore"
-  fi
-
-  if ! grep -Fxq "$header" "$gitignore"; then
-    if [[ -s "$gitignore" ]]; then
-      printf '\n' >>"$gitignore"
-    fi
-    printf '%s\n' "$header" >>"$gitignore"
-    updated=1
-  fi
-
-  for rel in "${LOCAL_STATE_REL_FILES[@]}"; do
-    if grep -Fxq "$rel" "$gitignore"; then
-      continue
-    fi
-    printf '%s\n' "$rel" >>"$gitignore"
-    updated=1
-  done
-
-  if [[ "$updated" -eq 1 ]]; then
-    echo "Updated: $gitignore (HANDOFF.md shared; other agent state local)"
-  else
-    echo "Unchanged: $gitignore (shared handoff policy already present)"
   fi
 }
 
@@ -454,13 +422,13 @@ warn_if_handoff_ignored() {
     return 0
   fi
 
-  if ! git -C "$TARGET_DIR" check-ignore -q ".agent/HANDOFF.md"; then
-    return 0
-  fi
-
-  echo ""
-  echo "WARNING: .agent/HANDOFF.md is still ignored by a broader custom rule."
-  echo "Review $TARGET_DIR/.gitignore and narrow the matching rule so the team can track the shared handoff."
+  local rel
+  for rel in "${SHARED_STATE_REL_FILES[@]}"; do
+    if git -C "$TARGET_DIR" check-ignore -q "$rel"; then
+      echo "WARNING: $rel is still ignored by a broader custom rule."
+      echo "Review $TARGET_DIR/.gitignore and narrow only the relevant rule after checking sensitive content."
+    fi
+  done
 }
 
 replace_placeholders() {
@@ -496,6 +464,7 @@ copy_with_backup "$PACK_ROOT/docs/workflows/evals.md" "$TARGET_DIR/docs/workflow
 copy_with_backup "$PACK_ROOT/docs/workflows/contracts.md" "$TARGET_DIR/docs/workflows/contracts.md" "docs/workflows/contracts.md"
 copy_with_backup "$PACK_ROOT/docs/workflows/wiki.md" "$TARGET_DIR/docs/workflows/wiki.md" "docs/workflows/wiki.md"
 copy_with_backup "$PACK_ROOT/docs/workflows/graphify.md" "$TARGET_DIR/docs/workflows/graphify.md" "docs/workflows/graphify.md"
+copy_with_backup "$PACK_ROOT/docs/workflows/optimization.md" "$TARGET_DIR/docs/workflows/optimization.md" "docs/workflows/optimization.md"
 copy_with_backup "$PACK_ROOT/docs/workflows/token-management.md" "$TARGET_DIR/docs/workflows/token-management.md" "docs/workflows/token-management.md"
 copy_with_backup "$PACK_ROOT/docs/glossary.md" "$TARGET_DIR/docs/glossary.md" "docs/glossary.md"
 copy_with_backup "$PACK_ROOT/.agent/PLAN.md" "$TARGET_DIR/.agent/PLAN.md" ".agent/PLAN.md"
@@ -503,6 +472,7 @@ copy_with_backup "$PACK_ROOT/.agent/REVIEW.md" "$TARGET_DIR/.agent/REVIEW.md" ".
 copy_with_backup "$PACK_ROOT/.agent/TEST.md" "$TARGET_DIR/.agent/TEST.md" ".agent/TEST.md"
 TEST_FILE_WAS_COPIED="$LAST_COPY_STATUS"
 copy_with_backup "$PACK_ROOT/.agent/HANDOFF.md" "$TARGET_DIR/.agent/HANDOFF.md" ".agent/HANDOFF.md"
+copy_with_backup "$PACK_ROOT/.agent/HISTORY.md" "$TARGET_DIR/.agent/HISTORY.md" ".agent/HISTORY.md"
 copy_with_backup "$PACK_ROOT/.agent/WIKI.md" "$TARGET_DIR/.agent/WIKI.md" ".agent/WIKI.md"
 copy_with_backup "$PACK_ROOT/.agent/LEARNINGS.md" "$TARGET_DIR/.agent/LEARNINGS.md" ".agent/LEARNINGS.md"
 copy_with_backup "$PACK_ROOT/.agent/integrations/README.md" "$TARGET_DIR/.agent/integrations/README.md" ".agent/integrations/README.md"

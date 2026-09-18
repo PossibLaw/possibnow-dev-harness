@@ -1,10 +1,20 @@
 {
   "name": "possibnow-dev-harness",
-  "version": "4.0.1",
-  "description": "PossibNow Dev Harness: two-tier progressive governance harness (Claude + Codex) with a state-artifact pipeline (PLAN/TEST/REVIEW/HANDOFF), a single shared HANDOFF continuity file that every commit must carry, simplicity ladder, role registry, continuity checkpoints, and runtime guardrails (Claude only).",
-  "author": {"name": "PossibLaw"},
+  "version": "4.1.0",
+  "description": "PossibNow Dev Harness: progressive Claude/Codex governance, reviewed project optimization, current HANDOFF plus historical HISTORY, shared continuity delivery, and Claude runtime guardrails.",
+  "author": {
+    "name": "PossibLaw"
+  },
   "homepage": "https://github.com/PossibLaw/PossibLaw-Plugins",
   "repository": "https://github.com/PossibLaw/possibnow-dev-harness.git",
-  "keywords": ["governance", "dev-harness", "claude-code", "codex", "guardrails", "handoff", "tdd"],
+  "keywords": [
+    "governance",
+    "dev-harness",
+    "claude-code",
+    "codex",
+    "guardrails",
+    "handoff",
+    "tdd"
+  ],
   "license": "MIT"
 }

@@ -11,17 +11,17 @@ Bootstrap the **current working directory** with PossibNow Dev Harness project f
 ## What it installs into the repo
 
 - `AGENTS.md` and `CLAUDE.md` — project-level governance (Codex + Claude)
-- `.agent/{PLAN,REVIEW,TEST,HANDOFF,WIKI,LEARNINGS}.md` — state-artifact templates (PLAN now also holds the former CONTEXT assumptions and TASKS checklist; HANDOFF is the single continuity file)
+- `.agent/{PLAN,REVIEW,TEST,HANDOFF,HISTORY,WIKI,LEARNINGS}.md` — state-artifact templates (PLAN now also holds the former CONTEXT assumptions and TASKS checklist; HANDOFF is current; HISTORY preserves previous checkpoints)
 - `.agent/integrations/` — advisory continuity-checkpoint helper (`run-checkpoint.sh`) that prints the PLAN/HANDOFF updates to make
 - `docs/roles/*.md` — six canonical role contracts (product-strategist, engineering-planner, reviewer, security-reviewer, qa-validator, docs-releaser)
-- `docs/workflows/{evals,contracts,wiki,graphify,token-management}.md`
+- `docs/workflows/{evals,contracts,wiki,graphify,token-management,optimization}.md`
 - `docs/glossary.md` and `docs/vendor/*.md`
 - `.claude/skills/{closing-sprint-and-syncing-state,running-novice-safe-git-cycle,applying-simplicity-ladder,scaling-up-with-graphify}/SKILL.md` — project-local copies for Codex parity
-- `.agent/HANDOFF.md` remains trackable for team continuity and must ship with every commit (the Claude Code guardrail blocks `git commit` while it is untracked or unstaged); other `.agent/*` working-state files stay local
+- `.agent/HANDOFF.md` remains trackable for team continuity and must ship with every commit (the Claude Code guardrail blocks `git commit` while it is untracked or unstaged); all related sanitized continuity ships with the work
 
 ## What it does NOT touch
 
-The plugin's runtime guardrails (`hooks/`, `scripts/guardrails/`, top-level `agents/` and `skills/`) live inside the plugin install and apply automatically when Claude Code starts. This command only adds files that need to live in your project repo.
+The plugin's runtime guardrails (`hooks/`, `scripts/guardrails/`, top-level `agents/` and `skills/`) live inside the plugin install and apply automatically when Claude Code starts. This command only adds files that need to live in your project repo. Existing state files are always preserved, even without `--preserve-progress`. It does not migrate an old combined handoff; use `/possibnow-dev-harness:optimize` to review that change.
 
 ## Steps to run
 
@@ -46,16 +46,16 @@ If the script reports `DONE: project files installed into <path>`, remind the us
 > PossibNow Dev Harness files installed. Next steps:
 >
 > 1. Review the diff: `git status && git diff`
-> 2. Commit the shared governance, templates, and `.agent/HANDOFF.md` so other contributors receive the current baton and session history. Review the handoff first and remove credentials, secrets, raw private client data, and machine-specific paths:
+> 2. Commit the shared governance, templates, and all related sanitized continuity so other contributors receive the current checkpoint and historical context. Review the handoff first and remove credentials, secrets, raw private client data, and machine-specific paths:
 >    ```
->    git add AGENTS.md CLAUDE.md docs/ .agent/HANDOFF.md .claude/skills/ .gitignore
+>    git add AGENTS.md CLAUDE.md docs/ .agent/PLAN.md .agent/TEST.md .agent/REVIEW.md .agent/HANDOFF.md .agent/HISTORY.md .agent/WIKI.md .agent/LEARNINGS.md .agent/integrations/ .claude/skills/ .gitignore
 >    ```
 >    ```
 >    git commit -m "Add PossibNow Dev Harness governance + workflow templates"
 >    ```
 > 3. If any commands show as `UNCONFIRMED` in `.agent/TEST.md` or `CLAUDE.md`, fill them in (or re-run init with `--test "..."` etc.)
-> 4. The `closing-sprint-and-syncing-state` skill will keep `PLAN.md` and the single `HANDOFF.md` continuity file current as you work.
-> 5. From now on, every commit must carry `.agent/HANDOFF.md`: refresh the Current Baton, `git add .agent/HANDOFF.md`, then commit. In Claude Code the guardrail refuses a commit that would leave the handoff untracked or unstaged.
+> 4. The `closing-sprint-and-syncing-state` skill will keep `PLAN.md` and current HANDOFF and historical HISTORY current as you work.
+> 5. From now on, every commit must include its changed continuity: refresh the current checkpoint, archive its predecessor, review and stage all related records, then commit. In Claude Code the guardrail refuses a commit that would leave the handoff untracked or unstaged.
 
 If the script blocks (e.g., target placeholder error, missing pack), surface the error and the suggested fix verbatim — do not paper over it.
 

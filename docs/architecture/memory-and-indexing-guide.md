@@ -14,7 +14,8 @@ Canonical memory is the local, reviewable file set:
 - `.agent/PLAN.md` (goal, assumptions, and task checklist — the former CONTEXT and TASKS are folded in here)
 - `.agent/TEST.md`
 - `.agent/REVIEW.md`
-- `.agent/HANDOFF.md` (single continuity file: current baton on top, newest-first dated Session Timeline below a STOP marker)
+- `.agent/HANDOFF.md` (current checkpoint)
+- `.agent/HISTORY.md` (exact prior handoffs, on demand)
 
 Optional layers must be additive:
 - `.agent/LEARNINGS.md` captures reusable process observations only when learning mode is enabled, and a lesson is promoted only after it recurs at least twice or the user confirms it (validation-gated).
@@ -23,12 +24,12 @@ Optional layers must be additive:
 - Claude Code native memory is outside the Dev Harness contract and should not become the repo source of truth.
 - A retrieval backend such as MemPalace is a deferred future option over completed local artifacts; it is not shipped today.
 
-Default recommendation: keep the single HANDOFF continuity file on, keep learnings/wiki/Graphify (Tier 2) off until a repo has enough repeated context load pain to justify them.
+Default recommendation: keep the current HANDOFF plus historical HISTORY on, keep learnings/wiki/Graphify (Tier 2) off until a repo has enough repeated context load pain to justify them.
 
 ## Trust Order
 
 1. Source code, tests, runtime behavior, and committed configuration
-2. Active workflow artifacts: `PLAN.md`, `TEST.md`, `REVIEW.md`, `HANDOFF.md` (including the Session Timeline below the STOP marker in `HANDOFF.md`)
+2. Active workflow artifacts: `PLAN.md`, `TEST.md`, `REVIEW.md`, `HANDOFF.md` and historical checkpoints in HISTORY
 3. Curated repo docs and manually maintained wiki pages with source citations
 4. `.agent/LEARNINGS.md`
 5. Generated Graphify output and any Claude native memory retrieval (a future MemPalace-style retrieval backend would sit here too)
@@ -40,37 +41,25 @@ If any lower layer conflicts with a higher layer, trust the higher layer and upd
 | Layer | Default | Main job | Owner | Commit? | Read when | Write when |
 | --- | --- | --- | --- | --- | --- | --- |
 | `AGENTS.md` / `CLAUDE.md` | On | Stable startup rules and routing | Human-maintained template | Yes | Every agent session | Rarely, for policy changes |
-| `.agent/PLAN.md` | On demand | Current objective, assumptions, task checklist, evals, risks | Active task owner | No | Planning or task execution | Before implementation |
-| `.agent/TEST.md` | On demand | Validation commands, eval receipts, security checks | QA/implementer | No | Test/validation work | During verification |
-| `.agent/REVIEW.md` | On demand | Review findings and security checklist | Reviewer | No | Review work | During review |
-| `.agent/HANDOFF.md` | On | Current baton (decisions, open questions) on top; newest-first Session Timeline below the STOP marker | Final task owner | No | Resume, handoff, parallel worktree | End of meaningful work |
-| `.agent/LEARNINGS.md` | Off | Reusable observations and proposed improvements (validation-gated) | Agent only when enabled | No | Learning mode tasks | CAPTURE/APPLY mode only |
-| Manual wiki (Tier 2) | Off | Curated codebase map and concept pages | Agent/human curator | Optional | Deep orientation/repo review | After verified changes |
+| `.agent/PLAN.md` | On demand | Current objective, assumptions, task checklist, evals, risks | Active task owner | Yes | Planning or task execution | Before implementation |
+| `.agent/TEST.md` | On demand | Validation commands, eval receipts, security checks | QA/implementer | Yes | Test/validation work | During verification |
+| `.agent/REVIEW.md` | On demand | Review findings and security checklist | Reviewer | Yes | Review work | During review |
+| `.agent/HANDOFF.md` | On | Current checkpoint only; old checkpoints archived in HISTORY | Final task owner | Yes | Resume, handoff, parallel worktree | End of meaningful work |
+| `.agent/HISTORY.md` | On demand | Exact historical handoffs | Final task owner | Yes | Specific historical question | Before replacing HANDOFF |
+| `.agent/LEARNINGS.md` | Off | Reusable observations and proposed improvements (validation-gated) | Agent only when enabled | Yes | Learning mode tasks | CAPTURE/APPLY mode only |
+| Manual wiki (Tier 2) | Off | Curated codebase map and concept pages | Agent/human curator | Yes | Deep orientation/repo review | After verified changes |
 | Graphify output (Tier 2) | Off | Generated graph/index over code/docs/raw materials | Tool-generated | Usually no | Orientation/query acceleration | Explicit graph refresh |
 | Claude native memory | Tool-specific | Personal/global preferences | Claude Code | Outside repo | Personal behavior only | Never for client/repo facts by default |
 
 ## How Current Memory Works
 
-### Handoff (single continuity file)
+### Current Handoff and Historical Handoffs
 
-Continuity is **one file**: `.agent/HANDOFF.md`.
-
-- The **Current Baton** on top is the structured "what matters next" artifact. It should contain current phase, owner, decisions, constraints, open questions, next actions, and links back to eval/test/review evidence.
-- The **Session Timeline** below the STOP marker is the newest-first historical timeline. It preserves what happened across sessions without asking future agents to reread every artifact. It is useful for resuming work, but it should not override the active baton above it.
-
-`PLAN.md` and `HANDOFF.md` keep current resume context above this marker:
-
-```text
-STOP: normal resume context ends here; older entries below are archive.
-```
-
-During normal resume, read the newest active section (the Current Baton) and stop at the STOP marker. Read older Session Timeline material only when the user explicitly asks for historical context.
-
-Use this split:
-- Current actionable state goes in the **Current Baton** of `.agent/HANDOFF.md`.
-- Historical timeline goes in the **Session Timeline** of the same file, newest first, below the STOP marker.
-- Do not duplicate full plans, test logs, or wiki pages into the timeline.
-- Do not create sidecar continuity files (no separate `history.md`); fold current facts into `PLAN.md` and `HANDOFF.md` instead.
+HANDOFF contains the current checkpoint. HISTORY preserves exact previous
+handoffs with identifiers and hashes. Verify archival before replacing current
+state; preserve active constraints and legacy historical records. Normal resume
+loads HANDOFF only. See the current contract in
+`packs/project/docs/workflows/contracts.md` for migration and delivery rules.
 
 ### Learnings
 
@@ -96,7 +85,7 @@ Do not use learnings for:
 
 A semantic retrieval backend over completed local artifacts (for example MemPalace) is a **deferred future option**. It is **not shipped today** — there are no ingest stubs or hooks in the pack.
 
-If such a backend is added later, the principles still hold: completed file artifacts remain the source of truth, retrieval is advisory, retrieved entries must cite the source artifact path and timestamp, and the backend must never become a second writable truth store. The write path would stay: complete local artifacts → update the canonical `HANDOFF.md` (Current Baton + prepended Session Timeline entry) → ingest the completed artifacts → verify retrieval against current local files and source code.
+If such a backend is added later, the principles still hold: completed file artifacts remain the source of truth, retrieval is advisory, retrieved entries must cite the source artifact path and timestamp, and the backend must never become a second writable truth store. The write path would stay: complete local artifacts → update the canonical `HANDOFF.md` (current checkpoint with a verified archive in HISTORY) → ingest the completed artifacts → verify retrieval against current local files and source code.
 
 ### Manual Wiki
 
@@ -159,7 +148,7 @@ If Claude memory conflicts with repo files, repo files win.
 | Current next action | `.agent/HANDOFF.md` (Current Baton) | Learnings, Graphify |
 | Test command and receipt | `.agent/TEST.md` | Timeline-only notes |
 | Review finding | `.agent/REVIEW.md` | Wiki-only notes |
-| "What happened last session" | `.agent/HANDOFF.md` (Session Timeline) | `AGENTS.md`, `CLAUDE.md` |
+| "What happened last session" | `.agent/HISTORY.md` | `AGENTS.md`, `CLAUDE.md` |
 | Reusable process improvement | `.agent/LEARNINGS.md` | Handoff baton/timeline |
 | Architecture overview | Manual wiki or generated Graphify report | Handoff |
 | Source-backed codebase map | Manual wiki or Graphify, with source verification | Claude memory |
@@ -172,7 +161,7 @@ If Claude memory conflicts with repo files, repo files win.
 
 Keep:
 - `AGENTS.md` and `CLAUDE.md`
-- `.agent/PLAN.md`, `.agent/TEST.md`, `.agent/REVIEW.md`, `.agent/HANDOFF.md` (single continuity file)
+- `.agent/PLAN.md`, `.agent/TEST.md`, `.agent/REVIEW.md`, `.agent/HANDOFF.md`, `.agent/HISTORY.md`
 - `docs/workflows/contracts.md`
 - `docs/workflows/token-management.md`
 - `docs/workflows/wiki.md`
@@ -214,7 +203,7 @@ The agent should then follow the Graphify Indexing Request Contract in `docs/wor
 A semantic retrieval backend (e.g. MemPalace) is not shipped today. It would only be worth revisiting when:
 
 - the team needs retrieval across many completed tasks
-- file search through the HANDOFF timeline and handoffs is no longer enough
+- file search through the HISTORY entries and handoffs is no longer enough
 - the backend can retrieve verbatim snippets with artifact citations
 
 Any such backend should index completed artifacts, not raw repo content by default.
@@ -236,7 +225,7 @@ memory_model:
     - .agent/TEST.md
     - .agent/REVIEW.md
     - .agent/HANDOFF.md
-  session_timeline: .agent/HANDOFF.md # Session Timeline below the STOP marker
+  session_timeline: .agent/HISTORY.md # Historical checkpoints loaded on demand
   learning_mode: OFF # OFF | CAPTURE | APPLY (validation-gated promotion)
   wiki_mode: OFF # OFF | ON (Tier 2)
   wiki_backend: manual # manual | graphify (Tier 2)

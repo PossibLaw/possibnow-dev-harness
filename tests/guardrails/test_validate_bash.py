@@ -376,3 +376,56 @@ def test_inline_add_relative_parent_path_from_subdirectory_allows(repo):
     sub = repo / "src"
     sub.mkdir()
     assert_allowed(run_hook("git add ../.agent/HANDOFF.md && git commit -m 'work'", cwd=str(sub)))
+
+# Shared continuity extends beyond the current handoff.
+@pytest.mark.parametrize('rel', ['.agent/PLAN.md', '.agent/HISTORY.md', '.agent/TEST.md', '.agent/REVIEW.md', '.agent/CONTENT-HANDOFF.md', '.agent/archives/old.md', '.claude/history.md'])
+def test_commit_blocks_omitted_continuity(repo, rel):
+    path = repo / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('continuity\n')
+    result = run_hook("git commit -m 'work'", cwd=str(repo))
+    assert result.returncode == 2
+    assert rel in result.stderr
+
+
+def test_staging_handoff_does_not_cover_new_history(repo):
+    (repo / '.agent/HISTORY.md').write_text('old state\n')
+    result = run_hook("git add .agent/HANDOFF.md && git commit -m 'work'", cwd=str(repo))
+    assert result.returncode == 2
+
+
+def test_commit_all_still_blocks_untracked_plan(repo):
+    (repo / '.agent/PLAN.md').write_text('plan\n')
+    assert run_hook("git commit -am 'work'", cwd=str(repo)).returncode == 2
+
+
+def test_staged_continuity_allows_commit(repo):
+    (repo / '.agent/HISTORY.md').write_text('old state\n')
+    _git(repo, 'add', '.agent/HISTORY.md')
+    assert_allowed(run_hook("git commit -m 'work'", cwd=str(repo)))
+
+
+def test_ignored_named_continuity_requires_ignore_fix(repo):
+    (repo / '.gitignore').write_text('.agent/PLAN.md\n')
+    (repo / '.agent/PLAN.md').write_text('plan\n')
+    result = run_hook("git add -A && git commit -m 'work'", cwd=str(repo))
+    assert result.returncode == 2
+    assert 'ignored' in result.stderr
+
+
+def test_explicit_commit_path_cannot_omit_staged_history(repo):
+    (repo / '.agent/HISTORY.md').write_text('old state\n')
+    _git(repo, 'add', '.agent/HISTORY.md')
+    result = run_hook("git commit --only app.py -m 'work'", cwd=str(repo))
+    assert result.returncode == 2
+
+
+def test_unrelated_private_notes_not_continuity(repo):
+    (repo / '.gitignore').write_text('.agent/private-notes.md\n')
+    (repo / '.agent/private-notes.md').write_text('private\n')
+    assert_allowed(run_hook("git commit -m 'work'", cwd=str(repo)))
+
+@pytest.mark.parametrize('command', ["git add --dry-run .agent/HANDOFF.md && git commit -m work", "git add -u app.py && git commit -m work", "git commit -m '-am'"])
+def test_nonstaging_forms_do_not_satisfy_guard(repo, command):
+    _edit_handoff(repo)
+    assert run_hook(command, cwd=str(repo)).returncode == 2
