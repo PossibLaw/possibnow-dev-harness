@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.1.0 — 2026-09-18
+
+- Add `/possibnow-dev-harness:optimize`: read-only proposal, then reviewed project apply with validation/rollback and quality-gated model changes.
+- Commit all relevant sanitized continuity; split current HANDOFF from historical HISTORY. Preserve existing state on every installer rerun.
+- Retire exact legacy continuity ignore rules while preserving private and broad custom exclusions for review.
+- Extend the direct Git commit guard to named continuity, content records, archives, and existing history.
+- Make installer dry-run read-only and add regression coverage.
+
 ## 2026-08-31 — v4.0.1 — guardrail fixes: chmod escalation narrowed to risky forms; format-check emits valid hook output
 - **`scripts/guardrails/blacklist.py`**: the escalate-tier rule `chmod\s+(?!777)` asked for confirmation on EVERY chmod the hard tier didn't block — including `chmod 644`, `chmod +x`, and `chmod 000` on scratch files — which made the confirm tier pure noise in agent-heavy sessions (observed 2026-08-31: a test harness's `chmod 000` on a mktemp file woke the user). Replaced with a risky-forms set: recursive (`-R`), world-writable grants (`o+w` / `a+w` / bare `+w`, and numeric modes whose others digit grants write: 2/3/6/7), and setuid/setgid (`+s`, four-digit modes starting 2/4/6). The mode-777 forms stay hard-blocked in `BLOCKED_PATTERNS`, unchanged. Tests updated to the new contract: `chmod 644` / `chmod +x` moved to the safe group with `000` / `600` / `u+w` / `755` beside them; `-R 755`, `o+w`, `a+w`, `666`, `4755`, `u+s` pinned as escalated. 81 pytest cases pass.
 - **`scripts/guardrails/format-check.sh`**: both output sites emitted `{"hookSpecificOutput":{"suppressOutput":true}}`, an invalid shape — `suppressOutput` is a top-level field and `hookSpecificOutput` requires `hookEventName` — so every Write/Edit surfaced a "Hook JSON output validation failed" error in the transcript (observed in every lane session 2026-08-31). Now emits `{"suppressOutput":true}`.

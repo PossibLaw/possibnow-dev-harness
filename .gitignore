@@ -6,8 +6,14 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-/.claude/
+/.claude/*
+!/.claude/history.md
 
-# Local agent working state; HANDOFF.md is shared with the team
+# Private runtime state; sanitized Markdown continuity is shared.
 /.agent/*
-!/.agent/HANDOFF.md
+!/.agent/*.md
+!/.agent/archive/
+!/.agent/archives/
+!/.agent/archive/**
+!/.agent/archives/**
+.venv/

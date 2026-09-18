@@ -12,6 +12,9 @@ REQUIRED_FILES=(
   "commands/init.md"
   "commands/guardrails.md"
   "commands/scale.md"
+  "commands/optimize.md"
+  "packs/project/docs/workflows/optimization.md"
+  "packs/project/.agent/HISTORY.md"
   "skills/closing-sprint-and-syncing-state/SKILL.md"
   "skills/running-novice-safe-git-cycle/SKILL.md"
   "skills/applying-simplicity-ladder/SKILL.md"
@@ -97,8 +100,8 @@ if git -C "$REPO_ROOT" check-ignore -q .agent/HANDOFF.md; then
   echo "BLOCKED: root .agent/HANDOFF.md must be trackable for team continuity"
   exit 1
 fi
-if ! git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
-  echo "BLOCKED: root .agent/PLAN.md must remain local and ignored"
+if git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
+  echo "BLOCKED: root .agent/PLAN.md must be trackable"
   exit 1
 fi
 
@@ -109,7 +112,7 @@ for script in "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/inst
   fi
 done
 
-# Installer policy: HANDOFF.md is shared, while local state and unrelated ignore rules stay intact.
+# Installer policy: continuity is shared; unrelated private exclusions stay intact.
 INSTALL_TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/possiblaw-install-test.XXXXXX")"
 trap 'rm -rf "$INSTALL_TEST_ROOT"' EXIT
 INSTALL_TEST_TARGET="$INSTALL_TEST_ROOT/target"
@@ -136,7 +139,14 @@ if git -C "$INSTALL_TEST_TARGET" check-ignore -q .agent/HANDOFF.md; then
   exit 1
 fi
 
-for rel in .agent/PLAN.md .agent/REVIEW.md .agent/TEST.md .agent/WIKI.md .agent/LEARNINGS.md .env.local .agent/private-notes.md; do
+for rel in .agent/PLAN.md .agent/REVIEW.md .agent/TEST.md .agent/WIKI.md .agent/LEARNINGS.md .agent/HISTORY.md; do
+  if git -C "$INSTALL_TEST_TARGET" check-ignore -q "$rel"; then
+    echo "BLOCKED: installer still excludes shared continuity: $rel"
+    exit 1
+  fi
+done
+
+for rel in .env.local .agent/private-notes.md; do
   if ! git -C "$INSTALL_TEST_TARGET" check-ignore -q "$rel"; then
     echo "BLOCKED: installer failed to preserve local/unrelated ignore rule: $rel"
     exit 1
@@ -151,8 +161,8 @@ if git -C "$INSTALL_FRESH_TARGET" check-ignore -q .agent/HANDOFF.md; then
   echo "BLOCKED: fresh install gitignores shared continuity file: .agent/HANDOFF.md"
   exit 1
 fi
-if ! git -C "$INSTALL_FRESH_TARGET" check-ignore -q .agent/PLAN.md; then
-  echo "BLOCKED: fresh install exposes local working state: .agent/PLAN.md"
+if git -C "$INSTALL_FRESH_TARGET" check-ignore -q .agent/PLAN.md; then
+  echo "BLOCKED: fresh install hides shared continuity: .agent/PLAN.md"
   exit 1
 fi
 
@@ -236,7 +246,7 @@ for f in CLAUDE.md AGENTS.md; do
   require_text "$REPO_ROOT/packs/project/$f" "## Vendor References" "missing vendor section in packs/project/$f"
   require_text "$REPO_ROOT/packs/project/$f" "## Contract Pipeline (Required)" "missing contract pipeline section in packs/project/$f"
   require_text "$REPO_ROOT/packs/project/$f" "## Continuity Checkpoint Contract" "missing checkpoint section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Shared Handoff and Local Working State" "missing shared handoff policy in packs/project/$f"
+  require_text "$REPO_ROOT/packs/project/$f" "## Shared Continuity (Committed with Work)" "missing shared handoff policy in packs/project/$f"
   require_text "$REPO_ROOT/packs/project/$f" "## Two Tiers" "missing two-tier model in packs/project/$f"
   require_text "$REPO_ROOT/packs/project/$f" "## Token Discipline (Always On)" "missing token discipline section in packs/project/$f"
   require_text "$REPO_ROOT/packs/project/$f" "## Simplicity Ladder (Always On)" "missing simplicity ladder section in packs/project/$f"
@@ -249,7 +259,7 @@ done
 require_text "$REPO_ROOT/packs/project/docs/roles/README.md" "## Canonical Roles" "missing canonical role table in packs/project/docs/roles/README.md"
 
 # Continuity contract
-require_text "$REPO_ROOT/packs/project/docs/workflows/contracts.md" "## Single-File Continuity Contract (Required)" "missing single-file continuity contract in contracts.md"
+require_text "$REPO_ROOT/packs/project/docs/workflows/contracts.md" "## Current and Historical Continuity Contract (Required)" "missing current/history continuity contract in contracts.md"
 require_text "$REPO_ROOT/packs/project/docs/workflows/contracts.md" "## Continuity Checkpoints (Required)" "missing checkpoint section in contracts.md"
 require_text "$REPO_ROOT/packs/project/docs/workflows/contracts.md" "## Scale Mode (Tier 2, Default OFF)" "missing scale mode section in contracts.md"
 require_text "$REPO_ROOT/packs/project/docs/workflows/wiki.md" "## Trust Order (Required)" "missing trust order section in packs/project/docs/workflows/wiki.md"
@@ -268,8 +278,8 @@ require_text "$REPO_ROOT/packs/project/.agent/REVIEW.md" "artifact_type: review"
 require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "artifact_type: handoff" "missing handoff artifact_type in packs/project/.agent/HANDOFF.md"
 require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "shared, version-controlled continuity record" "missing shared continuity policy in packs/project/.agent/HANDOFF.md"
 require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "## Sprint / Git Cycle" "missing sprint git section in packs/project/.agent/HANDOFF.md"
-require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "## Session Timeline (Newest First)" "missing merged session timeline in packs/project/.agent/HANDOFF.md"
-require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "$STOP_MARKER" "missing newest-first stop marker in packs/project/.agent/HANDOFF.md"
+require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" ".agent/HISTORY.md" "missing historical checkpoint link"
+require_text "$REPO_ROOT/packs/project/.agent/HISTORY.md" "include_in_memory: false" "history must be on-demand"
 require_text "$REPO_ROOT/packs/project/.agent/LEARNINGS.md" "## Promotion Gate (Required)" "missing validation/promotion gate in packs/project/.agent/LEARNINGS.md"
 require_text "$REPO_ROOT/packs/project/.agent/integrations/README.md" "run-checkpoint" "missing run-checkpoint reference in integrations README"
 
@@ -281,7 +291,7 @@ require_text "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "name: scalin
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"
-require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.0.1"' "plugin.json not bumped to version 4.0.1"
+require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.1.0"' "plugin.json not bumped to version 4.1.0"
 
 # Shared handoff commit guard (Claude runtime) and its tests
 require_text "$REPO_ROOT/scripts/guardrails/validate-bash.py" "def check_handoff_commit" "missing shared-handoff commit guard in scripts/guardrails/validate-bash.py"
@@ -303,14 +313,14 @@ require_text "$REPO_ROOT/packs/global/codex/.codex/AGENTS.md" "For vendor setup/
 
 # Guardrail unit tests: run with the first python3 that has pytest; otherwise report the gap.
 PYTEST_PY=""
-for candidate in python3 /usr/bin/python3 /opt/homebrew/bin/python3; do
+for candidate in "$REPO_ROOT/.venv/bin/python" python3 /usr/bin/python3 /opt/homebrew/bin/python3; do
   if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import pytest' >/dev/null 2>&1; then
     PYTEST_PY="$candidate"
     break
   fi
 done
 if [[ -n "$PYTEST_PY" ]]; then
-  if ! (cd "$REPO_ROOT" && "$PYTEST_PY" -m pytest tests/guardrails -q -p no:cacheprovider); then
+  if ! (cd "$REPO_ROOT" && "$PYTEST_PY" -m pytest tests/guardrails tests/installer -q -p no:cacheprovider); then
     echo "BLOCKED: guardrail unit tests failed (tests/guardrails)"
     exit 1
   fi

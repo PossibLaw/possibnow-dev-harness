@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PreToolUse hook for Bash — blocks destructive commands, escalates risky ones,
-and refuses `git commit` while the shared .agent/HANDOFF.md is untracked or unstaged."""
+and refuses `git commit` while the shared project continuity is ignored, untracked, or unstaged."""
 
 import json
 import re
@@ -97,22 +97,35 @@ def _abs_path_covers(tok_abs, handoff_abs):
         current = parent
 
 
-def _add_covers(add_args, add_dir, toplevel, untracked):
+def _add_covers(add_args, add_dir, toplevel, untracked, rel=HANDOFF_REL):
     """Does `git add <add_args>` (run from add_dir) stage the handoff? Untracked files
     are only picked up by explicit paths, `.`/`:/`, or -A/--all — never by -u/--update.
     Relative pathspecs are resolved the way git does: relative to add_dir's prefix
     inside the repo, so no raw path strings are ever compared."""
+    add_root = _run_git(add_dir, "rev-parse", "--show-toplevel")
+    if not add_root or not os.path.samefile(add_root.strip(), toplevel):
+        return False
+    if any(x in add_args for x in ("-n", "--dry-run", "-N", "--intent-to-add", "-p", "--patch", "-i", "--interactive")):
+        return False
+    if any(x.startswith((":!", ":^", ":(exclude")) for x in add_args):
+        return False
+    paths = [x for x in add_args if not x.startswith("-")]
+    update_only = any(x in add_args for x in ("-u", "--update"))
+    if update_only and untracked:
+        return False
     prefix = _run_git(add_dir, "rev-parse", "--show-prefix")
     if prefix is None:
         return False
     prefix = prefix.strip()
-    handoff_from_add_dir = os.path.relpath(HANDOFF_REL, prefix) if prefix else HANDOFF_REL
-    handoff_abs = os.path.join(toplevel, *HANDOFF_REL.split("/"))
+    handoff_from_add_dir = os.path.relpath(rel, prefix) if prefix else rel
+    handoff_abs = os.path.join(toplevel, *rel.split("/"))
     for tok in add_args:
         if tok in ("-A", "--all", "--no-ignore-removal"):
-            return True
+            if not paths:
+                return True
+            continue
         if tok in ("-u", "--update"):
-            if not untracked:
+            if not untracked and not paths:
                 return True
             continue
         if tok.startswith("-"):
@@ -136,7 +149,14 @@ def _add_covers(add_args, add_dir, toplevel, untracked):
 def _commit_includes_all(commit_args):
     """`git commit -a` / `--all` (also combined short flags like -am) stages
     modified tracked files, but never untracked ones."""
+    skip = False
     for tok in commit_args:
+        if skip:
+            skip = False
+            continue
+        if tok in ("-m", "--message", "-F", "--file", "--author", "--date"):
+            skip = True
+            continue
         if tok == "--all":
             return True
         if tok.startswith("-") and not tok.startswith("--") and "a" in tok[1:]:
@@ -144,67 +164,97 @@ def _commit_includes_all(commit_args):
     return False
 
 
+CONTINUITY_NAMES = {"HANDOFF.md", "HISTORY.md", "PLAN.md", "CONTEXT.md", "TASKS.md",
+                    "TEST.md", "REVIEW.md", "LEARNINGS.md", "WIKI.md", "CONTINUITY.md",
+                    "OPTIMIZATION.md"}
+
+
+def _is_continuity(rel):
+    if rel in (".claude/history.md", "HISTORY.md"):
+        return True
+    if not rel.startswith(".agent/") or not rel.endswith(".md"):
+        return False
+    tail = rel[len(".agent/"):]
+    return (tail in CONTINUITY_NAMES or tail.startswith("CONTENT-")
+            or tail.startswith(("archive/", "archives/")))
+
+
+def _continuity_paths(root):
+    # Include tracked deletions and ignored named continuity, but not arbitrary
+    # private notes, logs, credentials or symlinked directories.
+    tracked = _run_git(root, "ls-files", "-z", "--", ".agent", ".claude/history.md", "HISTORY.md") or ""
+    paths = {p for p in tracked.split("\0") if _is_continuity(p)}
+    agent_dir = os.path.join(root, ".agent")
+    if not os.path.islink(agent_dir):
+        for directory, dirs, files in os.walk(agent_dir, followlinks=False):
+            dirs[:] = [d for d in dirs if not os.path.islink(os.path.join(directory, d))]
+            for name in files:
+                rel = os.path.relpath(os.path.join(directory, name), root).replace(os.sep, "/")
+                if _is_continuity(rel):
+                    paths.add(rel)
+    for rel in (".claude/history.md", "HISTORY.md"):
+        if os.path.isfile(os.path.join(root, rel)):
+            paths.add(rel)
+    return sorted(paths)
+
+
+def _path_limited_commit(args):
+    skip = False
+    for arg in args:
+        if skip:
+            skip = False
+            continue
+        if arg in ("-m", "--message", "-F", "--file", "--author", "--date", "-C", "-c", "--reuse-message", "--reedit-message") or re.fullmatch(r"-[a-zA-Z]*[mF]", arg):
+            skip = True
+        elif arg in ("--", "--only", "-o", "--include", "-i") or not arg.startswith("-"):
+            return True
+    return False
+
+
 def check_handoff_commit(command, cwd):
-    """Return a BLOCKED message when `git commit` would leave the shared
-    handoff untracked or with unstaged edits; otherwise None.
+    """Best-effort guard for common direct git commands, not a shell sandbox.
 
-    Never raises: any unexpected condition (not a git repo, no handoff file,
-    git unavailable) means the commit is allowed."""
+    Require changed named continuity and archives in the commit. Complex shell
+    wrappers still rely on the shared contract and review.
+    """
     try:
-        tokens = _tokenize(command)
-        segments = _segments(tokens)
         base_dir = cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-
-        add_segments = []
-        for segment in segments:
+        adds = []
+        for segment in _segments(_tokenize(command)):
             parsed = _parse_git_segment(segment)
             if not parsed:
                 continue
             sub, args, chdir = parsed
             repo_dir = os.path.normpath(os.path.join(base_dir, chdir)) if chdir else base_dir
             if sub == "add":
-                add_segments.append((args, repo_dir))
+                adds.append((args, repo_dir))
                 continue
             if sub != "commit":
                 continue
-
-            toplevel = _run_git(repo_dir, "rev-parse", "--show-toplevel")
-            if not toplevel:
-                return None
-            toplevel = toplevel.strip()
-            handoff_abs = os.path.join(toplevel, *HANDOFF_REL.split("/"))
-            if not os.path.isfile(handoff_abs):
-                return None
-
-            status = _run_git(toplevel, "status", "--porcelain", "--untracked-files=all", "--", HANDOFF_REL)
-            if status is None or not status.strip():
-                return None
-            xy = status.splitlines()[0][:2]
-            untracked = xy == "??"
-            unstaged_edit = (not untracked) and xy[1] == "M"
-            if not (untracked or unstaged_edit):
-                return None
-
-            staged_inline = any(
-                _add_covers(add_args, add_dir, toplevel, untracked) for add_args, add_dir in add_segments
-            )
-            if staged_inline:
-                return None
-            if unstaged_edit and _commit_includes_all(args):
-                return None
-
-            if untracked:
-                return (
-                    f"BLOCKED: {HANDOFF_REL} is untracked, so this commit would leave the shared "
-                    f"handoff behind. Refresh the Current Baton, then run: "
-                    f"git add {HANDOFF_REL} -- and retry the commit."
-                )
-            return (
-                f"BLOCKED: {HANDOFF_REL} has unstaged edits, so this commit would ship a stale "
-                f"handoff. Run: git add {HANDOFF_REL} -- then retry the commit (or use git commit -a)."
-            )
+            root = _run_git(repo_dir, "rev-parse", "--show-toplevel")
+            if not root:
+                continue
+            root = root.strip()
+            for rel in _continuity_paths(root):
+                if _run_git(root, "check-ignore", rel):
+                    return f"BLOCKED: {rel} is ignored. Review sensitive content and narrow its obsolete ignore rule before committing continuity."
+                status = _run_git(root, "status", "--porcelain", "-z", "--untracked-files=all", "--", rel)
+                if not status:
+                    continue
+                xy = status[:2]
+                if _path_limited_commit(args):
+                    return f"BLOCKED: a path-limited commit could omit changed continuity {rel}. Stage reviewed continuity and use an ordinary git commit."
+                untracked = xy == "??"
+                unstaged = not untracked and xy[1] != " "
+                if not (untracked or unstaged):
+                    continue
+                inline = any(_add_covers(a, where, root, untracked, rel) for a, where in adds)
+                if inline or (unstaged and _commit_includes_all(args)):
+                    continue
+                reason = "untracked" if untracked else "unstaged edits"
+                return f"BLOCKED: {rel} has {reason}. Review for sensitive content, then run: git add {rel} -- and retry the commit."
         return None
-    except Exception:  # noqa: BLE001 - a guardrail must never break the tool call
+    except Exception:
         return None
 
 

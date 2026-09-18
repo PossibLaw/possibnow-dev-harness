@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Advisory continuity-checkpoint printer (single-file continuity model).
-# It prints the PLAN/HANDOFF updates you should make. It does NOT write state
+# Advisory continuity-checkpoint printer (current/history continuity model).
+# It prints the PLAN/HANDOFF/HISTORY updates you should make. It does NOT write state
 # and does NOT call any backend.
 
 usage() {
@@ -91,7 +91,9 @@ echo "Required updates (make these yourself; this helper does not write state):"
 echo "  1. Update $PLAN_FILE (milestone/sprint status, assumptions, task checklist)"
 echo "  2. Update $HANDOFF_FILE:"
 echo "       - refresh the Current Baton at the top (decisions, open questions, next actions)"
-echo "       - prepend a short dated entry to the Session Timeline below the STOP marker"
+echo "       - first archive the exact old handoff in .agent/HISTORY.md and verify its hash"
+echo "       - keep all historical checkpoints out of the current HANDOFF"
+echo "  Commit all sanitized changed continuity with the work; verify delivery on remote main."
 
 if [[ "$LEARNING_MODE" == "CAPTURE" || "$LEARNING_MODE" == "APPLY" ]]; then
   echo "  3. Append $LEARNINGS_FILE (Learning Mode: $LEARNING_MODE; promote only gated lessons)"

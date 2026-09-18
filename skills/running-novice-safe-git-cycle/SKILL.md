@@ -1,38 +1,16 @@
 ---
 name: running-novice-safe-git-cycle
-description: Use when work is ready to ship and the developer needs a novice-safe git workflow; review scope, run checks, refresh the shared handoff plus local working state, and move through commit, push, and PR steps without leaking secrets or local state files.
+description: Review scope, validate, and deliver code plus sanitized current and historical continuity through the authorized Git workflow.
 metadata:
-  version: 1.1.0
+  version: 2.0.0
 ---
 
 # Running Novice-Safe Git Cycle
 
-## Inputs
-- changed files
-- relevant validation commands and receipts
-- current handoff status
+1. Inspect status and diff to isolate the requested work and preserve unrelated changes.
+2. Run relevant checks; record actual receipts and unresolved failures.
+3. Follow `docs/workflows/contracts.md` to archive the old handoff in HISTORY before refreshing the current HANDOFF. Update related plan, context, tasks, test/review summaries, learnings, wiki, content continuity, and existing project history when relevant.
+4. Review the exact candidate files for secrets and raw sensitive data. Stage explicit reviewed paths, including all changed continuity and archives. Do not force-add ignored directories, credentials, logs, or caches.
+5. Make a focused commit; push and complete the authorized PR/merge workflow. Verify code and continuity on remote main before claiming delivery. If approval or checks block merging, keep that state explicit.
 
-## Steps
-1. Inspect `git status --short` and `git diff --stat` to confirm scope.
-2. Remove accidental files, debug leftovers, secrets, unrelated changes, and local `.agent/*` working state other than `.agent/HANDOFF.md` from the candidate commit.
-3. Run the smallest relevant checks first, then the full required checks for the change.
-4. Refresh canonical newest-first state in `.agent/PLAN.md` and `.agent/HANDOFF.md` (current baton + timeline), review the handoff for sensitive data, then stage it explicitly with `git add .agent/HANDOFF.md` — every commit must carry the current handoff (in Claude Code the guardrail blocks a commit that leaves it untracked or unstaged).
-5. Leave git-cycle status explicit in the handoff: reviewing, ready to commit, committed, pushed, or PR open.
-6. Create a focused commit with a descriptive message.
-7. Push the branch and open or update the PR when a remote workflow exists.
-
-## Outputs
-- clean staged scope
-- validation evidence captured
-- shared handoff refreshed and included; local working state excluded
-- next git step obvious to a novice developer
-
-## Common Mistakes
-- omitting a relevant `.agent/HANDOFF.md` update and leaving collaborators with stale continuity
-- running `git commit` before `git add .agent/HANDOFF.md` (blocked by the Claude Code guardrail; a contract violation everywhere else)
-- committing local `.agent/*` working state other than `.agent/HANDOFF.md`
-- committing secrets, raw private client data, or machine-specific paths in the shared handoff
-- creating sidecar continuity files instead of updating the canonical files
-- skipping the checkpoint before a commit
-- mixing unrelated changes into one commit
-- claiming checks passed without receipts
+Do not exclude project continuity under an obsolete local-only rule, overwrite another contributor's edits, discard historical handoffs, or claim unrun checks passed. The command guard covers common direct Git commands, not every shell wrapper; inspect the staged diff yourself.

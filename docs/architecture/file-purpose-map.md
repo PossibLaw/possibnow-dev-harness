@@ -16,7 +16,8 @@
 - `.agent/PLAN.md`: planning artifact template (objective, assumptions, and task checklist — absorbs the former CONTEXT and TASKS files).
 - `.agent/REVIEW.md`: review + security checklist.
 - `.agent/TEST.md`: validation matrix and security checks.
-- `.agent/HANDOFF.md`: single continuity file — Current Baton on top, newest-first Session Timeline below a STOP marker (absorbs the former `.claude/history.md`).
+- `.agent/HANDOFF.md`: current checkpoint only.
+- `.agent/HISTORY.md`: exact archived handoffs, loaded on demand; preserves legacy historical records.
 - `.agent/WIKI.md`: optional Tier-2 wiki-mode config (vault path, wiki root, sync rules).
 - `.agent/LEARNINGS.md`: optional, validation-gated learning log for reusable observations and improvement proposals.
 - `.agent/integrations/*`: local advisory checkpoint helper (`run-checkpoint.sh`) that prints the required PLAN/HANDOFF updates; it does not write state or call a backend.

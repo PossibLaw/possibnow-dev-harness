@@ -72,3 +72,6 @@ Never do:
 ## Completion Contract
 - Return `DONE` only when acceptance checks pass.
 - If blocked, return `BLOCKED: <reason>` plus attempted steps and next action.
+
+## Shared Project Continuity
+Commit sanitized current and historical handoffs, plans, context/tasks, test/review summaries, learnings, wiki, content continuity, archives, and existing project history with their work. Keep credentials, environment files, locks, and raw runtime caches private. Use HANDOFF for current state and HISTORY for exact archived checkpoints. Archive and verify before replacement; verify authorized delivery on remote main. Do not sweep other repositories or overwrite another tool's settings to enforce this policy.

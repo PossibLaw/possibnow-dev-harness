@@ -5,7 +5,7 @@ Repo Root (absolute path, required): /path/to/your/repo
 Cross-tool project instruction file for <PROJECT_NAME>. This mirrors `CLAUDE.md`; keep the two in sync.
 
 ## Two Tiers (How This Pack Grows With You)
-- **Tier 1 — Starter (default):** small-app workflow — `PLAN → TEST → REVIEW → HANDOFF`, single-file continuity, guardrails, and the simplicity ladder. Everything most projects need.
+- **Tier 1 — Starter (default):** small-app workflow — `PLAN → TEST → REVIEW → HANDOFF`, current/historical continuity, guardrails, and the simplicity ladder. Everything most projects need.
 - **Tier 2 — Scale (gated as the codebase grows):** indexed retrieval (Graphify), wiki orientation, deeper review. When a repo gets large the harness suggests Scale mode; you opt in. Tier 2 adds to Tier 1, never removes it.
 
 ## Startup Contract
@@ -15,9 +15,10 @@ Cross-tool project instruction file for <PROJECT_NAME>. This mirrors `CLAUDE.md`
    - Planning request → `.agent/PLAN.md`
    - Test request → `.agent/TEST.md`
    - Review request → `.agent/REVIEW.md`
-   - Handoff, resume, or parallel worktree → `.agent/HANDOFF.md` (single continuity file: read the top, stop at the STOP marker)
+   - Handoff, resume, or parallel worktree → `.agent/HANDOFF.md` (current checkpoint only; historical questions load a specific HISTORY entry)
    - Contract workflow, artifact schema, or stage handoff questions → `docs/workflows/contracts.md`
    - Token/context budget questions → `docs/workflows/token-management.md`
+   - Optimize configuration or `/possibnow-dev-harness:optimize` → `docs/workflows/optimization.md`
    - Role workflow, routing, or specialization questions → `docs/roles/README.md` plus the relevant role file in `docs/roles/`
    - Codebase has grown / "index this code" / large existing repo → `docs/workflows/graphify.md` (Scale mode, Tier 2)
    - Wiki mode, Obsidian vault path, or persistent knowledge questions → `.agent/WIKI.md` and `docs/workflows/wiki.md` (Tier 2)
@@ -31,9 +32,9 @@ Cross-tool project instruction file for <PROJECT_NAME>. This mirrors `CLAUDE.md`
 
 ## Token Discipline (Always On)
 Keep context small (full guide: `docs/workflows/token-management.md`):
-- On resume, read only the top of `.agent/HANDOFF.md` and stop at the STOP marker.
+- On resume, read the current `.agent/HANDOFF.md`; historical checkpoints stay in `.agent/HISTORY.md`.
 - Load the trigger files in the Startup Contract on demand — never read the whole repo or all docs at startup.
-- Keep stable blocks (this file, `.agent/PLAN.md`) stable within a session so prompt caching keeps paying off.
+- Keep genuinely stable instruction blocks stable; update PLAN whenever the facts change.
 - Apply the simplicity ladder (below) — less generated code is less to read, review, and maintain.
 - At Tier 2, query the Graphify index instead of re-reading source files.
 
@@ -47,8 +48,8 @@ Analyze thoroughly; build minimally.
 2. If the resolved root is under `/tmp`, `/var/folders`, or any OS temp directory, return `BLOCKED` and ask for the real repo root.
 3. If multiple repo roots or worktrees are possible, ask the user which repo root to use.
 4. If the repo root cannot be resolved, ask the user for the absolute repo root path and do not write any state files until confirmed.
-5. Always write continuity only to `${REPO_ROOT}/.agent/PLAN.md` and `${REPO_ROOT}/.agent/HANDOFF.md`.
-6. Never create alternate continuity sidecars such as handoff append files or a separate history file.
+5. Use the canonical continuity files under `${REPO_ROOT}/.agent/`, including current HANDOFF and historical HISTORY.
+6. Do not create competing current handoffs; HISTORY is the canonical archive of previous handoffs.
 7. Keep newest-first continuity and stop-boundary rules from `docs/workflows/contracts.md`.
 8. If `.agent/` is missing, return `BLOCKED` and ask for permission to create it under `${REPO_ROOT}`.
 9. When saving, print the absolute path used; if it is not under `${REPO_ROOT}`, stop and ask for correction.
@@ -59,26 +60,22 @@ Analyze thoroughly; build minimally.
 - Shared contracts in `docs/roles/`, `docs/workflows/`, and `docs/vendor/` apply to every tool.
 
 ## Session Memory
-Continuity lives in one shared, version-controlled file: `${REPO_ROOT}/.agent/HANDOFF.md`.
+Current continuity lives in `${REPO_ROOT}/.agent/HANDOFF.md`; previous checkpoints are preserved in `${REPO_ROOT}/.agent/HISTORY.md`. Both are version-controlled.
 
 Before pausing, handing off, or moving into a git cycle, refresh:
 - `${REPO_ROOT}/.agent/PLAN.md` milestone status and sprint status.
-- `${REPO_ROOT}/.agent/HANDOFF.md`: update the **Current Baton** at the top, and prepend a short dated entry to the **Session Timeline** below the STOP marker.
+- `${REPO_ROOT}/.agent/HANDOFF.md`: archive and verify the old checkpoint in HISTORY, then write the new Current Baton.
 - `${REPO_ROOT}/.agent/LEARNINGS.md` only when `Learning Mode` is `CAPTURE` or `APPLY`, and only for gated lessons.
 
-When resuming prior work, read the Current Baton of `${REPO_ROOT}/.agent/HANDOFF.md` first and stop at the STOP marker.
+When resuming prior work, read the current `${REPO_ROOT}/.agent/HANDOFF.md`; load history only when specifically needed.
 
-## Shared Handoff and Local Working State
-- `.agent/HANDOFF.md` is version-controlled and **must be committed with every change it describes** — teammates and other coding agents receive the current baton only through git. Before every `git commit`, refresh the Current Baton and run `git add .agent/HANDOFF.md`; never leave the handoff untracked or with unstaged edits.
-- In Claude Code, the harness guardrail (`validate-bash`) blocks `git commit` while `.agent/HANDOFF.md` is untracked or has unstaged edits. Codex and other AGENTS.md-aware tools have no runtime hook, so they follow the same rule by contract.
-- Keep these working-state files local and out of commits/PRs:
-  - `.agent/PLAN.md`
-  - `.agent/REVIEW.md`
-  - `.agent/TEST.md`
-  - `.agent/WIKI.md`
-  - `.agent/LEARNINGS.md`
-- Before committing the handoff, remove credentials, secrets, raw private client data, and machine-specific paths; use `UNCONFIRMED` or a portable placeholder when needed.
-- When concurrent handoff edits conflict, preserve valid entries from each contributor and restore the required newest-first order.
+## Shared Continuity (Committed with Work)
+- Keep one current `.agent/HANDOFF.md` and preserve previous checkpoints in `.agent/HISTORY.md`.
+- Archive the exact prior handoff with an ID and SHA-256 hash; verify preservation before replacement. Preserve legacy history and active constraints.
+- Commit all relevant continuity with the work: handoff/history, plan/context/tasks, test/review summaries, learnings, wiki, content continuity, archives, and an existing project history.
+- Review and sanitize before staging explicit files. Secrets, environment files, transient locks, and raw runtime caches stay private.
+- Push and merge continuity with its work, then verify remote main before claiming a shared handoff is complete.
+- The Claude Bash guard checks common direct commits for omitted named continuity; other hosts follow this contract. It is not a shell security sandbox.
 
 ## Optional Learning Loop (Default OFF, Validation-Gated)
 - Default: `Learning Mode` is `OFF`.
@@ -113,7 +110,7 @@ When resuming prior work, read the Current Baton of `${REPO_ROOT}/.agent/HANDOFF
 
 ## Continuity Checkpoint Contract
 - Canonical source: `docs/workflows/contracts.md` (Continuity Checkpoints section).
-- Quick summary: run a checkpoint at sprint close, before a git cycle, before ending the session, and when context feels ~50% full. Each checkpoint updates `.agent/PLAN.md` and `.agent/HANDOFF.md` (Current Baton + a prepended Session Timeline entry), and `.agent/LEARNINGS.md` when learning mode is enabled.
+- Quick summary: run a checkpoint at sprint close, before a git cycle, before ending the session, and when context pressure risks losing current state. Each checkpoint updates `.agent/PLAN.md` and current `.agent/HANDOFF.md` and historical `.agent/HISTORY.md`, and `.agent/LEARNINGS.md` when learning mode is enabled.
 - If present, the optional helper `.agent/integrations/run-checkpoint.sh` prints the required updates as a checklist; it does not write state for you.
 
 ## Scale Mode (Tier 2, Default OFF)
@@ -166,14 +163,14 @@ Never do:
 - Use focused branches and atomic commits.
 - Attach validation evidence to PRs/handoffs.
 - Never commit credentials.
-- Always commit `.agent/HANDOFF.md` with the work (`git add .agent/HANDOFF.md` before every `git commit`); keep other `.agent/*` working-state files local unless the user explicitly changes that policy.
+- Stage all reviewed changed continuity with the work, including HANDOFF and HISTORY. Keep only secrets and raw runtime state private.
 - For novice-safe shipping, run this order:
   1. `git status --short`
   2. review `git diff --stat` and files changed
   3. run relevant checks
-  4. refresh the PLAN + HANDOFF checkpoint, then `git add .agent/HANDOFF.md`
+  4. refresh the PLAN + HANDOFF checkpoint, then stage reviewed changed continuity explicitly
   5. commit a focused change
-  6. push the branch and open or update a PR when a remote exists
+  6. push the branch, complete the authorized merge, and verify remote main when a remote exists
 - If the local helper exists, prefer `.agent/integrations/run-checkpoint.sh --reason pre-git-cycle`.
 
 ## Local Norms
