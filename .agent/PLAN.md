@@ -1,7 +1,7 @@
 ---
 contract_version: 1
 artifact_type: plan
-status: IN_PROGRESS
+status: COMPLETE
 depends_on: []
 produces: [eval_ids, release_scope]
 feeds_into: [.agent/TEST.md]
@@ -45,10 +45,10 @@ mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
 
 ## Milestones
 
-Implementation complete; local verification and release review in progress.
-Publish v4.2.1 only after full verification and CI pass. Preserve all sanitized
-continuity with work and verify remote main. Record post-publication smoke evidence
-in the GitHub release notes so the immutable tag is not moved after verification.
+Implementation, 212-test local/CI verification, PR merges, and v4.2.1 publication
+are complete. E10 public smoke passed against the tagged commit, including rollback.
+See RELEASE-4.2.1.md and the published GitHub Release verification receipt.
+No installed project migration is implied; preserved custom files need reviewed apply.
 
 ## Learning Mode
 - Mode: `OFF` (existing task default)
@@ -62,3 +62,5 @@ tag passed public install/preservation/repeat checks but failed rollback on a
 macOS /var versus /private/var root alias. No pre-existing file was changed/deleted.
 Ship patch v4.2.1 after alias/internal-symlink regression tests and the same public smoke.
 Do not move v4.2.0. No GitHub Release was published for that failed candidate tag.
+
+Published-tag correction completed: v4.2.1 passed and was published; v4.2.0 remains unchanged.

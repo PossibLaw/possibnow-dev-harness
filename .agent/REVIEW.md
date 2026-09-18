@@ -10,7 +10,7 @@ memory:
   tags: [review, security]
 ---
 
-# 4.2.0 Review
+# 4.2.1 Review
 
 Reviewed requirement preservation against docs/architecture/rule-ownership.md and
 E1-E10 in TEST.md. Root adapters have one authoring source and meaningful task
@@ -58,3 +58,5 @@ only the chosen target-root alias before deriving the receipt-relative path; kee
 safe_path checks on every internal component. Do not resolve the receipt directly
 and hide an internal symlink. Candidate tag v4.2.0 remains immutable; v4.2.1 must
 pass the public smoke before release publication.
+
+Publication review complete: the actual v4.2.1 public-tag smoke passed and the release is published. See RELEASE-4.2.1.md.

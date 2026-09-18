@@ -1,8 +1,8 @@
 ---
 contract_version: 1
 artifact_type: handoff
-status: READY_TO_RELEASE
-depends_on: [.agent/PLAN.md, .agent/TEST.md, .agent/REVIEW.md]
+status: COMPLETE
+depends_on: [.agent/PLAN.md, .agent/TEST.md, .agent/REVIEW.md, .agent/RELEASE-4.2.1.md]
 produces: [next_actions, historical_checkpoint_link]
 feeds_into: []
 memory:
@@ -10,38 +10,38 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — 4.2.1
+# Current Handoff — v4.2.1 published
 
 ## Status
-Compact portable harness implementation is validated: 212 tests, plugin/skill
-validators, and diff checks passed. AGENTS and CLAUDE are each 65 physical lines.
-Root-alias rollback regression is fixed. Release delivery is in progress on fix/portable-rollback-release.
+Release v4.2.1 is published from ffe828e765d687fc63a6e8fff0a2382e40de0ea5.
+PRs #11/#12 are merged; local and CI verification passed with 212 tests.
+Both project entries are 65 physical lines. Public double-pinned bootstrap smoke
+passed preservation, read-only preview, idempotency, exact commit, and rollback.
 
 ## Unresolved work
-- Merge with passing CI; publish v4.2.1 and verify the double-pinned remote bootstrap
-  on a disposable customized fixture before providing the final update command.
-- Live Codex/Claude/Cursor behavior and semantic optimize apply remain UNCONFIRMED.
-- Marketplace distribution is separate; no external marketplace repository was changed.
+- Customized installed projects remain pending their own reviewed migration;
+  downloading the release does not complete it. No real installed project was modified.
+- Live client compliance and semantic optimize apply remain UNCONFIRMED.
+- Marketplace publication remains separate; no external marketplace repo was changed.
 
 ## Active constraints
-- Work only in the harness source; no Aleph or other installed project modifications.
-- Existing project-specific policy/state stays intact until a reviewed migration.
-- <=150 physical lines per shipped/new root is project policy, not a savings claim.
-- Do not change models, effort, globals, permissions, learning modes, or Scale.
-- No paid model comparison. Test installation/migration only in disposable fixtures.
-- Preserve legacy/recovered archives and all sanitized continuity with the work.
-- Before checkout updates inspect ignored continuity and use --no-overwrite-ignore.
+- Preserve project-specific routes/commands/content constraints and all continuity.
+- <=150 physical lines per shipped/new entry is project policy, not a savings claim.
+- No incidental model/effort/global/permission/learning/Scale changes or paid model evals.
+- Use disposable fixtures for installer/migration testing, never real projects.
+- Preserve legacy/recovered archives and all related sanitized continuity with work.
+- Inspect ignored continuity before checkout updates; use --no-overwrite-ignore.
+- Keep release tags immutable. v4.2.0 failed a final rollback portability gate;
+  v4.2.1 includes the verified correction and is the recommended release.
 
 ## Evidence
-- .agent/TEST.md: E1-E10 receipts and limitations; .agent/REVIEW.md: security review.
-- docs/architecture/rule-ownership.md: authoritative policy homes and contradictions.
-- Previous checkpoint: checkpoint-c3fbb0796e0fbbc964c727b85b064ba844d8639e2d94f26f3193ffbdf3b756a8 in HISTORY, exact bytes verified.
+- RELEASE-4.2.1.md: public release URL, commit, bootstrap hash and actual smoke receipt.
+- TEST.md: E1-E10 and separate line/word/byte metrics; REVIEW.md: security assessment.
+- docs/architecture/rule-ownership.md: current authoritative guidance homes.
+- Previous checkpoint: checkpoint-6d4bbad1154ecf70171e3136fe9cf434969439f9ffa28272cc9d4ebf094221d5 in HISTORY; exact bytes verified.
 
 ## Next actions
-1. Complete PR/CI/merge and v4.2.1 publication.
-2. Verify published script/pack commit, then record publication evidence and provide
-   the pinned update, reviewed optimize migration, and guarded rollback commands.
-3. Installed project owners review pending customized files; downloading alone does
-   not complete their migration. Keep semantic/live-client limits explicit.
-
-Checkpoint time: 2026-09-18T17:10:09.004880+00:00
+1. Existing-project owners use the pinned v4.2.1 update in RELEASE-4.2.1.md.
+2. Follow its versioned optimization policy in read-only check mode; apply only
+   the reviewed proposal. Preserve custom files and active constraints during migration.
+3. Keep live-client/marketplace limitations explicit until separately verified.
