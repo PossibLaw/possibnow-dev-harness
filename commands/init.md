@@ -16,7 +16,8 @@ Bootstrap the **current working directory** with PossibNow Dev Harness project f
 - `docs/roles/*.md` — six canonical role contracts (product-strategist, engineering-planner, reviewer, security-reviewer, qa-validator, docs-releaser)
 - `docs/workflows/{evals,contracts,wiki,graphify,token-management,optimization}.md`
 - `docs/glossary.md` and `docs/vendor/*.md`
-- `.claude/skills/{closing-sprint-and-syncing-state,running-novice-safe-git-cycle,applying-simplicity-ladder,scaling-up-with-graphify}/SKILL.md` — project-local copies for Codex parity
+- `.claude/skills/{closing-sprint-and-syncing-state,running-novice-safe-git-cycle,applying-simplicity-ladder,scaling-up-with-graphify}/SKILL.md` — project-local Claude workflow skills
+- `.agents/skills/` — Codex-discoverable copies of those four workflows plus Scale, Guardrails, and Optimize equivalents
 - `.agent/HANDOFF.md` remains trackable for team continuity and must ship with every commit (the Claude Code guardrail blocks `git commit` while it is untracked or unstaged); all related sanitized continuity ships with the work
 
 ## What it does NOT touch
@@ -48,7 +49,7 @@ If the script reports `DONE: project files installed into <path>`, remind the us
 > 1. Review the diff: `git status && git diff`
 > 2. Commit the shared governance, templates, and all related sanitized continuity so other contributors receive the current checkpoint and historical context. Review the handoff first and remove credentials, secrets, raw private client data, and machine-specific paths:
 >    ```
->    git add AGENTS.md CLAUDE.md docs/ .agent/PLAN.md .agent/TEST.md .agent/REVIEW.md .agent/HANDOFF.md .agent/HISTORY.md .agent/WIKI.md .agent/LEARNINGS.md .agent/integrations/ .claude/skills/ .gitignore
+>    git add AGENTS.md CLAUDE.md docs/ .agent/PLAN.md .agent/TEST.md .agent/REVIEW.md .agent/HANDOFF.md .agent/HISTORY.md .agent/WIKI.md .agent/LEARNINGS.md .agent/integrations/ .claude/skills/ .agents/skills/ .gitignore
 >    ```
 >    ```
 >    git commit -m "Add PossibNow Dev Harness governance + workflow templates"

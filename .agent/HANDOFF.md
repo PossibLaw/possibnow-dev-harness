@@ -12,14 +12,12 @@ memory:
 
 # Current Handoff
 
-Checkpoint: 4.1.0 optimization and shared continuity, September 18, 2026.
+Checkpoint: Codex workflow parity, September 18, 2026.
 
-Implemented `/possibnow-dev-harness:optimize` as a preview-first agent workflow with reviewed apply, bundled policy 2026-09-18.1, unchanged incumbent models without quality evidence, validation, and rollback. All relevant sanitized continuity now ships with the work. HANDOFF is current-only; HISTORY preserves exact old checkpoints. The installer preserves existing state on every rerun, makes dry-run read-only, and retires exact obsolete ignore rules. The direct Git guard covers named continuity, content records, historical archives, and existing history; it is best-effort, not a general shell security boundary.
+The harness now has four Codex project skills corresponding to its Claude commands: Init, Scale, Guardrails, and Optimize. The project installer places Scale, Guardrails, Optimize, and the four existing workflow skills in `.agents/skills/` of target repos. Init lives in the harness clone, where its bundled installer is available. Codex invokes these with `$name`; Claude retains its namespaced slash commands. The informational Guardrails skill does not enforce Claude hooks in Codex.
 
-Validation: 172 tests passed through scripts/verify-pack.sh, including new installer and commit-guard regressions. Plugin manifest validation and both revised skill validators passed. No paid agent/model eval or live target migration was performed.
+Validation: `scripts/verify-pack.sh` passed with 172 tests, including skill delivery and symlinked `.agents` preflight rejection. Four new skills passed `quick_validate.py`; `git diff --check` passed. A live Codex skill invocation and plugin distribution remain UNCONFIRMED.
 
-Next: after updating the plugin, project owners run `/optimize` to review their migration. Marketplace distribution must identify 4.1.0; verify remote main during release. Do not silently migrate existing projects or alter global model defaults.
+Next: deliver this change with its PLAN, TEST, REVIEW, HANDOFF, and HISTORY files, then verify remote main. Project owners must update an installed pack to receive the new skills; existing projects are not silently migrated. The v4.1.0 optimization policy and previous release context remain in HISTORY.
 
-Previous handoff is preserved verbatim and hash-verified in HISTORY.md. PLAN, TEST, and REVIEW hold the implementation evidence and limitations.
-
-Recovered pre-release local continuity is preserved under `.agent/archives/`; see HISTORY.md for provenance and the sync limitation. Future checkout updates must use `--no-overwrite-ignore` and inspect ignored continuity first.
+The previous HANDOFF is preserved verbatim and hash-verified in HISTORY. Prior recovered continuity remains under `.agent/archives/` as described there.

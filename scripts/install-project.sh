@@ -339,7 +339,7 @@ assert_local_write_path() {
   done
 }
 
-for path in "$TARGET_DIR/.agent" "$TARGET_DIR/.claude" "$TARGET_DIR/docs" "$TARGET_DIR/.gitignore"; do
+for path in "$TARGET_DIR/.agent" "$TARGET_DIR/.agents" "$TARGET_DIR/.claude" "$TARGET_DIR/docs" "$TARGET_DIR/.gitignore"; do
   assert_local_write_path "$path"
 done
 
@@ -481,6 +481,12 @@ copy_with_backup "$REPO_ROOT/skills/closing-sprint-and-syncing-state/SKILL.md" "
 copy_with_backup "$REPO_ROOT/skills/running-novice-safe-git-cycle/SKILL.md" "$TARGET_DIR/.claude/skills/running-novice-safe-git-cycle/SKILL.md" ".claude/skills/running-novice-safe-git-cycle/SKILL.md"
 copy_with_backup "$REPO_ROOT/skills/applying-simplicity-ladder/SKILL.md" "$TARGET_DIR/.claude/skills/applying-simplicity-ladder/SKILL.md" ".claude/skills/applying-simplicity-ladder/SKILL.md"
 copy_with_backup "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "$TARGET_DIR/.claude/skills/scaling-up-with-graphify/SKILL.md" ".claude/skills/scaling-up-with-graphify/SKILL.md"
+for skill in closing-sprint-and-syncing-state running-novice-safe-git-cycle applying-simplicity-ladder scaling-up-with-graphify; do
+  copy_with_backup "$REPO_ROOT/skills/$skill/SKILL.md" "$TARGET_DIR/.agents/skills/$skill/SKILL.md" ".agents/skills/$skill/SKILL.md"
+done
+for skill in possibnow-scale possibnow-guardrails possibnow-optimize; do
+  copy_with_backup "$REPO_ROOT/.agents/skills/$skill/SKILL.md" "$TARGET_DIR/.agents/skills/$skill/SKILL.md" ".agents/skills/$skill/SKILL.md"
+done
 ensure_state_ignore_policy
 
 if [[ "$DRY_RUN" -eq 0 ]]; then

@@ -10,7 +10,7 @@ It was built by distilling hundreds of pages of best-practice references (captur
 
 ## Deploy It (Start Here)
 
-Pick one path. **Both scaffold the same files** (`AGENTS.md`, `CLAUDE.md`, `.agent/*`, `docs/roles/`, `docs/workflows/`, `.claude/skills/`) into your repo and auto-detect your stack (Node/Python/Go/Rust) to pre-fill test/lint/build commands.
+Pick one path. **Both scaffold the same files** (`AGENTS.md`, `CLAUDE.md`, `.agent/*`, `docs/roles/`, `docs/workflows/`, `.claude/skills/`, `.agents/skills/`) into your repo and auto-detect your stack (Node/Python/Go/Rust) to pre-fill test/lint/build commands.
 
 ### Path A — One-line install into any repo (recommended)
 
@@ -51,11 +51,18 @@ The plugin also adds runtime guardrails (destructive-command blocker, sensitive-
 |---|---|---|
 | **Assistant** | Claude, Codex, Cursor, any `AGENTS.md` tool | Claude Code only |
 | **Install** | One `curl` command, per repo | Marketplace install once, then `/init` per repo |
-| **Adds slash commands** | No | Yes (`/possibnow-dev-harness:*`) |
+| **Adds Claude slash commands** | No | Yes (`/possibnow-dev-harness:*`) |
+| **Adds Codex skills** | Yes, in the target repo | Yes, in the target repo |
 | **Runtime guardrail hooks** | No (files only) | Yes |
 | **Best for** | Any repo, any tool, CI, non-Claude teams | Claude Code users who want the full experience |
 
 Optional user-level defaults (Codex/Claude global files) are covered under [Optional Global Setup](#optional-global-setup).
+
+### Codex equivalents
+
+Codex uses project skills for these reusable workflows. After installing the project pack, invoke `$possibnow-scale`, `$possibnow-guardrails`, or `$possibnow-optimize` in Codex CLI or the IDE extension. The four existing workflow skills are also installed under `.agents/skills/` for Codex discovery. In a clone of this harness repository, `$possibnow-init /path/to/target-repo` runs the bundled installer; a target repo that has not been initialized yet can instead use the one-line install above. These are `$` skill invocations, not custom entries in Codex's built-in `/` menu. [OpenAI Docs](https://learn.chatgpt.com/docs/build-skills) describes the invocation and repository discovery rules.
+
+The `guardrails` skill reports what is active; Claude plugin hooks do not become Codex hooks when the project pack is installed.
 
 ## Optimize an Existing Project
 
@@ -79,9 +86,8 @@ a change. This is an agent workflow, not a deterministic installer or an automat
 router; no savings are guaranteed. It uses bundled policy `2026-09-18.1`, with no
 private research access or always-on research hook.
 
-For Codex/other hosts after project installation, ask: "Follow
-`docs/workflows/optimization.md` to optimize this project." The namespaced slash
-command itself is Claude Code-specific.
+For Codex after project installation, use `$possibnow-optimize` (or ask it to follow
+`docs/workflows/optimization.md`). The namespaced slash command is Claude Code-specific.
 
 Update an installed Claude plugin with `/plugin update possibnow-dev-harness@possiblaw-plugins`,
 then start a new session or use the host's plugin reload mechanism. Existing
@@ -126,7 +132,7 @@ The dev harness is the canonical home for host-agnostic delivery roles.
 - `.agent/LEARNINGS.md`: Optional, validation-gated learning log (default off) for reusable observations and proposed skill/plugin/instruction improvements.
 - `.agent/integrations/*`: Local advisory checkpoint helper (`run-checkpoint.sh`) that prints the PLAN/HANDOFF updates to make.
 - `docs/workflows/token-management.md`: Token/context budgeting guide so the harness stays fast and cheap.
-- `.claude/skills/*/SKILL.md`: Repo-local workflow skills for repeated procedures (sprint closeout, novice-safe git cycle, the simplicity ladder, and scaling up with Graphify).
+- `.claude/skills/*/SKILL.md` and `.agents/skills/*/SKILL.md`: Repo-local Claude and Codex skills for repeated procedures, plus Codex equivalents of the Scale, Guardrails, and Optimize commands.
 
 ### Optional global files
 - `~/.codex/AGENTS.md`: User-level Codex defaults that apply across repositories.
@@ -237,6 +243,7 @@ Install only one tool:
 - `.claude/skills/running-novice-safe-git-cycle/SKILL.md`
 - `.claude/skills/applying-simplicity-ladder/SKILL.md`
 - `.claude/skills/scaling-up-with-graphify/SKILL.md`
+- `.agents/skills/*/SKILL.md` (the four workflow skills plus `possibnow-scale`, `possibnow-guardrails`, and `possibnow-optimize`)
 - `docs/vendor/README.md`
 - `docs/vendor/supabase.md`
 - `docs/roles/README.md`
@@ -350,7 +357,7 @@ packs/
     docs/roles/            # Canonical host-agnostic role contracts
     docs/vendor/           # Local vendor integration references
     docs/workflows/        # Evals, contracts, token management, and indexing guidance
-    .claude/skills/        # Repo-local workflow skills
+    .claude/skills/        # Claude workflow skills
     .agent/integrations/   # Local advisory checkpoint helper (run-checkpoint.sh)
   global/claude/           # ~/.claude curated files
   global/codex/            # ~/.codex curated files
