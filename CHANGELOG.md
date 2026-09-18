@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 4.2.1 — 2026-09-18 — Verified portable release
+
+- Fix rollback receipt handling when the target root has an equivalent path alias (including macOS /var and /private/var). Internal symlinks and out-of-repo receipt paths remain rejected.
+- The v4.2.0 tag failed its final published rollback smoke gate; it is preserved unchanged for provenance. Use v4.2.1 for both bootstrap and pack. All compact-guidance and conservative-update changes below are included.
+
 ## 4.2.0 — 2026-09-18 — Compact portable guidance and conservative upgrades
 
 - Generate both project entries from one compact source and enforce 150 physical lines each, including LF/CRLF and final unterminated lines. Detailed delivery, continuity, content, learning, and client guidance loads on demand.

@@ -15,7 +15,7 @@ Examples:
 
 Environment overrides:
   DEV_HARNESS_REPO_URL   Git URL to clone (default: official GitHub repo)
-  DEV_HARNESS_REF        Branch/tag to clone (default: v4.2.0; raw commit SHA unsupported)
+  DEV_HARNESS_REF        Branch/tag to clone (default: v4.2.1; raw commit SHA unsupported)
   (STARTER_PACK_REPO_URL / STARTER_PACK_REF are still honored as legacy aliases)
 USAGE
 }
@@ -48,7 +48,7 @@ fi
 
 TARGET_DIR_ABS="$(cd "$TARGET_DIR" && pwd)"
 REPO_URL="${DEV_HARNESS_REPO_URL:-${STARTER_PACK_REPO_URL:-https://github.com/PossibLaw/possibnow-dev-harness.git}}"
-REPO_REF="${DEV_HARNESS_REF:-${STARTER_PACK_REF:-v4.2.0}}"
+REPO_REF="${DEV_HARNESS_REF:-${STARTER_PACK_REF:-v4.2.1}}"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/possibnow-dev-harness.XXXXXX")"
 CLONE_DIR="$TMP_ROOT/repo"
 

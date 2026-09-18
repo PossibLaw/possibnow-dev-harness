@@ -14,10 +14,19 @@ except ImportError:
 
 
 def rollback(root, receipt_path):
-    root = Path(root).resolve()
+    requested_root = Path(root).absolute()
+    root = requested_root.resolve()
     receipt_path = Path(receipt_path).absolute()
-    rel = receipt_path.relative_to(root)
-    safe_path(root, rel)
+    # Normalize aliases of the target root (e.g. macOS /var -> /private/var).
+    # Do not resolve the receipt itself: internal symlinks must still be rejected.
+    bases = [requested_root, root] + list(receipt_path.parents)
+    for base in bases:
+        if base in receipt_path.parents and base.resolve() == root:
+            rel = receipt_path.relative_to(base)
+            break
+    else:
+        raise ValueError('receipt is outside the target repository')
+    receipt_path = safe_path(root, rel)
     receipt = json.loads(receipt_path.read_text())
     if receipt.get('schema') != 1 or rel.as_posix() != f".harness/releases/{receipt['version']}/INSTALL.json":
         raise ValueError('unsupported receipt')

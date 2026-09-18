@@ -10,7 +10,7 @@ memory:
   tags: [plan]
 ---
 
-# 4.2.0 Compact portable harness
+# 4.2.1 Compact portable harness
 
 Baseline: main 4f43649b175ad18813319bba6849d200238c307f, unchanged after fetch.
 Original entries: AGENTS 178 lines/1890 words/13582 bytes; CLAUDE 202/2003/14446.
@@ -19,7 +19,7 @@ not a scientific optimum or cost claim. Rule ownership: docs/architecture/rule-o
 
 Scope: one source for compact adapters; on-demand canonical procedures; current-only
 handoff with verified exact archives; gated learnings; conservative file-preserving
-updates with versioned candidates/receipts/rollback; double-pinned v4.2.0 release.
+updates with versioned candidates/receipts/rollback; double-pinned v4.2.1 release.
 Do not modify installed projects, globals, models/effort, permissions, learning
 mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
 
@@ -46,7 +46,7 @@ mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
 ## Milestones
 
 Implementation complete; local verification and release review in progress.
-Publish v4.2.0 only after full verification and CI pass. Preserve all sanitized
+Publish v4.2.1 only after full verification and CI pass. Preserve all sanitized
 continuity with work and verify remote main. Record post-publication smoke evidence
 in the GitHub release notes so the immutable tag is not moved after verification.
 
@@ -54,3 +54,11 @@ in the GitHub release notes so the immutable tag is not moved after verification
 - Mode: `OFF` (existing task default)
 
 Prior plan preserved verbatim: archives/pre-4.2-PLAN.md.
+
+## Published-tag gate correction
+
+PR #11 merged as 08a01b75cd11bde3bd1487ed96bbbf7924427b9b. The immutable v4.2.0
+tag passed public install/preservation/repeat checks but failed rollback on a
+macOS /var versus /private/var root alias. No pre-existing file was changed/deleted.
+Ship patch v4.2.1 after alias/internal-symlink regression tests and the same public smoke.
+Do not move v4.2.0. No GitHub Release was published for that failed candidate tag.

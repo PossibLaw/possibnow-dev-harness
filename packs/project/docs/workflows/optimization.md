@@ -8,7 +8,7 @@ another AGENTS-aware host, ask it to follow this file. Claude's namespaced
 command is not a native Codex slash command.
 
 For a preserved/customized installation, start with the versioned policy named
-by the installer: `.harness/releases/4.2.0/docs/workflows/optimization.md`.
+by the installer: `.harness/releases/4.2.1/docs/workflows/optimization.md`.
 Use the contracts.md, delivery.md, learning.md, and content.md shipped beside this
 policy for proposed guidance; local project customizations remain authoritative
 constraints to preserve. A downloaded release snapshot does not mean migration

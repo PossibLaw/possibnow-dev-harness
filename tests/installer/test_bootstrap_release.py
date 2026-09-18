@@ -18,7 +18,7 @@ def test_bootstrap_pins_pack_ref_and_reports_commit(tmp_path):
     git('add', '.')
     git('commit', '-qm', 'release fixture')
     released = git('rev-parse', 'HEAD')
-    git('tag', 'v4.2.0')
+    git('tag', 'v4.2.1')
     (source / 'packs/project/docs/glossary.md').write_text('unreleased main content')
     git('commit', '-qam', 'unreleased change')
     target = tmp_path / 'target'
@@ -30,10 +30,10 @@ def test_bootstrap_pins_pack_ref_and_reports_commit(tmp_path):
     # Default tag and explicit double pin must both select the release, not branch HEAD.
     for explicit in (False, True):
         if explicit:
-            env['DEV_HARNESS_REF'] = 'v4.2.0'
+            env['DEV_HARNESS_REF'] = 'v4.2.1'
         result = subprocess.run(['bash', str(ROOT / 'scripts/bootstrap-project.sh'), str(target), '--adopt'], env=env, capture_output=True, text=True)
         assert result.returncode == 0, result.stdout + result.stderr
-        metadata = json.loads((target / '.harness/releases/4.2.0/VERSION.json').read_text())
-        assert metadata == {'version': '4.2.0', 'commit': released, 'source_dirty': False}
+        metadata = json.loads((target / '.harness/releases/4.2.1/VERSION.json').read_text())
+        assert metadata == {'version': '4.2.1', 'commit': released, 'source_dirty': False}
         assert released in result.stdout
         assert (target / 'docs/glossary.md').read_text() != 'unreleased main content'

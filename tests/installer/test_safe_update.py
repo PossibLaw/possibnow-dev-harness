@@ -39,10 +39,10 @@ def test_customized_update_is_preserved_and_proposed(tmp_path):
     for rel, data in originals.items():
         assert (tmp_path / rel).read_bytes() == data
     assert 'PENDING' in result.stdout and '151' in result.stdout
-    policy = tmp_path / '.harness/releases/4.2.0/docs/workflows/optimization.md'
+    policy = tmp_path / '.harness/releases/4.2.1/docs/workflows/optimization.md'
     assert policy.exists()
     receipt = json.loads((policy.parents[2] / 'INSTALL.json').read_text())
-    assert receipt['version'] == '4.2.0'
+    assert receipt['version'] == '4.2.1'
     assert 'AGENTS.md' in {x['path'] for x in receipt['pending']}
     before = snapshot(tmp_path)
     assert run(tmp_path, '--adopt').returncode == 0
@@ -96,7 +96,7 @@ def test_nested_symlink_is_rejected_before_any_write(tmp_path):
 def test_rollback_preserves_existing_and_refuses_intervening_edits(tmp_path):
     (tmp_path / 'AGENTS.md').write_text('custom root\n')
     assert run(tmp_path).returncode == 0
-    tool = tmp_path / '.harness/releases/4.2.0/tools/rollback.py'
+    tool = tmp_path / '.harness/releases/4.2.1/tools/rollback.py'
     receipt = tool.parent.parent / 'INSTALL.json'
     original = (tmp_path / 'CLAUDE.md').read_bytes()
     (tmp_path / 'CLAUDE.md').write_text('edited after install\n')
@@ -132,7 +132,7 @@ def test_unchanged_older_install_is_preserved_until_review(tmp_path):
 
 def test_release_snapshot_tampering_fails_before_other_writes(tmp_path):
     assert run(tmp_path).returncode == 0
-    policy = tmp_path / '.harness/releases/4.2.0/docs/workflows/optimization.md'
+    policy = tmp_path / '.harness/releases/4.2.1/docs/workflows/optimization.md'
     policy.write_text('local snapshot edit')
     before = snapshot(tmp_path)
     assert run(tmp_path).returncode != 0
@@ -141,7 +141,7 @@ def test_release_snapshot_tampering_fails_before_other_writes(tmp_path):
 
 def test_receipt_traversal_is_rejected_without_deletes(tmp_path):
     assert run(tmp_path).returncode == 0
-    receipt = tmp_path / '.harness/releases/4.2.0/INSTALL.json'
+    receipt = tmp_path / '.harness/releases/4.2.1/INSTALL.json'
     data = json.loads(receipt.read_text())
     data['created']['docs/../../outside'] = 'fake'
     receipt.write_text(json.dumps(data))
@@ -154,7 +154,7 @@ def test_receipt_traversal_is_rejected_without_deletes(tmp_path):
 
 def test_snapshot_roots_are_not_discoverable_nested_instructions(tmp_path):
     assert run(tmp_path).returncode == 0
-    bundle = tmp_path / '.harness/releases/4.2.0'
+    bundle = tmp_path / '.harness/releases/4.2.1'
     for name in ('AGENTS.md', 'CLAUDE.md'):
         assert not list(bundle.rglob(name))
         assert (bundle / (name + '.candidate')).is_file()
@@ -166,3 +166,31 @@ def test_non_directory_parent_is_rejected_without_target_writes(tmp_path):
     before = snapshot(tmp_path)
     assert run(tmp_path).returncode != 0
     assert snapshot(tmp_path) == before
+
+
+@pytest.mark.parametrize("use_alias_target", [False, True])
+def test_rollback_accepts_alias_for_target_root(tmp_path, use_alias_target):
+    real = tmp_path / 'real'
+    real.mkdir()
+    alias = tmp_path / 'alias'
+    alias.symlink_to(real, target_is_directory=True)
+    assert run(real).returncode == 0
+    tool = real / '.harness/releases/4.2.1/tools/rollback.py'
+    receipt = alias / '.harness/releases/4.2.1/INSTALL.json'
+    result = subprocess.run([sys.executable, str(tool), str(alias if use_alias_target else real), '--receipt', str(receipt)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert snapshot(real) == {}
+
+
+def test_rollback_rejects_internal_directory_symlink(tmp_path):
+    real = tmp_path / 'real'
+    real.mkdir()
+    assert run(real).returncode == 0
+    outside = tmp_path / 'outside-harness'
+    (real / '.harness').rename(outside)
+    (real / '.harness').symlink_to(outside, target_is_directory=True)
+    before = snapshot(real)
+    tool = outside / 'releases/4.2.1/tools/rollback.py'
+    result = subprocess.run([sys.executable, str(tool), str(real), '--receipt', str(real / '.harness/releases/4.2.1/INSTALL.json')], capture_output=True)
+    assert result.returncode != 0
+    assert snapshot(real) == before
