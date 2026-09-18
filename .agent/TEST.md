@@ -10,7 +10,7 @@ memory:
   tags: [test]
 ---
 
-# 4.2.0 Validation receipts
+# 4.2.1 Validation receipts
 
 Baseline main 4f43649: `./scripts/verify-pack.sh` passed, 172 tests.
 Failing-before: 16 new entry/update checks failed on original overwrite behavior,
@@ -35,8 +35,8 @@ The three modified skill files passed quick_validate.py. `git diff --check` pass
 | E9 | All existing Claude guardrail regression tests unchanged and green; client integration claims reviewed against mechanisms/docs |
 | E10 | Local tagged repository fixture: default/explicit v4.2.0 bootstrap selects release commit over newer branch HEAD; reports correct version/commit and clean source |
 
-Publication smoke from the real remote tag is a release gate, to be recorded after
-publication before handing out the final command. Installer rollback was exercised
+Publication smoke from the real v4.2.1 tag passed; RELEASE-4.2.1.md records the
+verified public command, commit, file preservation, repeat behavior, and rollback. Installer rollback was exercised
 against a customized fixture; changed-file and path-traversal refusals delete nothing.
 Nested symlink/non-directory preflight makes no target writes. Shell helper remains executable.
 
@@ -67,3 +67,5 @@ regression cases cover both alias/canonical root arguments and an internal symli
 Final published v4.2.1 smoke remains the release gate.
 
 Patch validation: ./scripts/verify-pack.sh passed with 212 tests.
+
+E10 final: public v4.2.1 bootstrap/pack/rollback smoke passed; GitHub Release published with its receipt.
