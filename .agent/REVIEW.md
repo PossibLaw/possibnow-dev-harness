@@ -50,3 +50,11 @@ engine. Preserved customized entries can remain oversized pending reviewed migra
 Marketplace distribution and live client integration require their own verification.
 
 Prior review preserved verbatim: archives/pre-4.2-REVIEW.md.
+
+## v4.2.1 correction review
+
+The public-tag smoke exposed a root alias portability gap in rollback. Normalize
+only the chosen target-root alias before deriving the receipt-relative path; keep
+safe_path checks on every internal component. Do not resolve the receipt directly
+and hide an internal symlink. Candidate tag v4.2.0 remains immutable; v4.2.1 must
+pass the public smoke before release publication.

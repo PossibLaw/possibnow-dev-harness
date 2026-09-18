@@ -63,7 +63,7 @@ byte preservation, archive verification, deduplication, and hash rechecks. Pass
 Its lock serializes helper runs; coordinate independent editors during replacement.
 The helper cannot infer unresolved work, sanitize secrets, or prove semantic fidelity.
 If an older customized helper is preserved, use the new release snapshot helper
-under `.harness/releases/4.2.0/.agent/integrations/` explicitly.
+under `.harness/releases/4.2.1/.agent/integrations/` explicitly.
 
 ## Continuity Checkpoints (Required)
 

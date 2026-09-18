@@ -55,3 +55,15 @@ migration ran. Optimize semantic check/apply remains an advisory agent workflow;
 helper tests do not prove model decisions or semantic retention.
 
 Prior receipts preserved verbatim: archives/pre-4.2-TEST.md.
+
+## v4.2.1 publication gate fix
+
+The actual v4.2.0 curl smoke verified matching bootstrap bytes/version/commit,
+customized-state preservation, pending oversized entry, read-only preview, and
+repeat byte/mtime stability. Rollback refused a logically equivalent macOS target
+root path before deletion. A new alias fixture reproduced that failure before the
+fix. Root alias normalization now retains internal-symlink rejection; three extra
+regression cases cover both alias/canonical root arguments and an internal symlink.
+Final published v4.2.1 smoke remains the release gate.
+
+Patch validation: ./scripts/verify-pack.sh passed with 212 tests.
