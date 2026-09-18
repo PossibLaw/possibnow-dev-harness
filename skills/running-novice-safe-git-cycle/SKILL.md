@@ -14,3 +14,5 @@ metadata:
 5. Make a focused commit; push and complete the authorized PR/merge workflow. Verify code and continuity on remote main before claiming delivery. If approval or checks block merging, keep that state explicit.
 
 Do not exclude project continuity under an obsolete local-only rule, overwrite another contributor's edits, discard historical handoffs, or claim unrun checks passed. The command guard covers common direct Git commands, not every shell wrapper; inspect the staged diff yourself.
+
+Before updating a checkout to a newer Git revision, inspect ignored continuity paths as well as ordinary status. A clean `git status` does not protect ignored files. Use `git merge --ff-only --no-overwrite-ignore` (after fetching) or an equivalent refusing operation. If it blocks, preserve and review those local records before integrating; never silently overwrite or discard them.
