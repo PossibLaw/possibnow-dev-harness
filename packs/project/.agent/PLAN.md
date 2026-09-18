@@ -53,27 +53,16 @@ If this work involves an LLM/agent/RAG system, also define:
 
 ## Learning Mode
 - Mode: `OFF` (default)
-- Allowed values:
-  - `OFF`: do not update learning artifacts.
-  - `CAPTURE`: append observations to `.agent/LEARNINGS.md` at task end.
-  - `APPLY`: capture observations and propose updates to skills/plugins/instructions.
-- Activation:
-  - Set mode in this file for the current task, or
-  - Explicitly request mode in the user prompt.
+- Change only by explicit task instruction or deliberate project choice.
+- Authoritative mode/promotion policy: `docs/workflows/learning.md`.
 
 ## Continuity Checkpoint
 - Sprint label: `UNCONFIRMED`
-- Run checkpoint when:
-  - the sprint is done or paused
-  - the session is about to end
-  - work is moving into commit, PR, or merge steps
-  - context feels roughly 50% full
-- Required checkpoint outputs:
-  - update milestone statuses in this file
-  - refresh `.agent/HANDOFF.md` (Current Baton + prepend one Session Timeline entry)
-  - append `.agent/LEARNINGS.md` when learning mode is `CAPTURE` or `APPLY` (gated lessons only)
-- Checkpoint helper (optional, advisory checklist only):
-  - `.agent/integrations/run-checkpoint.sh --reason sprint-closeout`
+- For substantive active work, follow `docs/workflows/contracts.md` at a checkpoint.
+- Update the current plan and prepare one current HANDOFF after verified archival.
+- Keep completed narratives in HISTORY; retain all unresolved work/active constraints.
+- Ordinary questions and read-only checks do not create delivery-state work.
+- Advisory helper: `.agent/integrations/run-checkpoint.sh --reason sprint-closeout`.
 
 ## Assumptions
 - [ASSUMPTION]

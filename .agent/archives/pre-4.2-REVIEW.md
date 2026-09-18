@@ -1,0 +1,25 @@
+---
+contract_version: 1
+artifact_type: review
+status: IN_PROGRESS
+depends_on: []
+produces: []
+feeds_into: []
+memory:
+  include_in_memory: true
+  tags: [review]
+---
+
+# 4.1.0 Review
+
+Scope: installer, workflow instructions, and best-effort direct Git command guard.
+
+Security checks: no credentials/private research copied into the public release; no network or paid model calls from the installer; dry-run makes no writes; existing continuity is preserved; unrelated private ignore rules stay intact; configuration changes require a reviewed proposal and retain permissions. The commit guard is not a complete shell parser or security sandbox. No application auth/IDOR/CSRF/API boundary changed.
+
+Residual limits: broad custom ignores require review; named continuity matching is documented rather than arbitrary-file semantic classification; optimization is an agent-run workflow, not a deterministic config installer. Model/effort changes require qualified task evidence. Historical content must be sanitized before sharing; archival preserves reviewed bytes rather than deciding which sensitive facts may be published.
+
+Evidence: E1-E3 regression suite and plugin/skill validators in TEST.md. No live agent eval or measured savings claimed.
+
+## Codex workflow parity — September 18, 2026
+
+Reviewed the new skill instructions and installer changes for unsafe path handling, executable argument interpolation, credential exposure, and false enforcement claims. Init directs Codex to pass options as arguments and inspect existing state; Guardrails expressly distinguishes Claude hooks from Codex protections. The installer copies only bundled Markdown skill files through its existing symlink-safe copy function. No auth, API, or deployment surface changed. Residual limit: skill invocation behavior in a live Codex conversation is `UNCONFIRMED`.

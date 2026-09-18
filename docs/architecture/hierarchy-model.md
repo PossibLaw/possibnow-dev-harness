@@ -1,24 +1,11 @@
-# Hierarchy Model
+# Instruction hierarchy
 
-This pack ships two separate instruction hierarchies:
+Root entries contain stable project context and task routes. They are generated
+from packs/entry.md; neither eagerly imports the handbook. Detailed policies load
+only for the matching task. See [rule ownership](rule-ownership.md) for canonical
+homes and [client integration](../../packs/project/docs/workflows/clients.md) for
+client-specific discovery and precedence. Do not assume a single hierarchy across hosts.
 
-1. Global hierarchy (optional):
-- `~/.claude/CLAUDE.md`
-- `~/.claude/agents/*.md`
-- `~/.codex/AGENTS.md`
-
-2. Project hierarchy (installed into a target repository):
-- `<repo>/CLAUDE.md`
-- `<repo>/AGENTS.md`
-- `<repo>/.agent/*.md`
-- `<repo>/.claude/history.md`
-
-## Precedence
-- Tool global file applies first.
-- Project file overrides global behavior for that repository.
-- State files in `.agent/` are on-demand context artifacts.
-
-## Design Rule
-- Global files: stable rules that should apply across all projects.
-- Project files: repo-specific behavior, commands, and local constraints.
-- State files: execution context and handoff, not permanent policy.
+Active work belongs in PLAN/TASKS; HANDOFF is current-only; HISTORY preserves prior
+checkpoints individually. Learning records follow the gated learning workflow.
+Keep all related sanitized continuity version-controlled with the work.

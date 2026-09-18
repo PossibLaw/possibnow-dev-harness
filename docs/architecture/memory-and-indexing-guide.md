@@ -71,8 +71,8 @@ Best capture points:
 - repeated corrections worth turning into a norm or skill
 
 Use it only when `Learning Mode` is `CAPTURE` or `APPLY`:
-- `CAPTURE`: record concise observations with evidence.
-- `APPLY`: record observations and propose concrete changes to skills, plugins, instructions, or workflows.
+- `CAPTURE`: record bounded unapproved candidates or gated lessons with evidence; no policy edits.
+- `APPLY`: capture under the same gate and propose policy changes; apply only authorized edits.
 
 Do not use learnings for:
 - ordinary task status
@@ -256,3 +256,5 @@ If any answer is unclear, keep the layer off.
 5. Do not add Ix to the Dev Harness for now.
 6. Prefer pruning duplicate memory over adding another backend.
 7. Require generated indexes to cite source files and be verified before they influence implementation.
+
+Current normative learning policy: packs/project/docs/workflows/learning.md. Historical research below earlier dates is evidence, not an instruction to enable learning or integrations.

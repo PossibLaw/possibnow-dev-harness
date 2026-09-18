@@ -20,75 +20,34 @@ memory:
 
 # HANDOFF
 
-This is the shared, version-controlled continuity record for the current checkpoint only. Commit it and all related continuity with the work. Previous checkpoints live in `.agent/HISTORY.md`; archive the exact prior handoff and verify its hash before replacing it. Preserve historical context and active constraints.
-
-On resume read this current file. Retrieve a specific HISTORY entry only when needed.
-
-## Current Baton (Read First)
-Refresh this section in place at every checkpoint. Keep the newest actionable state here.
+A shared, version-controlled continuity record for one current checkpoint.
+Procedure: `docs/workflows/contracts.md`. Previous checkpoints: `.agent/HISTORY.md`.
 
 ## Status
-- Current phase:
+- Phase:
+- Timestamp:
 - Owner:
-- Timestamp (ISO):
-- Overall status: `IN_PROGRESS`
-- Checkpoint reason: `task-end` | `sprint-closeout` | `pre-git-cycle` | `context-50` | `handoff`
-- Tier: `1 (Starter)` | `2 (Scale)`
-- Scale mode: `OFF` | `ON`
+- Status: IN_PROGRESS
+- Tier: 1 (Starter)
+- Scale mode: OFF
 
-## Suggested Roles
-- `docs-releaser` owns handoff quality, docs alignment, and next-action clarity.
+## Unresolved work
+- Task, owner, blocker, and evidence still needed:
 
-## What Was Completed
-- Item:
-  - Files:
-  - Evidence:
+## Active constraints
+- Still-active decisions, exact values, and conditional rules:
 
-## Decisions
-- Decision:
-  - Chose:
-  - Rejected:
-  - Why:
-  - Status: `CONFIRMED` or `PROVISIONAL`
+## Evidence
+- Relevant PLAN/TASKS, TEST/REVIEW, content records, and source locators:
 
-## Exact Values and Constraints
-- Value:
-- Constraint:
-- Conditional rule: IF / THEN / BUT / EXCEPT
-
-## Open Questions
-- Question:
-- Needed from:
-- Risk if unanswered:
-
-## Next Actions
-1.
-2.
-3.
+## Next actions
+1. Next concrete action:
 
 ## Sprint / Git Cycle
-- Sprint label:
-- Sprint status: `IN_PROGRESS` | `PAUSED` | `COMPLETE`
-- Git cycle status: `NOT_STARTED` | `REVIEWING` | `READY_TO_COMMIT` | `COMMITTED` | `PUSHED` | `PR_OPEN`
-- Recommended next git step:
+- Delivery state and next Git action:
+- Previous checkpoint ID and verified HISTORY locator:
 
-## Learning / Memory
-- Learning mode: `OFF` | `CAPTURE` | `APPLY`
-- Learnings updated: `YES` | `NO` | `N/A`
-
-## Do-Not-Reread
-- Archive or stale sources to skip unless explicitly requested.
-
-## Contract Links (Required)
-- Eval IDs covered:
-- Test receipts referenced:
-- Review findings referenced:
-
-## Wiki Sync (Required When `.agent/WIKI.md` Enabled — Tier 2)
-- Wiki root:
-- Wiki index updated: `YES` or `NO`
-- Pages updated:
-
-## Historical Checkpoint
-- Previous checkpoint ID:
-- History locator and verified SHA-256:
+## Optional state
+- Learning mode: OFF (read actual project declaration before learning work)
+- Wiki sync when enabled:
+- Legacy history locators, if any:

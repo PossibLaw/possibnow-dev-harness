@@ -1,23 +1,22 @@
 ---
-description: Manage and view active Claude Code guardrails and safety hooks (PossibNow Dev Harness).
+description: Inspect the PossibNow Claude Code guardrails and report which protections are actually observable in this workspace.
 argument-hint: [optional status or rule check]
 allowed-tools: Read
 ---
 
 # /possibnow-dev-harness:guardrails
 
-View the active safety guardrails protecting your workspace.
+Read the plugin's `hooks/hooks.json` and the relevant `scripts/guardrails/` rule.
+When available, inspect enabled plugin/hook configuration without printing secrets.
+Report configured protections separately from verified active runtime enforcement.
+A missing runtime observation is UNCONFIRMED, not proof a protection is active.
 
-## Overview
+The base plugin hooks cover destructive-command validation, sensitive-file warnings,
+format checks, and a shared-continuity commit guard for common direct Git commands.
+The optional Tier 2 hook file is not enabled by default. The hook suite tests these
+scripts directly; it is not a general shell sandbox or proof of live session behavior.
 
-The `possibnow-dev-harness` plugin installs Tier-1 safety hooks globally in your environment. These hooks intercept dangerous or risky actions before they execute.
-
-## Active Protections
-
-By default, the base hooks (`hooks/hooks.json`) monitor for:
-1. **Destructive Commands (validate-bash):** Blocks dangerous commands like `rm -rf`.
-2. **Sensitive File Edits (protect-files):** Warns when credentials or critical files are modified.
-3. **Format on Write (format-check):** Applies formatting checks when files are written.
-4. **Shared Handoff Commit Guard (validate-bash):** Refuses `git commit` while `.agent/HANDOFF.md` is untracked or has unstaged edits, so the shared handoff always ships with the work it describes. It honors `git commit -a` and an inline `git add` that covers the file, and stays silent outside git repos or when the repo has no handoff. Fix: refresh the Current Baton, run `git add .agent/HANDOFF.md`, and retry.
-
-To see the exact rules and prompt changes applied, review your local `.claude/settings.json` or the plugin `hooks/` config files.
+Project-file installation supplies advisory guidance and helpers. Claude hooks do
+not protect Codex, Cursor, or other hosts. Use the bundled client integration policy
+at `${CLAUDE_PLUGIN_ROOT}/packs/project/docs/workflows/clients.md` for boundaries.
+Do not change hooks, permissions, models, or native settings during this status check.

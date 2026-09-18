@@ -3,28 +3,54 @@ contract_version: 1
 artifact_type: plan
 status: IN_PROGRESS
 depends_on: []
-produces: []
-feeds_into: []
+produces: [eval_ids, release_scope]
+feeds_into: [.agent/TEST.md]
 memory:
   include_in_memory: true
   tags: [plan]
 ---
 
-# 4.1.0 Plan
+# 4.2.0 Compact portable harness
 
-Scope: optimization slash command plus shared continuity commit contract. Preserve model choices, existing project state, secrets/private ignores, and historical handoffs. No fleet-wide migration or paid model eval.
+Baseline: main 4f43649b175ad18813319bba6849d200238c307f, unchanged after fetch.
+Original entries: AGENTS 178 lines/1890 words/13582 bytes; CLAUDE 202/2003/14446.
+Sal's <=150 physical line policy applies to each shipped/newly generated root,
+not a scientific optimum or cost claim. Rule ownership: docs/architecture/rule-ownership.md.
 
-E1: fresh install provides optimization workflow and HISTORY; named continuity is trackable.
-E2: upgrades and repeated installs preserve existing state; dry-run creates nothing.
-E3: commits cannot omit changed named continuity, content records, archives, or history; staging, ignored rules, and path-limited commits are checked without including unrelated private notes.
-E4: command defaults to a read-only diff; apply requires the reviewed proposal and no unvalidated model changes. Instruction/pack validation only; live agent application not executed.
+Scope: one source for compact adapters; on-demand canonical procedures; current-only
+handoff with verified exact archives; gated learnings; conservative file-preserving
+updates with versioned candidates/receipts/rollback; double-pinned v4.2.0 release.
+Do not modify installed projects, globals, models/effort, permissions, learning
+mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
 
-Status: implementation and local verification complete; release candidate ready for the authorized delivery workflow.
+## Acceptance and evidence plan
 
-## Codex workflow parity — September 18, 2026
+- E1: fresh fixture gets valid routes and <=150-line entries.
+- E2: 150 passes/151 fails with LF, CRLF, and missing final newline.
+- E3: planning, validation, review/security, content, checkpoint and learning rules
+  remain in reachable authoritative homes; retain detailed TEST/REVIEW checklists.
+- E4: customized and unchanged older fixtures preserve every pre-existing byte;
+  differing files remain pending reviewed migration, including oversized entries.
+- E5: dry-run/check makes no target writes; same release/options repeat is idempotent.
+- E6: archive full prior bytes/hash/timestamp/ID; failed/corrupt/conflicting archive
+  or intervening edit leaves HANDOFF intact. Candidate semantic completeness is reviewed.
+- E7: OFF captures nothing; candidates never count as adopted lessons. CAPTURE
+  never edits instructions; APPLY requires authorization. Static/advisory coverage.
+- E8: no eager root imports, rules, or state/history/library preload; read-only
+  questions bypass delivery state. Existing external client context is unverified.
+- E9: existing Claude guardrail tests remain unchanged and passing; client matrix
+  names enforcement limits. No new runtime adapter is claimed.
+- E10: tag-based bootstrap fixture selects release over newer branch; published
+  curl smoke must select the actual release version/commit before final delivery.
 
-Scope: expose the four Claude command workflows through Codex project skills, while keeping the Claude command files and runtime hooks intact. The harness clone supplies Init; installed projects receive Scale, Guardrails, and Optimize plus the four existing workflow skills in `.agents/skills/`.
+## Milestones
 
-E1 (happy): a fresh project install provides seven discoverable Codex skills and preserves the Claude files. E2 (edge): dry-run and existing-state installs preserve project data. E3 (failure/security): invalid paths or symlink escapes fail safely; the Guardrails skill does not claim Claude hooks protect Codex. E4: Codex skill frontmatter validates. Live Codex invocation is `UNCONFIRMED`.
+Implementation complete; local verification and release review in progress.
+Publish v4.2.0 only after full verification and CI pass. Preserve all sanitized
+continuity with work and verify remote main. Record post-publication smoke evidence
+in the GitHub release notes so the immutable tag is not moved after verification.
 
-Status: implementation and local checks complete; remote delivery pending.
+## Learning Mode
+- Mode: `OFF` (existing task default)
+
+Prior plan preserved verbatim: archives/pre-4.2-PLAN.md.

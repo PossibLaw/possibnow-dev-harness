@@ -10,7 +10,7 @@ Short, beginner-friendly definitions of terms used across the PossibNow Dev Harn
 - **Role**: A named job (e.g., `reviewer`, `qa-validator`). Each role has a canonical contract under `docs/roles/` plus thin Claude/Codex wrappers.
 - **Handoff / continuity file**: `.agent/HANDOFF.md` holds only current state; `.agent/HISTORY.md` preserves exact earlier handoffs, retrieved on demand. Both are committed.
 - **Continuity checkpoint**: update PLAN, archive and verify the old HANDOFF in HISTORY, then replace HANDOFF with current state and commit related continuity.
-- **Progress file**: A local working-state file such as `.agent/PLAN.md`, `.agent/TEST.md`, or `.agent/REVIEW.md`. The exception is `.agent/HANDOFF.md`, which is shared and version-controlled for team continuity.
+- **Progress file**: A shared working-state file such as PLAN, TEST, REVIEW, or HANDOFF; sanitized continuity is version-controlled and delivered with its work.
 
 ## Testing and evaluation terms
 

@@ -1,42 +1,26 @@
 # Troubleshooting
 
-## "BLOCKED: target directory does not exist"
-- Ensure the path passed to `install-project.sh` exists and is a folder.
+- Missing target: create/select the intended project directory and run from its root.
+- Missing Python/Git/Bash: the project installer requires these local tools.
+- PENDING files: existing differing instructions are deliberately preserved. Follow
+  the versioned optimization policy named in installation output for a reviewed diff.
+- Oversized existing root: keep its local policy until a reviewed migration reduces
+  it to <=150 physical lines. Do not delete or truncate it just to pass the cap.
+- Conflicting release snapshot or partial install: preserve local work; inspect its
+  INSTALL.json and reconcile or use the guarded rollback command in the README.
+- Ignored continuity: use git check-ignore -v on the named files; narrow only the
+  relevant rules after a secret review. All related sanitized continuity is shared.
+  The installer preserves .gitignore byte-for-byte.
+- Checkpoint hash rejection: another edit intervened. Review the new state and
+  regenerate the candidate; do not merely recalculate the hash to force it through.
+- Corrupt/conflicting archive: retain HANDOFF, repair/verify archival from evidence,
+  then retry. Never delete legacy history or bypass verification.
+- Commit blocked by Claude hook: review and stage all changed sanitized continuity,
+  including HANDOFF, HISTORY and archives, with the work. The hook checks common
+  direct Git commands; it does not operate in Codex or Cursor.
+- Old plugin id possiblaw-starter: uninstall the old marketplace entry and install
+  possibnow-dev-harness. Confirm the actual installed version; marketplace delivery
+  is separate from a source GitHub release.
 
-## "BLOCKED: choose at least one of --claude, --codex, or --all"
-- Add one install target flag to `install-global.sh`.
-
-## "permission denied"
-- On macOS/Linux, ensure scripts are executable:
-  - `chmod +x scripts/*.sh`
-
-## I installed but want to revert
-- Restore from backup files created next to overwritten files:
-  - `<file>.bak.<timestamp>`
-
-## I want to update harness files without replacing progress notes
-- Re-run project install with:
-  - `./scripts/install-project.sh /path/to/repo --preserve-progress`
-
-## `.agent/HANDOFF.md` does not show up in `git status`
-- New installs keep `.agent/HANDOFF.md` trackable while other `.agent/*.md` working-state files remain ignored.
-- Re-run the current project installer to remove the exact legacy handoff ignore rule:
-  - `./scripts/install-project.sh /path/to/repo --preserve-progress`
-- If the handoff remains ignored, find the broader custom rule and narrow it without exposing the other working-state files:
-  - `git check-ignore -v .agent/HANDOFF.md`
-
-## "BLOCKED: .agent/HANDOFF.md is untracked" or "has unstaged edits" when committing
-- This is the shared-handoff commit guard in Claude Code (`validate-bash` hook). Every commit must carry the current handoff so teammates and other coding agents inherit the baton.
-- Fix: refresh the Current Baton at the top of `.agent/HANDOFF.md`, then:
-  - `git add .agent/HANDOFF.md`
-  - retry the commit (for tracked-but-unstaged edits, `git commit -a` also works)
-- The guard never fires outside a git repo or in a repo that has no `.agent/HANDOFF.md`.
-- Codex and other AGENTS.md-aware tools have no runtime hook; they follow the same rule from `AGENTS.md` and `docs/workflows/contracts.md`.
-
-## I still have the old `possiblaw-starter` plugin installed
-- The plugin was renamed to `possibnow-dev-harness` in v4.0.0 and its slash commands changed to `/possibnow-dev-harness:*`.
-  - `/plugin uninstall possiblaw-starter@possiblaw-plugins`
-  - `/plugin install possibnow-dev-harness@possiblaw-plugins`
-
-## Windows users
-- The harness ships bash scripts only (macOS + Linux). On Windows, run them from WSL or Git Bash.
+Live Windows execution is UNCONFIRMED. Use a supported Unix environment; this
+release does not add a Windows or another client's runtime adapter.

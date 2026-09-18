@@ -15,7 +15,7 @@ Usage:
 Reasons:
   sprint-closeout
   pre-git-cycle
-  context-50
+  context-pressure
   task-end
   handoff
 
@@ -96,7 +96,7 @@ echo "       - keep all historical checkpoints out of the current HANDOFF"
 echo "  Commit all sanitized changed continuity with the work; verify delivery on remote main."
 
 if [[ "$LEARNING_MODE" == "CAPTURE" || "$LEARNING_MODE" == "APPLY" ]]; then
-  echo "  3. Append $LEARNINGS_FILE (Learning Mode: $LEARNING_MODE; promote only gated lessons)"
+  echo "  3. Review $LEARNINGS_FILE (Learning Mode: $LEARNING_MODE; follow docs/workflows/learning.md; candidates are unapproved)"
 else
   echo "  3. Skip learnings (Learning Mode: $LEARNING_MODE)"
 fi

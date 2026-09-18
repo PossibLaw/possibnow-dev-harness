@@ -1,0 +1,4 @@
+# Runtime artifacts only; sanitized continuity and archives remain shared.
+.checkpoint.lock
+__pycache__/
+*.pyc

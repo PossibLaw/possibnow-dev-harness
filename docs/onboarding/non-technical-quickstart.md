@@ -1,62 +1,24 @@
-# Non-Technical Quickstart
+# Quickstart
 
-## What you need
-- A terminal on macOS or Linux (on Windows, use WSL or Git Bash).
-- A project folder you want to prepare for Claude/Codex.
+Use macOS/Linux with Bash, Git, and Python 3. Open a terminal in your project root.
+The [README](../../README.md#install-or-update-a-project) gives the command that pins
+both bootstrap and pack to the supported release.
 
-## Step 1: Download the harness
+The installer preserves every existing file. It adds missing files and a versioned
+release snapshot. Read its PENDING messages: customized instructions and even an
+unchanged older harness require a reviewed migration when their bytes differ.
+Continuity, unrelated edits, models, permissions, learning mode and Scale remain intact.
+Use --dry-run to preview without target writes. Repeating the same release and options
+is idempotent. Stack commands are suggestions to verify against your actual project.
 
-```bash
-git clone https://github.com/PossibLaw/possibnow-dev-harness.git
-```
+Ask your agent to follow the exact versioned optimization policy printed by the
+installer in check mode. Review the proposal, then authorize that proposal's apply.
+An updated download alone does not complete migration. See the README for rollback.
 
-```bash
-cd possibnow-dev-harness
-```
+Share all sanitized continuity and archives with the work. If ignore rules hide
+shared files, review and narrow only those rules while keeping secrets private.
+The Claude commit guard requires the separately installed/enabled plugin; project
+Markdown and other clients' behavior are advisory unless specifically enforced.
 
-## Step 2: Add project instruction files to your repo
-
-```bash
-./scripts/install-project.sh /path/to/your/repo
-```
-
-Example:
-
-```bash
-./scripts/install-project.sh ~/Documents/my-new-project
-```
-
-Already inside the target repo:
-
-```bash
-/path/to/possibnow-dev-harness/scripts/install-project.sh .
-```
-
-Notes:
-- The installer auto-detects likely command defaults from repo files when possible.
-- If needed, override with flags such as `--test`, `--lint`, `--typecheck`, and `--build`.
-- The installer keeps `.agent/HANDOFF.md` trackable for team continuity, and every commit must carry it (`git add .agent/HANDOFF.md` before you commit; Claude Code enforces this with a guardrail). Other `.agent/*.md` working-state files remain local by default.
-
-If this repo already had the harness and you want to keep existing progress and handoff files, run:
-
-```bash
-./scripts/install-project.sh /path/to/your/repo --preserve-progress
-```
-
-## Step 3 (Optional): Install global files for your user account
-
-```bash
-./scripts/install-global.sh --codex --claude
-```
-
-## Step 4: Confirm installation
-
-```bash
-./scripts/verify-pack.sh
-```
-
-## If something goes wrong
-- Re-run with `--dry-run` to preview actions:
-  - `./scripts/install-project.sh /path/to/repo --dry-run`
-  - `./scripts/install-global.sh --all --dry-run`
-- Restore from backups named like `filename.bak.YYYYMMDD-HHMMSS`.
+For source development, run ./scripts/verify-pack.sh from the harness clone.
+This runs fixture installs; do not use your actual project as a test fixture.

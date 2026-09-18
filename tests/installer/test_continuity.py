@@ -15,7 +15,7 @@ def test_dry_run_is_read_only(tmp_path):
     assert list(tmp_path.rglob('*')) == before
 
 
-def test_upgrade_preserves_history_and_removes_only_obsolete_rules(tmp_path):
+def test_upgrade_preserves_history_and_reports_ignored_continuity(tmp_path):
     subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
     state = tmp_path / '.agent'
     state.mkdir()
@@ -26,8 +26,8 @@ def test_upgrade_preserves_history_and_removes_only_obsolete_rules(tmp_path):
     assert result.returncode == 0, result.stderr
     assert (state / 'HANDOFF.md').read_text() == 'current work\n'
     assert (state / 'HISTORY.md').read_text() == 'historical work\n'
-    for rel in ['.agent/PLAN.md', '.agent/TEST.md', '.agent/HISTORY.md', '.agent/CONTENT-PLAN.md', '.claude/history.md']:
-        assert subprocess.run(['git', '-C', str(tmp_path), 'check-ignore', '-q', rel]).returncode == 1
+    assert 'PENDING: shared harness/continuity file is ignored:' in result.stdout
+    assert (tmp_path / '.gitignore').read_text() == '.env*\n.agent/private-notes.md\n.agent/PLAN.md\n.agent/HISTORY.md\n.agent/CONTENT-PLAN.md\n.claude/history.md\n'
     for rel in ['.env.local', '.agent/private-notes.md']:
         assert subprocess.run(['git', '-C', str(tmp_path), 'check-ignore', '-q', rel]).returncode == 0
 
