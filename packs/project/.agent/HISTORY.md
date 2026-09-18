@@ -17,5 +17,6 @@ for a historical question, not at startup. Before replacing HANDOFF, preserve it
 exact contents with a checkpoint ID, archive time, and SHA-256 hash; verify that
 copy first. Preserve existing historical files and link them here during migration.
 
-New checkpoints go above older ones. Do not put credentials or raw private data
+New checkpoints are indexed with unique IDs and links to byte-exact archive files.
+Preserve existing inline history; retrieve only the entry needed. Do not put credentials or raw private data
 in a shared checkpoint; review and sanitize the source before archiving.

@@ -9,7 +9,7 @@
 - `docs/vendor/supabase.md`: Supabase-specific integration and security reference.
 - `docs/workflows/evals.md`: evals-driven development guide (define “done”, design evals, and iterate safely).
 - `docs/workflows/contracts.md`: typed state-artifact pipeline (`PLAN -> TEST -> REVIEW -> HANDOFF`) plus continuity checkpoint and optional skill integration rules.
-- `docs/workflows/token-management.md`: token/context budgeting guide so the harness stays fast and cheap (Tier 1, always on).
+- `docs/workflows/token-management.md`: context/cost measurement guidance, loaded for context or cost tasks.
 - `docs/workflows/wiki.md`: optional Tier-2 wiki-mode workflow for persistent context acceleration with code-first verification.
 - `docs/workflows/graphify.md`: optional Tier-2 Graphify indexing workflow and non-developer request contract.
 - `docs/glossary.md`: short, beginner-friendly glossary of terms used across the pack.
@@ -48,3 +48,5 @@
 
 ## Repository Docs
 - `docs/architecture/memory-and-indexing-guide.md`: decision guide for repo memory layers, optional indexing, and Graphify fit.
+
+For the current authoritative routing/ownership map, use [rule-ownership.md](rule-ownership.md). The root entries are generated adapters; implementation procedures live in the delivery workflow.

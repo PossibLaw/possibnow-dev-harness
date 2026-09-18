@@ -116,94 +116,9 @@ for script in "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/inst
   fi
 done
 
-# Installer policy: continuity is shared; unrelated private exclusions stay intact.
-INSTALL_TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/possiblaw-install-test.XXXXXX")"
-trap 'rm -rf "$INSTALL_TEST_ROOT"' EXIT
-INSTALL_TEST_TARGET="$INSTALL_TEST_ROOT/target"
-mkdir -p "$INSTALL_TEST_TARGET"
-git -C "$INSTALL_TEST_TARGET" init -q
-printf '%s\n' \
-  '.env*' \
-  '.agent/private-notes.md' \
-  '# Local agent continuity files (keep local; do not commit)' \
-  '.claude/history.md' \
-  '.agent/PLAN.md' \
-  '.agent/CONTEXT.md' \
-  '.agent/TASKS.md' \
-  '.agent/REVIEW.md' \
-  '.agent/TEST.md' \
-  '.agent/HANDOFF.md' \
-  '.agent/WIKI.md' \
-  '.agent/LEARNINGS.md' >"$INSTALL_TEST_TARGET/.gitignore"
-
-"$REPO_ROOT/scripts/install-project.sh" "$INSTALL_TEST_TARGET" >/dev/null
-
-for skill in possibnow-scale possibnow-guardrails possibnow-optimize \
-  closing-sprint-and-syncing-state running-novice-safe-git-cycle \
-  applying-simplicity-ladder scaling-up-with-graphify; do
-  if [[ ! -f "$INSTALL_TEST_TARGET/.agents/skills/$skill/SKILL.md" ]]; then
-    echo "BLOCKED: installer did not provide Codex skill: $skill"
-    exit 1
-  fi
-done
-
-if git -C "$INSTALL_TEST_TARGET" check-ignore -q .agent/HANDOFF.md; then
-  echo "BLOCKED: installer still gitignores shared continuity file: .agent/HANDOFF.md"
-  exit 1
-fi
-
-for rel in .agent/PLAN.md .agent/REVIEW.md .agent/TEST.md .agent/WIKI.md .agent/LEARNINGS.md .agent/HISTORY.md; do
-  if git -C "$INSTALL_TEST_TARGET" check-ignore -q "$rel"; then
-    echo "BLOCKED: installer still excludes shared continuity: $rel"
-    exit 1
-  fi
-done
-
-for rel in .env.local .agent/private-notes.md; do
-  if ! git -C "$INSTALL_TEST_TARGET" check-ignore -q "$rel"; then
-    echo "BLOCKED: installer failed to preserve local/unrelated ignore rule: $rel"
-    exit 1
-  fi
-done
-
-INSTALL_FRESH_TARGET="$INSTALL_TEST_ROOT/fresh-target"
-mkdir -p "$INSTALL_FRESH_TARGET"
-git -C "$INSTALL_FRESH_TARGET" init -q
-"$REPO_ROOT/scripts/install-project.sh" "$INSTALL_FRESH_TARGET" >/dev/null
-if git -C "$INSTALL_FRESH_TARGET" check-ignore -q .agent/HANDOFF.md; then
-  echo "BLOCKED: fresh install gitignores shared continuity file: .agent/HANDOFF.md"
-  exit 1
-fi
-if git -C "$INSTALL_FRESH_TARGET" check-ignore -q .agent/PLAN.md; then
-  echo "BLOCKED: fresh install hides shared continuity: .agent/PLAN.md"
-  exit 1
-fi
-
-INSTALL_CUSTOM_TARGET="$INSTALL_TEST_ROOT/custom-target"
-mkdir -p "$INSTALL_CUSTOM_TARGET"
-git -C "$INSTALL_CUSTOM_TARGET" init -q
-printf '%s\n' '.agent/' >"$INSTALL_CUSTOM_TARGET/.gitignore"
-CUSTOM_INSTALL_OUTPUT="$("$REPO_ROOT/scripts/install-project.sh" "$INSTALL_CUSTOM_TARGET")"
-if ! git -C "$INSTALL_CUSTOM_TARGET" check-ignore -q .agent/HANDOFF.md; then
-  echo "BLOCKED: installer unexpectedly removed a broader custom ignore rule"
-  exit 1
-fi
-if [[ "$CUSTOM_INSTALL_OUTPUT" != *"WARNING: .agent/HANDOFF.md is still ignored by a broader custom rule."* ]]; then
-  echo "BLOCKED: installer did not warn about broader custom rule hiding .agent/HANDOFF.md"
-  exit 1
-fi
-
-INSTALL_SYMLINK_TARGET="$INSTALL_TEST_ROOT/symlink-target"
-mkdir -p "$INSTALL_SYMLINK_TARGET" "$INSTALL_TEST_ROOT/outside"
-ln -s "$INSTALL_TEST_ROOT/outside" "$INSTALL_SYMLINK_TARGET/.agents"
-if "$REPO_ROOT/scripts/install-project.sh" "$INSTALL_SYMLINK_TARGET" >"$INSTALL_TEST_ROOT/symlink-output" 2>&1; then
-  echo "BLOCKED: installer accepted a symlinked Codex skill directory"
-  exit 1
-fi
-if [[ -e "$INSTALL_SYMLINK_TARGET/AGENTS.md" || -e "$INSTALL_TEST_ROOT/outside/skills" ]]; then
-  echo "BLOCKED: installer wrote before rejecting a symlinked Codex skill directory"
-  exit 1
-fi
+# Installer behavior is covered with disposable fixtures in tests/installer.
+python3 "$REPO_ROOT/scripts/render_entries.py" --check
+python3 "$REPO_ROOT/scripts/entry_policy.py" "$REPO_ROOT/packs/project/AGENTS.md" "$REPO_ROOT/packs/project/CLAUDE.md" "$REPO_ROOT/packs/global/codex/.codex/AGENTS.md" "$REPO_ROOT/packs/global/claude/.claude/CLAUDE.md"
 
 has_rg=0
 if command -v rg >/dev/null 2>&1; then
@@ -266,19 +181,12 @@ require_text() {
   fi
 }
 
-# Instruction contracts (Claude + cross-tool mirror stay in sync)
+# Check reachable policy homes, not duplicated handbook text in each root.
 for f in CLAUDE.md AGENTS.md; do
-  require_text "$REPO_ROOT/packs/project/$f" "## Vendor References" "missing vendor section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Contract Pipeline (Required)" "missing contract pipeline section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Continuity Checkpoint Contract" "missing checkpoint section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Shared Continuity (Committed with Work)" "missing shared handoff policy in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Two Tiers" "missing two-tier model in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Token Discipline (Always On)" "missing token discipline section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Simplicity Ladder (Always On)" "missing simplicity ladder section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "## Scale Mode (Tier 2, Default OFF)" "missing scale mode section in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "docs/workflows/graphify.md" "missing graphify trigger in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" "docs/workflows/token-management.md" "missing token-management trigger in packs/project/$f"
-  require_text "$REPO_ROOT/packs/project/$f" ".agent/WIKI.md" "missing wiki config pointer in packs/project/$f"
+  for workflow in delivery contracts learning content clients optimization graphify token-management; do
+    require_text "$REPO_ROOT/packs/project/$f" "docs/workflows/$workflow.md" "missing task route: $workflow in $f"
+    test -f "$REPO_ROOT/packs/project/docs/workflows/$workflow.md"
+  done
 done
 
 require_text "$REPO_ROOT/packs/project/docs/roles/README.md" "## Canonical Roles" "missing canonical role table in packs/project/docs/roles/README.md"
@@ -305,7 +213,7 @@ require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "shared, version-contr
 require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" "## Sprint / Git Cycle" "missing sprint git section in packs/project/.agent/HANDOFF.md"
 require_text "$REPO_ROOT/packs/project/.agent/HANDOFF.md" ".agent/HISTORY.md" "missing historical checkpoint link"
 require_text "$REPO_ROOT/packs/project/.agent/HISTORY.md" "include_in_memory: false" "history must be on-demand"
-require_text "$REPO_ROOT/packs/project/.agent/LEARNINGS.md" "## Promotion Gate (Required)" "missing validation/promotion gate in packs/project/.agent/LEARNINGS.md"
+require_text "$REPO_ROOT/packs/project/docs/workflows/learning.md" "## Promotion gate" "missing validation/promotion gate in packs/project/.agent/LEARNINGS.md"
 require_text "$REPO_ROOT/packs/project/.agent/integrations/README.md" "run-checkpoint" "missing run-checkpoint reference in integrations README"
 
 # Skills
@@ -316,7 +224,7 @@ require_text "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "name: scalin
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"
-require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.1.0"' "plugin.json not bumped to version 4.1.0"
+require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.2.0"' "plugin.json not bumped to version 4.2.0"
 
 # Shared handoff commit guard (Claude runtime) and its tests
 require_text "$REPO_ROOT/scripts/guardrails/validate-bash.py" "def check_handoff_commit" "missing shared-handoff commit guard in scripts/guardrails/validate-bash.py"
@@ -345,12 +253,13 @@ for candidate in "$REPO_ROOT/.venv/bin/python" python3 /usr/bin/python3 /opt/hom
   fi
 done
 if [[ -n "$PYTEST_PY" ]]; then
-  if ! (cd "$REPO_ROOT" && "$PYTEST_PY" -m pytest tests/guardrails tests/installer -q -p no:cacheprovider); then
+  if ! (cd "$REPO_ROOT" && "$PYTEST_PY" -m pytest tests/guardrails tests/installer tests/harness -q -p no:cacheprovider); then
     echo "BLOCKED: guardrail unit tests failed (tests/guardrails)"
     exit 1
   fi
 else
-  echo "NOTE: pytest not found for any python3 candidate; guardrail unit tests skipped (UNCONFIRMED)"
+  echo "BLOCKED: pytest required for release verification (UNCONFIRMED)"
+  exit 1
 fi
 
 echo "DONE: verification passed"

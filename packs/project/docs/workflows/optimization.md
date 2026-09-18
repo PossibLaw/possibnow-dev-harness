@@ -1,11 +1,18 @@
 # Project Optimization
 
-Bundled policy revision: `2026-09-18.1`.
+Bundled policy revision: `2026-09-18.2`.
 
 This is an agent-run workflow, not an autonomous model router or a background
 installer. In Claude Code run `/possibnow-dev-harness:optimize`; in Codex or
 another AGENTS-aware host, ask it to follow this file. Claude's namespaced
 command is not a native Codex slash command.
+
+For a preserved/customized installation, start with the versioned policy named
+by the installer: `.harness/releases/4.2.0/docs/workflows/optimization.md`.
+Use the contracts.md, delivery.md, learning.md, and content.md shipped beside this
+policy for proposed guidance; local project customizations remain authoritative
+constraints to preserve. A downloaded release snapshot does not mean migration
+is complete. The INSTALL.json receipt identifies pending files and before hashes.
 
 Use the contracts.md shipped beside this workflow when a target project has no
 contract or an obsolete one. Include any needed contract update in the proposed
@@ -23,8 +30,12 @@ diff; an absent project install is not a reason to overwrite its files.
    configuration references when proposing a native key; unsupported/unverified
    versions hold that change rather than guessing a schema.
 3. Identify repeated context, obsolete rules, oversized current handoffs,
-   unbounded retries/loops, or missing task-cost receipts. Count words/bytes as
-   file measurements, not tokens. Tool/plugin counts do not prove loaded cost.
+   unbounded retries/loops, or missing task-cost receipts. Measure physical lines
+   (LF/CRLF and final unterminated line), words, and bytes separately. The project
+   policy caps each new/migrated AGENTS.md and CLAUDE.md at 150 physical lines.
+   This is Sal's policy, not a scientific optimum. Inspect eager imports and the
+   actual applicable instruction chain; do not hide the handbook behind imports.
+   File size does not measure tokens, savings, or loaded cost.
 4. Prepare a minimal diff against the current bytes. Prefer bounded on-demand
    context, a current HANDOFF with historical HISTORY, and complete shared
    continuity. Keep security requirements, necessary evidence, project-specific
@@ -32,8 +43,12 @@ diff; an absent project install is not a reason to overwrite its files.
    an existing repository merely to obtain these changes.
 5. Present one proposal: file and reason for each change, before/after behavior,
    validation, backup/rollback, and changes held for missing evidence. The check
-   phase does not write files. Keep any sensitive unchanged context out of the
-   displayed diff.
+   phase does not write files, including receipts, backups, or state updates.
+   Keep any sensitive unchanged context out of the displayed diff. Include exact
+   before SHA-256 values and an inventory of custom routes, commands, content
+   instructions, active constraints, and unresolved tasks to preserve. Oversized
+   customized entries remain PENDING until reviewed migration; never truncate
+   or blindly replace them with the supplied candidate.
 
 ## Model, effort, and accounting gates
 
@@ -65,18 +80,25 @@ second approval for work already authorized.
 - Back up changed files to a private local location; backups containing native
   config must not enter commits. For tracked safe files, identify the before
   commit/blob for recovery. Preserve all current source material.
-- For HANDOFF/HISTORY migration, follow `docs/workflows/contracts.md`: archive
+- For HANDOFF/HISTORY migration, follow contracts.md beside this release policy: archive
   and verify the entire previous handoff before replacing it with a reviewed
   current checkpoint. Do not mechanically split a large file at its first STOP
   marker or discard old history. Preserve legacy history files and link them.
 - Apply narrow edits. Never write UNCONFIRMED values into native settings. Keep
   secrets, permissions, hooks, and unrelated settings intact.
+- For root entries, validate with the release tools/entry_policy.py and inspect
+  readable formatting, route reachability, and required policy preservation.
+  Preserve project identity, important commands/gotchas, and content-specific
+  routes in the compact entry; move detailed local policy to reviewed documents.
+  A refused/stale apply makes no target writes. Re-prepare only affected changes.
 - Validate changed native syntax and supported keys, run the agreed relevant
   checks, inspect the final diff, and verify effective settings where possible.
   Unsupported live verification stays UNCONFIRMED. Do not consume paid model
   evaluations without authorization.
 - Record a sanitized `.agent/OPTIMIZATION.md` receipt: policy/host versions,
-  changes, validation evidence, held items, and exact per-file rollback steps.
+  changes, before/after hashes, validation evidence, held items, private backup
+  locators, and exact per-file rollback steps. The receipt distinguishes installed
+  release version from completed project migration. Never commit private backups.
   Commit and deliver all related continuity with the work under the shared
   contract. Never bulk-add secrets or ignored runtime directories.
 - Rollback restores only this proposal's edits after checking for intervening

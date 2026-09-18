@@ -1,4 +1,3 @@
-<!-- Generated from packs/entry.md; edit that source in the harness. -->
 # <PROJECT_NAME>
 
 Owner: <TEAM_OR_OWNER>. Add a short project purpose here.
@@ -61,5 +60,3 @@ An install or update does not change those modes or native client configuration.
 Record stable project-specific constraints here; keep completed narratives in history.
 This entry has a project-policy limit of 150 physical lines, including blanks.
 Move procedures to linked documents before adding more; never truncate local policy.
-
-Host: Claude Code discovers this entry; no automatic handbook imports are used.

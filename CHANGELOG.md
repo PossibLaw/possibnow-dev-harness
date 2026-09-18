@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## Unreleased — Codex workflow parity
+## 4.2.0 — 2026-09-18 — Compact portable guidance and conservative upgrades
+
+- Generate both project entries from one compact source and enforce 150 physical lines each, including LF/CRLF and final unterminated lines. Detailed delivery, continuity, content, learning, and client guidance loads on demand.
+- Preserve all existing project files. Supply versioned candidates, current optimization policy, pending migration hashes, and a guarded installation rollback receipt. Dry-run writes nothing; repeated installs do not churn files. Ignore rules are preserved and reported for review.
+- Add byte-exact checkpoint archival, verification, deduplication, and intervening-edit checks. Semantic completeness remains reviewed; legacy history survives intact.
+- Reconcile OFF/CAPTURE/APPLY and candidate/promotion gates; distinguish advisory instructions from tested Claude-only hooks.
+- Pin bootstrap and pack to v4.2.0; print source version/commit. No model, permission, learning mode, Scale, or global setting changes.
+
+### Codex workflow parity (included in 4.2.0)
 
 - Add Codex project skills for Init, Scale, Guardrails, and Optimize. The project installer ships the three ongoing skills and the four existing workflow skills to `.agents/skills/`; Init is available from the harness clone where its installer source lives.
 - Clarify that Codex invokes these with `$name` and that Claude plugin hooks do not run in Codex. Preflight rejects symlinked Codex skill directories before writing project files.

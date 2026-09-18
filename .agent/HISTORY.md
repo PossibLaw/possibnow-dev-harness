@@ -216,3 +216,12 @@ Next: after updating the plugin, project owners run `/optimize` to review their 
 
 Previous handoff is preserved verbatim and hash-verified in HISTORY.md. PLAN, TEST, and REVIEW hold the implementation evidence and limitations.
 <!-- END RELEASE CHECKPOINT -->
+
+
+<!-- checkpoint-21381c233de60059dbea10f73bb4cbcf7efe55d99369229bb2ada46ba3ab43e4 -->
+## checkpoint-21381c233de60059dbea10f73bb4cbcf7efe55d99369229bb2ada46ba3ab43e4
+Archived at: 2026-09-18T17:10:09.058352+00:00
+
+SHA-256: `21381c233de60059dbea10f73bb4cbcf7efe55d99369229bb2ada46ba3ab43e4`
+
+Exact prior bytes: [checkpoint](archives/handoffs/21381c233de60059dbea10f73bb4cbcf7efe55d99369229bb2ada46ba3ab43e4.md)

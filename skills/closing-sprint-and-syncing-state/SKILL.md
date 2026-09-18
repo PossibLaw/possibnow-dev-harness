@@ -9,6 +9,6 @@ metadata:
 
 Read `docs/workflows/contracts.md` for the checkpoint and commit contract. Update PLAN to reflect current work. Prepare a current HANDOFF that retains decisions, exact constraints, blockers, evidence links, and the next action.
 
-Before replacing HANDOFF, archive its exact old contents in HISTORY under a unique ID and hash; verify preservation and check for intervening edits. A failed archive leaves the current handoff intact. Do not duplicate an identical checkpoint or delete legacy history. Normal resume reads only current HANDOFF.
+Use the checkpoint.py helper described in that contract after reviewing the full prior handoff and authoritative current state. Keep every unresolved task and active constraint, regardless of age. The helper preserves and verifies exact prior bytes; semantic completeness still requires review. Normal resume reads only current HANDOFF.
 
-Update learnings only when enabled and supported by its promotion rule. Review all changed continuity for sensitive content, commit it with the work, and verify the authorized delivery on remote main. Keep raw runtime logs and credentials private. Report incomplete validation or delivery honestly.
+Read docs/workflows/learning.md only for requested or enabled learning; keep candidates separate from adopted lessons. Review all changed continuity for sensitive content, commit it with the work, and verify the authorized delivery on remote main. Keep raw runtime logs and credentials private. Report incomplete validation or delivery honestly.

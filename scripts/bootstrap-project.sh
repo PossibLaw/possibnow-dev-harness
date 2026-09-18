@@ -15,7 +15,7 @@ Examples:
 
 Environment overrides:
   DEV_HARNESS_REPO_URL   Git URL to clone (default: official GitHub repo)
-  DEV_HARNESS_REF        Branch/tag/ref to clone (default: main)
+  DEV_HARNESS_REF        Branch/tag to clone (default: v4.2.0; raw commit SHA unsupported)
   (STARTER_PACK_REPO_URL / STARTER_PACK_REF are still honored as legacy aliases)
 USAGE
 }
@@ -48,7 +48,7 @@ fi
 
 TARGET_DIR_ABS="$(cd "$TARGET_DIR" && pwd)"
 REPO_URL="${DEV_HARNESS_REPO_URL:-${STARTER_PACK_REPO_URL:-https://github.com/PossibLaw/possibnow-dev-harness.git}}"
-REPO_REF="${DEV_HARNESS_REF:-${STARTER_PACK_REF:-main}}"
+REPO_REF="${DEV_HARNESS_REF:-${STARTER_PACK_REF:-v4.2.0}}"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/possibnow-dev-harness.XXXXXX")"
 CLONE_DIR="$TMP_ROOT/repo"
 
@@ -57,7 +57,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-git clone --quiet --depth 1 --branch "$REPO_REF" "$REPO_URL" "$CLONE_DIR"
+git clone --quiet --depth 1 --branch "$REPO_REF" -- "$REPO_URL" "$CLONE_DIR"
 
 if [[ ! -x "$CLONE_DIR/scripts/install-project.sh" ]]; then
   echo "BLOCKED: installer script missing or not executable in the cloned dev harness."
