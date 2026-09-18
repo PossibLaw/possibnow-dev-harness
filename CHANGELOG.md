@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased — Codex workflow parity
+
+- Add Codex project skills for Init, Scale, Guardrails, and Optimize. The project installer ships the three ongoing skills and the four existing workflow skills to `.agents/skills/`; Init is available from the harness clone where its installer source lives.
+- Clarify that Codex invokes these with `$name` and that Claude plugin hooks do not run in Codex. Preflight rejects symlinked Codex skill directories before writing project files.
+
 ## 4.1.0 — 2026-09-18
 
 - Add `/possibnow-dev-harness:optimize`: read-only proposal, then reviewed project apply with validation/rollback and quality-gated model changes.

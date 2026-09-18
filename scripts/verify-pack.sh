@@ -13,6 +13,10 @@ REQUIRED_FILES=(
   "commands/guardrails.md"
   "commands/scale.md"
   "commands/optimize.md"
+  ".agents/skills/possibnow-init/SKILL.md"
+  ".agents/skills/possibnow-scale/SKILL.md"
+  ".agents/skills/possibnow-guardrails/SKILL.md"
+  ".agents/skills/possibnow-optimize/SKILL.md"
   "packs/project/docs/workflows/optimization.md"
   "packs/project/.agent/HISTORY.md"
   "skills/closing-sprint-and-syncing-state/SKILL.md"
@@ -134,6 +138,15 @@ printf '%s\n' \
 
 "$REPO_ROOT/scripts/install-project.sh" "$INSTALL_TEST_TARGET" >/dev/null
 
+for skill in possibnow-scale possibnow-guardrails possibnow-optimize \
+  closing-sprint-and-syncing-state running-novice-safe-git-cycle \
+  applying-simplicity-ladder scaling-up-with-graphify; do
+  if [[ ! -f "$INSTALL_TEST_TARGET/.agents/skills/$skill/SKILL.md" ]]; then
+    echo "BLOCKED: installer did not provide Codex skill: $skill"
+    exit 1
+  fi
+done
+
 if git -C "$INSTALL_TEST_TARGET" check-ignore -q .agent/HANDOFF.md; then
   echo "BLOCKED: installer still gitignores shared continuity file: .agent/HANDOFF.md"
   exit 1
@@ -177,6 +190,18 @@ if ! git -C "$INSTALL_CUSTOM_TARGET" check-ignore -q .agent/HANDOFF.md; then
 fi
 if [[ "$CUSTOM_INSTALL_OUTPUT" != *"WARNING: .agent/HANDOFF.md is still ignored by a broader custom rule."* ]]; then
   echo "BLOCKED: installer did not warn about broader custom rule hiding .agent/HANDOFF.md"
+  exit 1
+fi
+
+INSTALL_SYMLINK_TARGET="$INSTALL_TEST_ROOT/symlink-target"
+mkdir -p "$INSTALL_SYMLINK_TARGET" "$INSTALL_TEST_ROOT/outside"
+ln -s "$INSTALL_TEST_ROOT/outside" "$INSTALL_SYMLINK_TARGET/.agents"
+if "$REPO_ROOT/scripts/install-project.sh" "$INSTALL_SYMLINK_TARGET" >"$INSTALL_TEST_ROOT/symlink-output" 2>&1; then
+  echo "BLOCKED: installer accepted a symlinked Codex skill directory"
+  exit 1
+fi
+if [[ -e "$INSTALL_SYMLINK_TARGET/AGENTS.md" || -e "$INSTALL_TEST_ROOT/outside/skills" ]]; then
+  echo "BLOCKED: installer wrote before rejecting a symlinked Codex skill directory"
   exit 1
 fi
 

@@ -22,3 +22,11 @@ memory:
 No paid model eval, live slash-command conversation, native model change, production API test, or user-project migration ran. E4 is an instruction/pack check, not end-to-end proof of agent decisions.
 
 - Additional failing-before: symlinked-state escape test failed; after write-path rejection was added, the complete suite passed with 172 tests.
+
+## Codex workflow parity — September 18, 2026
+
+- Failing-before: `./scripts/verify-pack.sh` reported the four missing Codex skill files.
+- Passing-after: `./scripts/verify-pack.sh` passed with 172 tests and verified that a fresh install includes seven Codex skills. `git diff --check` passed. All four new skill files passed `skill-creator/scripts/quick_validate.py`.
+- The installer uses the existing safe-copy path, which rejects writes through symlinked destinations. Existing dry-run and preservation fixtures remain green.
+- Additional failing-before: the `.agents` symlink fixture found that the installer wrote other files before rejecting that path. Passing-after: preflight now rejects it before any target write.
+- Live Codex skill invocation, plugin distribution, and installed-project migration: `UNCONFIRMED` (not exercised).
