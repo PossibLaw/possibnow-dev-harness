@@ -1,7 +1,7 @@
 ---
 contract_version: 1
 artifact_type: plan
-status: COMPLETE
+status: IN_REVIEW
 depends_on: []
 produces: [eval_ids, release_scope]
 feeds_into: [.agent/TEST.md]
@@ -10,57 +10,21 @@ memory:
   tags: [plan]
 ---
 
-# 4.2.1 Compact portable harness
+# Unreleased: git guardrail gaps + Pocock-derived skills
 
-Baseline: main 4f43649b175ad18813319bba6849d200238c307f, unchanged after fetch.
-Original entries: AGENTS 178 lines/1890 words/13582 bytes; CLAUDE 202/2003/14446.
-Sal's <=150 physical line policy applies to each shipped/newly generated root,
-not a scientific optimum or cost claim. Rule ownership: docs/architecture/rule-ownership.md.
+Baseline: main 58ba0c0 (v4.2.1 published). Branch: feat/v4.3.0-git-guards-and-pocock-skills.
+Source for adopted skills: mattpocock/skills @ 49dd158d1076134a641b33efb035946536778336 (MIT).
 
-Scope: one source for compact adapters; on-demand canonical procedures; current-only
-handoff with verified exact archives; gated learnings; conservative file-preserving
-updates with versioned candidates/receipts/rollback; double-pinned v4.2.1 release.
-Do not modify installed projects, globals, models/effort, permissions, learning
-mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
+Scope: close force-push/branch-delete/discard gaps in `scripts/guardrails/blacklist.py`;
+add user-invoked `splitting-work-into-tickets` and `running-a-retro` skills; add
+`docs/references/writing-for-agents*.md` as a maintainer-only reference. No version bump,
+release pins, installed projects, globals, models, permissions, learning mode, or Scale.
+v4.3.0 is cut separately after its publish smoke gate.
 
 ## Acceptance and evidence plan
 
-- E1: fresh fixture gets valid routes and <=150-line entries.
-- E2: 150 passes/151 fails with LF, CRLF, and missing final newline.
-- E3: planning, validation, review/security, content, checkpoint and learning rules
-  remain in reachable authoritative homes; retain detailed TEST/REVIEW checklists.
-- E4: customized and unchanged older fixtures preserve every pre-existing byte;
-  differing files remain pending reviewed migration, including oversized entries.
-- E5: dry-run/check makes no target writes; same release/options repeat is idempotent.
-- E6: archive full prior bytes/hash/timestamp/ID; failed/corrupt/conflicting archive
-  or intervening edit leaves HANDOFF intact. Candidate semantic completeness is reviewed.
-- E7: OFF captures nothing; candidates never count as adopted lessons. CAPTURE
-  never edits instructions; APPLY requires authorization. Static/advisory coverage.
-- E8: no eager root imports, rules, or state/history/library preload; read-only
-  questions bypass delivery state. Existing external client context is unverified.
-- E9: existing Claude guardrail tests remain unchanged and passing; client matrix
-  names enforcement limits. No new runtime adapter is claimed.
-- E10: tag-based bootstrap fixture selects release over newer branch; published
-  curl smoke must select the actual release version/commit before final delivery.
-
-## Milestones
-
-Implementation, 212-test local/CI verification, PR merges, and v4.2.1 publication
-are complete. E10 public smoke passed against the tagged commit, including rollback.
-See RELEASE-4.2.1.md and the published GitHub Release verification receipt.
-No installed project migration is implied; preserved custom files need reviewed apply.
-
-## Learning Mode
-- Mode: `OFF` (existing task default)
-
-Prior plan preserved verbatim: archives/pre-4.2-PLAN.md.
-
-## Published-tag gate correction
-
-PR #11 merged as 08a01b75cd11bde3bd1487ed96bbbf7924427b9b. The immutable v4.2.0
-tag passed public install/preservation/repeat checks but failed rollback on a
-macOS /var versus /private/var root alias. No pre-existing file was changed/deleted.
-Ship patch v4.2.1 after alias/internal-symlink regression tests and the same public smoke.
-Do not move v4.2.0. No GitHub Release was published for that failed candidate tag.
-
-Published-tag correction completed: v4.2.1 passed and was published; v4.2.0 remains unchanged.
+- G1 (happy): `git push origin main`, `push -u origin feature`, `branch -d`, `restore --staged .`, `clean -n` run silently.
+- G2 (edge): force-push to main/master is blocked in every spelling (`-f`, trailing `--force`/`-f`, `--force-with-lease`, `+main`, `+HEAD:master`); `git clean -df|-xdf|--force` blocked; `push ... && cd main` stays silent.
+- G3 (failure/safety): other force-pushes, `branch -D`, `branch --delete --force`, `checkout .`, `checkout -- .`, `restore .`, `restore --worktree .` ask first.
+- S1: installer delivers both new skills to `.claude/skills/` and `.agents/skills/` in a disposable fixture; writing-for-agents is not shipped.
+- S2: `scripts/verify-pack.sh` requires both skills and their metadata; full suite green.
