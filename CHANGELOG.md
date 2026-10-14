@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased — git guardrail gaps and Pocock-derived skills
+
+- **Guardrails (`scripts/guardrails/blacklist.py`)**: force-push to main/master is now blocked in every common spelling (`-f`, trailing `--force`/`-f`, `--force-with-lease`, `+main` refspec), and `git clean` with any force flag (`-df`, `-xdf`, `--force`) is blocked. Ask-first now covers other force-push spellings, `git branch -D` / `--delete --force`, `git checkout .`, and `git restore .` (not `--staged`). Ordinary `git push`, `branch -d`, `restore --staged` and `clean -n` stay silent. 29 new regression cases (241 total).
+- **Skills**: add user-invoked `splitting-work-into-tickets` and `running-a-retro`, adapted from mattpocock/skills at 49dd158 (MIT, attributed in each file). Tickets publish to GitHub Issues when a GitHub remote and `gh` auth exist, else to local `.agent/tickets/`; frontier tickets are meant for parallel worktree agents.
+- **Docs**: add `docs/references/writing-for-agents*.md` as a maintainer reference (not shipped to projects).
+- No version bump or release pins changed; v4.3.0 is cut separately after its publish smoke gate.
+
 ## 4.2.1 — 2026-09-18 — Verified portable release
 
 - Fix rollback receipt handling when the target root has an equivalent path alias (including macOS /var and /private/var). Internal symlinks and out-of-repo receipt paths remain rejected.

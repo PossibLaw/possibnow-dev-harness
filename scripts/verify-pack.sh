@@ -23,6 +23,9 @@ REQUIRED_FILES=(
   "skills/running-novice-safe-git-cycle/SKILL.md"
   "skills/applying-simplicity-ladder/SKILL.md"
   "skills/scaling-up-with-graphify/SKILL.md"
+  "skills/splitting-work-into-tickets/SKILL.md"
+  "skills/running-a-retro/SKILL.md"
+  "docs/references/writing-for-agents.md"
   "hooks/hooks.json"
   "scripts/guardrails/validate-bash.py"
   "tests/guardrails/test_validate_bash.py"
@@ -221,6 +224,8 @@ require_text "$REPO_ROOT/skills/closing-sprint-and-syncing-state/SKILL.md" "name
 require_text "$REPO_ROOT/skills/running-novice-safe-git-cycle/SKILL.md" "name: running-novice-safe-git-cycle" "missing git cycle skill metadata"
 require_text "$REPO_ROOT/skills/applying-simplicity-ladder/SKILL.md" "name: applying-simplicity-ladder" "missing simplicity ladder skill metadata"
 require_text "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "name: scaling-up-with-graphify" "missing scale mode skill metadata"
+require_text "$REPO_ROOT/skills/splitting-work-into-tickets/SKILL.md" "name: splitting-work-into-tickets" "missing ticket-splitting skill metadata"
+require_text "$REPO_ROOT/skills/running-a-retro/SKILL.md" "name: running-a-retro" "missing retro skill metadata"
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"
