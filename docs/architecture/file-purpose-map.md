@@ -44,6 +44,7 @@
 - `skills/scaling-up-with-graphify/SKILL.md`: Tier-2 procedure for indexing a larger codebase.
 - `skills/splitting-work-into-tickets/SKILL.md`: user-invoked; turns a plan into tracer-bullet tickets with blocking edges (GitHub Issues or local `.agent/tickets/`). Adapted from mattpocock/skills (MIT).
 - `skills/running-a-retro/SKILL.md`: user-invoked; reviews a session and proposes environment improvements. Adapted from mattpocock/skills (MIT).
+- `scripts/install_codex_guardrails.py`: installs the guardrail scripts as Codex PreToolUse hooks in `~/.codex/config.toml`; trust them with `/hooks` in Codex.
 - `docs/references/writing-for-agents*.md`: maintainer reference for writing skills and entry files; not shipped to projects. From mattpocock/skills (MIT).
 - `agents/*.md`: host-agnostic specialist agents promoted to the top level.
 - `hooks/hooks.json`: Tier-1 Claude runtime hooks, on by default with the plugin; `hooks/tier2-hooks.json` is the opt-in Tier-2 set.

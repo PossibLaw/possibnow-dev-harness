@@ -285,8 +285,18 @@ def main():
         sys.exit(2)
 
     # Check escalation patterns
+    codex = sys.argv[1:3] == ["--host", "codex"]
     for pattern in ESCALATE_PATTERNS:
         if re.search(pattern, command):
+            if codex:
+                # Codex parses but ignores permissionDecision "ask", so ask-first must block.
+                print(
+                    f"ASK-FIRST: this command may have unintended consequences "
+                    f"(matched pattern '{pattern}'). Codex hooks cannot prompt: stop and ask the user "
+                    f"to confirm in chat, and if they agree, have them run it themselves.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
             result = {
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
