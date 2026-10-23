@@ -23,6 +23,8 @@ REQUIRED_FILES=(
   "skills/running-novice-safe-git-cycle/SKILL.md"
   "skills/applying-simplicity-ladder/SKILL.md"
   "skills/scaling-up-with-graphify/SKILL.md"
+  "skills/routing-work-to-a-repo/SKILL.md"
+  "tests/harness/test_routing_skill.py"
   "hooks/hooks.json"
   "scripts/guardrails/validate-bash.py"
   "tests/guardrails/test_validate_bash.py"
@@ -32,6 +34,8 @@ REQUIRED_FILES=(
   "scripts/verify-pack.sh"
   "scripts/set-learning-mode.sh"
   "scripts/orca-worktree-setup"
+  "scripts/sync-tasks-to-issues.py"
+  "tests/harness/test_sync_tasks_to_issues.py"
   "docs/orca.md"
   "tests/harness/test_orca_worktree_setup.py"
   "packs/project/AGENTS.md"
@@ -112,7 +116,7 @@ if git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
   exit 1
 fi
 
-for script in "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh"; do
+for script in "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh"; do
   if [[ ! -x "$script" ]]; then
     echo "BLOCKED: script is not executable: ${script#$REPO_ROOT/}"
     exit 1
@@ -224,6 +228,7 @@ require_text "$REPO_ROOT/skills/closing-sprint-and-syncing-state/SKILL.md" "name
 require_text "$REPO_ROOT/skills/running-novice-safe-git-cycle/SKILL.md" "name: running-novice-safe-git-cycle" "missing git cycle skill metadata"
 require_text "$REPO_ROOT/skills/applying-simplicity-ladder/SKILL.md" "name: applying-simplicity-ladder" "missing simplicity ladder skill metadata"
 require_text "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "name: scaling-up-with-graphify" "missing scale mode skill metadata"
+require_text "$REPO_ROOT/skills/routing-work-to-a-repo/SKILL.md" "name: routing-work-to-a-repo" "missing work-router skill metadata"
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"

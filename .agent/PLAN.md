@@ -39,3 +39,11 @@ Per-person Orca settings are out of scope for this public repo.
 - [x] O1–O3 covered by `tests/harness/test_orca_worktree_setup.py` (red first, then green)
 - [x] V1 verify-pack passes
 - [ ] PR reviewed and merged by Sal
+
+## Addendum: issue sync (ORC01, same baseline, stacked branch orc01/issue-sync)
+
+- S1 (happy): first run creates one labelled issue per identified open row with marker, source and flywheel line; a second run changes nothing; a prose edit updates the issue; a DONE row or a row that leaves the register closes it.
+- S2 (edge): rows without an ID are reported, not invented; `--only` limits to one repo; `--dry-run` writes nothing and reports counts; the board step is skipped while disabled.
+- S3 (failure/safety): a row matching a card or bank pattern is never sent and is named in the summary; an issue closed or edited on GitHub is reported as drift and never reopened or written back; a repository without a register is an error in the summary, not a crash.
+- Covered by `tests/harness/test_sync_tasks_to_issues.py` (red first, 14 tests). Live dry run on October 23, 2026 planned 147 issues across four private repositories.
+
