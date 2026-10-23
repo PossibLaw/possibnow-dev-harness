@@ -13,6 +13,10 @@ memory:
 # Current Handoff — Orca worktree setup helper and runbook (ORC00, unreleased)
 
 ## Status
+Board step added on branch `orc01/board-step` (October 23, 2026, after Sal approved the
+`project` scope and the cross-owner check passed): open synced issues go once onto
+`AtticusDundee/projects/1`. Three tests; suite 244.
+
 Branch `orc00/orca-setup` off main 58ba0c0 (v4.2.1). Adds `scripts/orca-worktree-setup`
 (moved from one machine's `~/.local/bin`), the generic `docs/orca.md` runbook, nine
 fixture tests, verify-pack entries, a README pointer, and `.orca` in `.gitignore`.
