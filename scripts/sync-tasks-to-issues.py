@@ -16,13 +16,14 @@ sent; file names are fine. Rows without an ID are reported, not invented.
 
 GitHub access goes through `gh api` (REST), which works locally and in Claude Code
 cloud sessions. The Project board step runs only when `board.enabled` is true in the
-config and needs a token with the `project` scope (UNCONFIRMED whether a user board
-can hold organization repositories' issues).
+config and needs a token with the `project` scope. Issues are added once each
+(tracked in the state file); a user board can hold organization repositories' issues
+(confirmed October 23, 2026).
 
 Config (JSON):
     {"label": "agent-task",
      "repos": [{"name": "Aleph", "path": "~/Aleph", "github": "Owner/repo"}, ...],
-     "board": {"enabled": false, "owner": "", "number": 0},
+     "board": {"enabled": true, "owner": "AtticusDundee", "number": 1},
      "deny_patterns": ["..."]}            # optional; defaults below
 
 Standard library only. Exit 0 even when some repositories fail; failures are in the
@@ -237,7 +238,7 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
     name, github = repo["name"], repo["github"]
     label = cfg.get("label", "agent-task")
     r = {"repo": name, "github": github, "created": [], "updated": [], "closed": [], "drift": [],
-         "private": [], "no_id": [], "errors": [], "would_create": 0}
+         "private": [], "no_id": [], "errors": [], "would_create": 0, "open_urls": []}
     tasks = Path(repo["path"]).expanduser() / ".agent" / "TASKS.md"
     if not tasks.is_file():
         r["errors"].append(f"no register at {tasks}")
@@ -290,6 +291,7 @@ def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: d
             else:
                 created = gh.create(github, title, body, label)
                 r["created"].append(f"{row.id} → #{created['number']}")
+                r["open_urls"].append(created.get("html_url") or f"https://github.com/{github}/issues/{created['number']}")
             return
         current_body, old_marker = split_marker(issue.get("body") or "")
         hand_edited = old_marker is not None and hashlib.sha256((issue["title"] + "\n" + current_body).encode("utf-8")).hexdigest()[:12] != old_marker["sha"]
@@ -304,20 +306,42 @@ def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: d
         if issue["state"] == "closed":
             r["drift"].append(f"{row.id} #{issue['number']}: closed on GitHub but the row is still open; not reopened")
             return
+        r["open_urls"].append(issue.get("html_url") or f"https://github.com/{github}/issues/{issue['number']}")
         if old_marker is None or old_marker["sha"] != new_marker["sha"]:
             if not gh.dry_run:
                 gh.update(github, issue["number"], title=title, body=body)
             r["updated"].append(f"{row.id} #{issue['number']}")
 
 
-def board_step(cfg: dict, results: list[dict]) -> str:
+def board_step(cfg: dict, results: list[dict], state: dict, dry_run: bool) -> tuple[str, list[str]]:
+    """Add every open synced issue to the GitHub Project board once. Needs `gh` with the project scope."""
     board = cfg.get("board") or {}
     if not board.get("enabled"):
-        return "board: off (enable in config after the gh token has the project scope; cross-owner user boards UNCONFIRMED)"
-    return "board: enabled but not implemented in this version; issues were not added"
+        return "board: off (enable in config once the gh token has the project scope)", []
+    owner, number = board.get("owner"), board.get("number")
+    if not owner or not number:
+        return "board: enabled but owner or number missing in config", []
+    added_before = set(state.get("board_added", []))
+    todo = [u for r in results for u in r["open_urls"] if u not in added_before]
+    if dry_run:
+        return f"board: would add {len(todo)} to {owner}/projects/{number} ({len(added_before)} already on it)", []
+    added, errors = 0, []
+    for url in todo:
+        res = subprocess.run(["gh", "project", "item-add", str(number), "--owner", owner, "--url", url, "--format", "json"],
+                             capture_output=True, text=True)
+        if res.returncode == 0:
+            added_before.add(url)
+            added += 1
+        else:
+            errors.append(f"board {url}: {res.stderr.strip()[:160]}")
+            if len(errors) >= 5:
+                errors.append("board: stopping after 5 failures this run")
+                break
+    state["board_added"] = sorted(added_before)
+    return f"board: added {added} to {owner}/projects/{number} ({len(added_before)} on it in total)", errors
 
 
-def summarize(results: list[dict], board_line: str, dry_run: bool) -> str:
+def summarize(results: list[dict], board_line: str, dry_run: bool, board_errors: list[str] | None = None) -> str:
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     out = [f"# Task → issue sync {'(dry run) ' if dry_run else ''}{now}", ""]
     for r in results:
@@ -332,6 +356,9 @@ def summarize(results: list[dict], board_line: str, dry_run: bool) -> str:
                 out += [f"  - {item}" for item in r[key]]
         out.append("")
     out.append(board_line)
+    if board_errors:
+        out.append("- Errors (board):")
+        out += [f"  - {e}" for e in board_errors]
     return "\n".join(out) + "\n"
 
 
@@ -371,7 +398,13 @@ def main(argv=None) -> int:
     gh = GitHub(args.dry_run)
     deny = cfg.get("deny_patterns") or DEFAULT_DENY
     results = [sync_repo(cfg, repo, gh, deny) for repo in repos]
-    summary = summarize(results, board_step(cfg, results), args.dry_run)
+    state_path = args.state.expanduser()
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {}
+    except ValueError:
+        state = {}
+    board_line, board_errors = board_step(cfg, results, state, args.dry_run)
+    summary = summarize(results, board_line, args.dry_run, board_errors)
     if args.slack:
         summary += post_slack(summary) + "\n"
     print(summary, end="")
@@ -379,7 +412,9 @@ def main(argv=None) -> int:
         for path in (args.summary, args.state):
             path.expanduser().parent.mkdir(parents=True, exist_ok=True)
         args.summary.expanduser().write_text(summary, encoding="utf-8")
-        args.state.expanduser().write_text(json.dumps({"ran": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "results": results}, indent=1), encoding="utf-8")
+        state.update({"ran": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                      "results": [{k: v for k, v in r.items() if k != "open_urls"} for r in results]})
+        state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
     return 0
 
 

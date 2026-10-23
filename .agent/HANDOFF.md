@@ -17,6 +17,9 @@ Merged to main on October 23, 2026: PR #15 (ORC00), then #19 carrying #16 (FD01)
 and #18 (ORC02), which had merged into their stacked bases rather than main. Branches and
 worktrees removed. No release cut; version stays 4.2.1 until PR #14 lands and v4.3.0 is cut.
 Earlier branch-level status kept below for the record.
+Board step merged as PR #21 (October 23, 2026, after Sal approved the
+`project` scope and the cross-owner check passed): open synced issues go once onto
+`AtticusDundee/projects/1`. Three tests; suite 244.
 
 Branch `orc00/orca-setup` off main 58ba0c0 (v4.2.1). Adds `scripts/orca-worktree-setup`
 (moved from one machine's `~/.local/bin`), the generic `docs/orca.md` runbook, nine
