@@ -10,10 +10,14 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — Orca worktree setup helper and runbook (ORC00, unreleased)
+# Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
-Board step added on branch `orc01/board-step` (October 23, 2026, after Sal approved the
+Merged to main on October 23, 2026: PR #15 (ORC00), then #19 carrying #16 (FD01), #17 (ORC01)
+and #18 (ORC02), which had merged into their stacked bases rather than main. Branches and
+worktrees removed. No release cut; version stays 4.2.1 until PR #14 lands and v4.3.0 is cut.
+Earlier branch-level status kept below for the record.
+Board step merged as PR #21 (October 23, 2026, after Sal approved the
 `project` scope and the cross-owner check passed): open synced issues go once onto
 `AtticusDundee/projects/1`. Three tests; suite 244.
 
@@ -64,6 +68,6 @@ skill (one sentence → issue in the owning repo, flywheel line, Orca worktree o
 - Previous checkpoint (v4.2.1 published) archived in HISTORY by the checkpoint helper.
 
 ## Next actions
-1. Sal reviews and merges the ORC00 PR (or asks for changes).
-2. Sal reviews the stacked FD01, ORC01 and ORC02 PRs (merge in order after ORC00) and confirms the routing table in the private repo.
-3. After ORC01 merges: the nightly runner in Aleph calls the sync from the main checkout.
+1. Switch the harness main checkout to `main` so the Aleph nightly runner finds `scripts/sync-tasks-to-issues.py` (checkout currently holds PR #14's branch).
+2. Sal confirms the routing table and answers the GR01/FW01 questions in the private repo.
+3. Cut v4.3.0 after PR #14 merges; update the installed plugin on Sal's machine.
