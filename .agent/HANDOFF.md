@@ -1,8 +1,8 @@
 ---
 contract_version: 1
 artifact_type: handoff
-status: COMPLETE
-depends_on: [.agent/PLAN.md, .agent/TEST.md, .agent/REVIEW.md, .agent/RELEASE-4.2.1.md]
+status: IN_REVIEW
+depends_on: [.agent/PLAN.md, .agent/TASKS.md]
 produces: [next_actions, historical_checkpoint_link]
 feeds_into: []
 memory:
@@ -10,38 +10,49 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.2.1 published
+# Current Handoff — Orca worktree setup helper and runbook (ORC00, unreleased)
 
 ## Status
-Release v4.2.1 is published from ffe828e765d687fc63a6e8fff0a2382e40de0ea5.
-PRs #11/#12 are merged; local and CI verification passed with 212 tests.
-Both project entries are 65 physical lines. Public double-pinned bootstrap smoke
-passed preservation, read-only preview, idempotency, exact commit, and rollback.
+Branch `orc00/orca-setup` off main 58ba0c0 (v4.2.1). Adds `scripts/orca-worktree-setup`
+(moved from one machine's `~/.local/bin`), the generic `docs/orca.md` runbook, nine
+fixture tests, verify-pack entries, a README pointer, and `.orca` in `.gitignore`.
+PR open for Sal's review; nothing merged. Row ORC00 of the machine-wide Program 1
+(Orca-first operating system); next rows FD01 and ORC01 also land in this repo.
 
 ## Unresolved work
-- Customized installed projects remain pending their own reviewed migration;
-  downloading the release does not complete it. No real installed project was modified.
-- Live client compliance and semantic optimize apply remain UNCONFIRMED.
-- Marketplace publication remains separate; no external marketplace repo was changed.
+- Program 1 rows in this repo: FD01 (feeder step at the end of the closing skill) and
+  ORC01 (generic issue-sync script). See `.agent/TASKS.md`.
+- Sal's per-repository Orca settings (setup lines, wait-for-setup, LumenAtlas) are recorded
+  in the private `AtticusDundee/agent-tasks` repo, not here. Orca's live settings on Sal's
+  Mac differed from the recorded recommendation on October 23, 2026; reconciling them is
+  Sal's call (recorded there).
+- Carried from PR #14 (branch feat/v4.3.0-git-guards-and-pocock-skills, unmerged): v4.3.0
+  release not cut (version, README pins, bootstrap tag, publish smoke); customized
+  installed projects still need their own reviewed migration; live client compliance and
+  semantic optimize apply UNCONFIRMED; Sal's machine runs the cached plugin at 4.1.0;
+  Codex parity for the Pocock-derived skills UNCONFIRMED.
+- This branch and PR #14 both touch CHANGELOG.md, README.md and `.agent/` continuity;
+  whichever merges second needs a small conflict resolution.
 
 ## Active constraints
-- Preserve project-specific routes/commands/content constraints and all continuity.
-- <=150 physical lines per shipped/new entry is project policy, not a savings claim.
-- No incidental model/effort/global/permission/learning/Scale changes or paid model evals.
-- Use disposable fixtures for installer/migration testing, never real projects.
-- Preserve legacy/recovered archives and all related sanitized continuity with work.
-- Inspect ignored continuity before checkout updates; use --no-overwrite-ignore.
-- Keep release tags immutable. v4.2.0 failed a final rollback portability gate;
-  v4.2.1 includes the verified correction and is the recommended release.
+- This repo is public: only generic Orca mechanics here; anything specific to a person
+  (which repos, setup lines, board, sync configuration) stays in a private repo.
+- Orca worktrees are created only when Sal asks; no agent starts work on its own until
+  the autonomy policy (Program 1 row GR01) is written and approved.
+- Ordinary `git push` must stay allowed; Pocock-derived files keep MIT attribution (PR #14).
+- All v4.2.1 constraints still apply: preserve project content and continuity, <=150-line
+  entries, no incidental model/effort/global/permission/learning/Scale changes,
+  disposable fixtures only, immutable release tags.
 
 ## Evidence
-- RELEASE-4.2.1.md: public release URL, commit, bootstrap hash and actual smoke receipt.
-- TEST.md: E1-E10 and separate line/word/byte metrics; REVIEW.md: security assessment.
-- docs/architecture/rule-ownership.md: current authoritative guidance homes.
-- Previous checkpoint: checkpoint-6d4bbad1154ecf70171e3136fe9cf434969439f9ffa28272cc9d4ebf094221d5 in HISTORY; exact bytes verified.
+- `uvx --with pytest pytest -q`: 221 passed (baseline 212); the nine new tests failed first
+  (script missing), then passed after the move.
+- `scripts/verify-pack.sh`: DONE: verification passed (now requires the script, runbook and test).
+- `docs/orca.md` field names checked against Orca CLI 1.4.232 (`orca repo list --json`,
+  `orca project setups --json`); the custom issue command is not exposed by the CLI.
+- Previous checkpoint (v4.2.1 published) archived in HISTORY by the checkpoint helper.
 
 ## Next actions
-1. Existing-project owners use the pinned v4.2.1 update in RELEASE-4.2.1.md.
-2. Follow its versioned optimization policy in read-only check mode; apply only
-   the reviewed proposal. Preserve custom files and active constraints during migration.
-3. Keep live-client/marketplace limitations explicit until separately verified.
+1. Sal reviews and merges the ORC00 PR (or asks for changes).
+2. FD01: feeder step in `skills/closing-sprint-and-syncing-state/SKILL.md`, own branch and PR.
+3. ORC01: generic issue-sync script with fixture tests, own branch and PR.
