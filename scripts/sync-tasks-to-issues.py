@@ -39,6 +39,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -195,10 +196,16 @@ class GitHub:
         if payload is not None:
             cmd += ["--input", "-"]
             data = json.dumps(payload)
-        res = subprocess.run(cmd, input=data, capture_output=True, text=True)
-        if res.returncode != 0:
-            raise RuntimeError(f"gh api {method} {path}: {res.stderr.strip()[:200]}")
-        return json.loads(res.stdout) if res.stdout.strip() else {}
+        for attempt in range(4):
+            res = subprocess.run(cmd, input=data, capture_output=True, text=True)
+            if res.returncode == 0:
+                return json.loads(res.stdout) if res.stdout.strip() else {}
+            err = res.stderr.strip()[:200]
+            transient = any(s in err for s in ("timeout", "TLS", "connection reset", "EOF", "502", "503", "504", "rate limit", "temporarily"))
+            if not transient or attempt == 3:
+                raise RuntimeError(f"gh api {method} {path}: {err}")
+            time.sleep(2 * (attempt + 1))
+        raise RuntimeError("unreachable")
 
     def ensure_label(self, repo: str, label: str):
         names = {l["name"] for l in self.api(f"repos/{repo}/labels?per_page=100")}
@@ -254,18 +261,36 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
         if hits:
             r["private"].append(f"{row.id}: matches a private-data pattern; not sent")
             continue
+        try:
+            _sync_row(row, name, github, label, gh, by_id, r)
+        except RuntimeError as exc:
+            r["errors"].append(f"{row.id}: {exc}")
+    for rid, issue in by_id.items():
+        if issue["state"] == "open":
+            try:
+                if not gh.dry_run:
+                    gh.comment(github, issue["number"], "Closed by the sync: the row left the register's current section.")
+                    gh.update(github, issue["number"], state="closed", state_reason="not_planned")
+                r["closed"].append(f"{rid} #{issue['number']} (row left the register)")
+            except RuntimeError as exc:
+                r["errors"].append(f"{rid} #{issue['number']}: {exc}")
+    return r
+
+
+def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: dict, r: dict) -> None:
+    if True:
         title, body = render(row, name)
         _, new_marker = split_marker(body)
         issue = by_id.pop(row.id, None)
         if issue is None:
             if row.done:
-                continue
+                return
             if gh.dry_run:
                 r["would_create"] += 1
             else:
                 created = gh.create(github, title, body, label)
                 r["created"].append(f"{row.id} → #{created['number']}")
-            continue
+            return
         current_body, old_marker = split_marker(issue.get("body") or "")
         hand_edited = old_marker is not None and hashlib.sha256((issue["title"] + "\n" + current_body).encode("utf-8")).hexdigest()[:12] != old_marker["sha"]
         if hand_edited:
@@ -275,21 +300,14 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
                 if not gh.dry_run:
                     gh.update(github, issue["number"], state="closed", state_reason="completed")
                 r["closed"].append(f"{row.id} #{issue['number']} (row done)")
-            continue
+            return
         if issue["state"] == "closed":
             r["drift"].append(f"{row.id} #{issue['number']}: closed on GitHub but the row is still open; not reopened")
-            continue
+            return
         if old_marker is None or old_marker["sha"] != new_marker["sha"]:
             if not gh.dry_run:
                 gh.update(github, issue["number"], title=title, body=body)
             r["updated"].append(f"{row.id} #{issue['number']}")
-    for rid, issue in by_id.items():
-        if issue["state"] == "open":
-            if not gh.dry_run:
-                gh.comment(github, issue["number"], "Closed by the sync: the row left the register's current section.")
-                gh.update(github, issue["number"], state="closed", state_reason="not_planned")
-            r["closed"].append(f"{rid} #{issue['number']} (row left the register)")
-    return r
 
 
 def board_step(cfg: dict, results: list[dict]) -> str:

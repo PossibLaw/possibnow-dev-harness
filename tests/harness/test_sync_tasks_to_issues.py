@@ -20,6 +20,9 @@ world_path = os.environ["FAKE_GH_WORLD"]
 world = json.load(open(world_path))
 args = sys.argv[1:]
 world.setdefault("calls", []).append(args)
+if world.get("fail_next", 0) > 0:
+    world["fail_next"] -= 1; json.dump(world, open(world_path, "w"), indent=1)
+    print("Post https://api.github.com/x: net/http: TLS handshake timeout", file=sys.stderr); sys.exit(1)
 def save():
     json.dump(world, open(world_path, "w"), indent=1)
 if args[:1] != ["api"]:
@@ -45,6 +48,8 @@ elif "/issues/" in path and path.endswith("/comments") and method == "POST":
 elif path.endswith("/issues") and method == "GET":
     out = [i for i in issues if any(l["name"] == "agent-task" for l in i["labels"])]
 elif path.endswith("/issues") and method == "POST":
+    if body.get("title") == world.get("fail_title"):
+        save(); print("HTTP 422: Validation Failed", file=sys.stderr); sys.exit(1)
     num = max([i["number"] for i in issues], default=0) + 1
     issue = {"number": num, "title": body["title"], "body": body["body"], "state": "open",
              "labels": [{"name": n} for n in body.get("labels", [])], "html_url": f"https://github.com/{repo}/issues/{num}"}
@@ -256,3 +261,23 @@ def test_board_step_is_skipped_while_disabled(world):
     calls = read_world(world)['calls']
     assert not any('graphql' in ' '.join(c) for c in calls)
     assert 'board: off' in world['summary'].read_text()
+
+
+def test_transient_gh_failure_is_retried(world):
+    w = read_world(world); w['fail_next'] = 2; world['path'].write_text(json.dumps(w))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    titles = sorted(i['title'] for i in read_world(world)['issues']['Owner/alpha'])
+    assert len(titles) == 2
+    assert 'Errors' not in world['summary'].read_text()
+
+
+def test_persistent_failure_on_one_row_does_not_abort_the_others(world):
+    w = read_world(world); w['fail_title'] = '[BL-A1] Name the next round and its order'; world['path'].write_text(json.dumps(w))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    titles = [i['title'] for i in read_world(world)['issues']['Owner/alpha']]
+    assert titles == ['[E1] Send the agreement to the client']
+    summary = world['summary'].read_text()
+    assert 'BL-A1' in summary and 'Errors' in summary and '422' in summary
+
