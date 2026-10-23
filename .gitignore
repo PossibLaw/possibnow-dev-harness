@@ -17,3 +17,4 @@ __pycache__/
 !/.agent/archive/**
 !/.agent/archives/**
 .venv/
+.orca

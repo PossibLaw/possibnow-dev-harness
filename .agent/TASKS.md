@@ -1,0 +1,13 @@
+# Task register — possibnow-dev-harness
+
+Current register first; the cross-repo feeder (`python3 ~/.agents/skills/cross-repo-tasks/feed.py`) copies the first `## ` section into the machine-wide list. Rows carry an ID so the issue sync can mirror them. Dates are absolute.
+
+## Open items (October 23, 2026)
+
+| ID | State | Task | Owner | Notes / evidence |
+| --- | --- | --- | --- | --- |
+| H-ORC00 | IN REVIEW | Orca worktree setup helper and generic runbook (`scripts/orca-worktree-setup`, `docs/orca.md`, tests, verify-pack entries, `.orca` ignored) | Agent, then Sal reviews the PR | Branch `orc00/orca-setup` off main 58ba0c0. Per-person Orca settings live in the private `AtticusDundee/agent-tasks` repo, not here. This leads to agents starting in worktrees that match the main checkout, which leads to reliable Orca-run work, which gets Sal a single place to create, watch and finish agent work (FW01). |
+| H-FD01 | TODO | End `skills/closing-sprint-and-syncing-state` with the cross-repo feeder step so every install carries it | Agent | Global row FD01. |
+| H-ORC01 | TODO | Generic issue-sync script: repo `.agent/TASKS.md` rows → GitHub issues labelled `agent-task` (one way; drift reported, never written back) | Agent | Global row ORC01; configuration (which repos, board) stays private. |
+| H-REL | TODO | Cut v4.3.0 after PR #14 merges: bump plugin.json, README pins, bootstrap tag, publish smoke | Agent, Sal approves | Carried from the PR #14 handoff. |
+| H-MIG | TODO | Customized installed projects still need their own reviewed migration; Sal's machine runs the cached plugin at 4.1.0 | Sal | Carried from v4.2.1. |

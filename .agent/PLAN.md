@@ -1,7 +1,7 @@
 ---
 contract_version: 1
 artifact_type: plan
-status: COMPLETE
+status: IN_REVIEW
 depends_on: []
 produces: [eval_ids, release_scope]
 feeds_into: [.agent/TEST.md]
@@ -10,57 +10,32 @@ memory:
   tags: [plan]
 ---
 
-# 4.2.1 Compact portable harness
+# Unreleased: Orca worktree setup helper and runbook (ORC00)
 
-Baseline: main 4f43649b175ad18813319bba6849d200238c307f, unchanged after fetch.
-Original entries: AGENTS 178 lines/1890 words/13582 bytes; CLAUDE 202/2003/14446.
-Sal's <=150 physical line policy applies to each shipped/newly generated root,
-not a scientific optimum or cost claim. Rule ownership: docs/architecture/rule-ownership.md.
+Baseline: main 58ba0c0 (v4.2.1 published). Branch: orc00/orca-setup.
+Source: `~/.local/bin/orca-worktree-setup` written October 20, 2026 (one machine, untracked)
+and the Orca session notes of October 14 and 20, 2026.
 
-Scope: one source for compact adapters; on-demand canonical procedures; current-only
-handoff with verified exact archives; gated learnings; conservative file-preserving
-updates with versioned candidates/receipts/rollback; double-pinned v4.2.1 release.
-Do not modify installed projects, globals, models/effort, permissions, learning
-mode, or Scale. Tests use disposable fixtures only; no paid model comparison.
+Scope: commit the setup helper as `scripts/orca-worktree-setup`; add the generic runbook
+`docs/orca.md`; require both in `scripts/verify-pack.sh`; ignore `.orca`. No version bump,
+release pins, installed projects, globals, models, permissions, learning mode, or Scale.
+Per-person Orca settings are out of scope for this public repo.
 
 ## Acceptance and evidence plan
 
-- E1: fresh fixture gets valid routes and <=150-line entries.
-- E2: 150 passes/151 fails with LF, CRLF, and missing final newline.
-- E3: planning, validation, review/security, content, checkpoint and learning rules
-  remain in reachable authoritative homes; retain detailed TEST/REVIEW checklists.
-- E4: customized and unchanged older fixtures preserve every pre-existing byte;
-  differing files remain pending reviewed migration, including oversized entries.
-- E5: dry-run/check makes no target writes; same release/options repeat is idempotent.
-- E6: archive full prior bytes/hash/timestamp/ID; failed/corrupt/conflicting archive
-  or intervening edit leaves HANDOFF intact. Candidate semantic completeness is reviewed.
-- E7: OFF captures nothing; candidates never count as adopted lessons. CAPTURE
-  never edits instructions; APPLY requires authorization. Static/advisory coverage.
-- E8: no eager root imports, rules, or state/history/library preload; read-only
-  questions bypass delivery state. Existing external client context is unverified.
-- E9: existing Claude guardrail tests remain unchanged and passing; client matrix
-  names enforcement limits. No new runtime adapter is claimed.
-- E10: tag-based bootstrap fixture selects release over newer branch; published
-  curl smoke must select the actual release version/commit before final delivery.
+- O1 (happy): with `ORCA_ROOT_PATH` and `ORCA_WORKTREE_PATH` set, the helper copies
+  `.claude/settings.local.json` and env files, copies `--clone` paths, links Claude memory,
+  prints `ready <worktree>`.
+- O2 (edge): a file already in the worktree is kept, never overwritten; a rerun copies
+  nothing; a missing `--clone` source is skipped silently; an empty argument is ignored;
+  no `npm ci` without `package-lock.json`.
+- O3 (failure/safety): without the Orca variables the helper exits non-zero naming
+  `ORCA_ROOT_PATH`; an unknown option exits 2. Secrets are copied only from the main
+  checkout into a gitignored path of the worktree, never printed.
+- V1: `scripts/verify-pack.sh` requires the helper (executable), the runbook and the test;
+  full suite green.
 
-## Milestones
-
-Implementation, 212-test local/CI verification, PR merges, and v4.2.1 publication
-are complete. E10 public smoke passed against the tagged commit, including rollback.
-See RELEASE-4.2.1.md and the published GitHub Release verification receipt.
-No installed project migration is implied; preserved custom files need reviewed apply.
-
-## Learning Mode
-- Mode: `OFF` (existing task default)
-
-Prior plan preserved verbatim: archives/pre-4.2-PLAN.md.
-
-## Published-tag gate correction
-
-PR #11 merged as 08a01b75cd11bde3bd1487ed96bbbf7924427b9b. The immutable v4.2.0
-tag passed public install/preservation/repeat checks but failed rollback on a
-macOS /var versus /private/var root alias. No pre-existing file was changed/deleted.
-Ship patch v4.2.1 after alias/internal-symlink regression tests and the same public smoke.
-Do not move v4.2.0. No GitHub Release was published for that failed candidate tag.
-
-Published-tag correction completed: v4.2.1 passed and was published; v4.2.0 remains unchanged.
+## Task Checklist
+- [x] O1–O3 covered by `tests/harness/test_orca_worktree_setup.py` (red first, then green)
+- [x] V1 verify-pack passes
+- [ ] PR reviewed and merged by Sal
