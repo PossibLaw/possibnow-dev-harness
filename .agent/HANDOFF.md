@@ -20,10 +20,12 @@ PR #15 open for Sal's review; nothing merged. Row ORC00 of the machine-wide Prog
 (Orca-first operating system). Row FD01 is stacked on it as branch `fd01/feeder-step`:
 the closing skill (2.1.0) now ends with the cross-repo feeder step, with one test.
 Row ORC01 is stacked on that as branch `orc01/issue-sync`: `scripts/sync-tasks-to-issues.py`
-(register rows → `agent-task` issues, one way, drift reported) with 14 fake-`gh` tests.
+(register rows → `agent-task` issues, one way, drift reported) with 16 fake-`gh` tests.
+Row ORC02 is stacked on that as branch `orc02/work-router`: the `routing-work-to-a-repo`
+skill (one sentence → issue in the owning repo, flywheel line, Orca worktree offer).
 
 ## Unresolved work
-- Program 1 rows in this repo: FD01 and ORC01, both in review as stacked PRs. See
+- Program 1 rows in this repo: FD01, ORC01 and ORC02, all in review as stacked PRs. See
   `.agent/TASKS.md`. The Project board step of the sync stays off until Sal approves the
   `project` scope on the gh token and a user board is confirmed to hold organization
   repositories' issues (UNCONFIRMED; GitHub docs disagree with each other).
@@ -50,7 +52,7 @@ Row ORC01 is stacked on that as branch `orc01/issue-sync`: `scripts/sync-tasks-t
   disposable fixtures only, immutable release tags.
 
 ## Evidence
-- `uvx --with pytest pytest -q`: 236 passed with ORC01 (222 with FD01, 221 for ORC00 alone, baseline 212); the nine new tests failed first
+- `uvx --with pytest pytest -q`: 241 passed with ORC02 (238 with ORC01's retry fix, 236 with ORC01 (222 with FD01, 221 for ORC00 alone, baseline 212); the nine new tests failed first
   (script missing), then passed after the move.
 - `scripts/verify-pack.sh`: DONE: verification passed (now requires the script, runbook and test).
 - `docs/orca.md` field names checked against Orca CLI 1.4.232 (`orca repo list --json`,
@@ -59,5 +61,5 @@ Row ORC01 is stacked on that as branch `orc01/issue-sync`: `scripts/sync-tasks-t
 
 ## Next actions
 1. Sal reviews and merges the ORC00 PR (or asks for changes).
-2. Sal reviews the stacked FD01 and ORC01 PRs (merge in order after ORC00).
+2. Sal reviews the stacked FD01, ORC01 and ORC02 PRs (merge in order after ORC00) and confirms the routing table in the private repo.
 3. After ORC01 merges: the nightly runner in Aleph calls the sync from the main checkout.
