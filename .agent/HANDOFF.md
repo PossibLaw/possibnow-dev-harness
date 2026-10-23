@@ -13,6 +13,9 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+TT01 on branch `tt01/ticktick` (October 23, 2026): `scripts/sync-issues-to-ticktick.py` with six tests;
+config in the private repo; the Aleph runner calls it after the issue sync with the keychain token.
+
 Merged to main on October 23, 2026: PR #15 (ORC00), then #19 carrying #16 (FD01), #17 (ORC01)
 and #18 (ORC02), which had merged into their stacked bases rather than main. Branches and
 worktrees removed. No release cut; version stays 4.2.1 until PR #14 lands and v4.3.0 is cut.
