@@ -3,6 +3,7 @@
 ## Unreleased — Orca worktree setup helper and runbook
 
 - **Orca**: add `scripts/orca-worktree-setup`, the shared Setup Script helper for Orca worktrees (copies `.claude/settings.local.json` and env files from the main checkout without overwriting, clones extra gitignored paths with `--clone`, links Claude Code project memory to the main checkout, runs `npm ci` only when a lockfile exists; reruns are no-ops). Add `docs/orca.md`, the generic runbook: project settings, setup line pattern, wait-for-setup, issue command template, worktree creation fields, what not to run in worktrees. Nine fixture-based tests in `tests/harness/test_orca_worktree_setup.py`; both files required by `scripts/verify-pack.sh`.
+- **Closing skill** (`skills/closing-sprint-and-syncing-state`, 2.1.0): ends with the cross-repo feeder step (`python3 ~/.agents/skills/cross-repo-tasks/feed.py`) so every install carries it; when the feeder is not installed the skill says to skip and note it in the handoff. Test: `tests/harness/test_closing_skill_feeder_step.py`.
 - `.gitignore`: ignore `.orca` (Orca writes it when a project's issue command is set). No version bump; per-person Orca settings stay out of this public repo.
 
 ## 4.2.1 — 2026-09-18 — Verified portable release

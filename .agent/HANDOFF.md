@@ -16,12 +16,13 @@ memory:
 Branch `orc00/orca-setup` off main 58ba0c0 (v4.2.1). Adds `scripts/orca-worktree-setup`
 (moved from one machine's `~/.local/bin`), the generic `docs/orca.md` runbook, nine
 fixture tests, verify-pack entries, a README pointer, and `.orca` in `.gitignore`.
-PR open for Sal's review; nothing merged. Row ORC00 of the machine-wide Program 1
-(Orca-first operating system); next rows FD01 and ORC01 also land in this repo.
+PR #15 open for Sal's review; nothing merged. Row ORC00 of the machine-wide Program 1
+(Orca-first operating system). Row FD01 is stacked on it as branch `fd01/feeder-step`:
+the closing skill (2.1.0) now ends with the cross-repo feeder step, with one test.
 
 ## Unresolved work
-- Program 1 rows in this repo: FD01 (feeder step at the end of the closing skill) and
-  ORC01 (generic issue-sync script). See `.agent/TASKS.md`.
+- Program 1 rows in this repo: FD01 (in review, stacked PR) and ORC01 (generic issue-sync
+  script, next). See `.agent/TASKS.md`.
 - Sal's per-repository Orca settings (setup lines, wait-for-setup, LumenAtlas) are recorded
   in the private `AtticusDundee/agent-tasks` repo, not here. Orca's live settings on Sal's
   Mac differed from the recorded recommendation on October 23, 2026; reconciling them is
@@ -45,7 +46,7 @@ PR open for Sal's review; nothing merged. Row ORC00 of the machine-wide Program 
   disposable fixtures only, immutable release tags.
 
 ## Evidence
-- `uvx --with pytest pytest -q`: 221 passed (baseline 212); the nine new tests failed first
+- `uvx --with pytest pytest -q`: 222 passed with FD01 (221 for ORC00 alone, baseline 212); the nine new tests failed first
   (script missing), then passed after the move.
 - `scripts/verify-pack.sh`: DONE: verification passed (now requires the script, runbook and test).
 - `docs/orca.md` field names checked against Orca CLI 1.4.232 (`orca repo list --json`,
@@ -54,5 +55,5 @@ PR open for Sal's review; nothing merged. Row ORC00 of the machine-wide Program 
 
 ## Next actions
 1. Sal reviews and merges the ORC00 PR (or asks for changes).
-2. FD01: feeder step in `skills/closing-sprint-and-syncing-state/SKILL.md`, own branch and PR.
+2. Sal reviews the stacked FD01 PR (merge after ORC00).
 3. ORC01: generic issue-sync script with fixture tests, own branch and PR.
