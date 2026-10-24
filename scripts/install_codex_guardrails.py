@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GUARDS = ROOT / "scripts" / "guardrails"
-FILES = ("validate-bash.py", "protect-files.py", "blacklist.py")
+FILES = ("validate-bash.py", "protect-files.py", "blacklist.py", "autonomy.py")
 BEGIN = "# >>> possibnow-dev-harness codex guardrails >>>"
 END = "# <<< possibnow-dev-harness codex guardrails <<<"
 
