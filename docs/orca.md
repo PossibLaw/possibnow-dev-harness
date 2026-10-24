@@ -32,7 +32,7 @@ account it uses is the local `gh` login (`gh auth status`).
 | When to run | Run by default | Every new worktree gets the same treatment |
 | Wait for setup to complete before starting agent | **On** | Otherwise the agent starts before packages are installed |
 | Archive Script | empty | Nothing to clean up unless the repository needs it |
-| Custom GitHub Issue Command | the template in section 4 | First message an agent gets when work starts from an issue |
+| Custom GitHub Issue Command | leave empty | In Orca 1.4.x this field runs as a shell command in a split pane, not as the agent's first prompt (stablyai/orca#9066). Text pasted here produces a shell error. See section 4. |
 | External worktrees | Hide (global default) | Show it per repository only when worktrees made outside Orca must appear |
 | Advanced → Command Source | leave | Matters only for a repository that ships a shared `orca.yaml` |
 
@@ -72,16 +72,26 @@ index uses `~/.local/bin/orca-worktree-setup --clone graphify-out`.
 
 Tests: `tests/harness/test_orca_worktree_setup.py` (disposable fixtures, fake HOME).
 
-## 4. Custom GitHub issue command template
+## 4. What the agent gets when work starts from an issue
 
-Plain text, not a slash command, so the same text works for Claude Code and Codex:
+Orca 1.4.x puts only the bare issue URL in the agent's input as an unsent draft. The
+Project Settings field "Custom GitHub Issue Command" does not change that: it is executed
+as a shell command in a split pane (open request stablyai/orca#9066, "upcoming"). Leave it
+empty.
+
+To give every agent the same starting instructions, put a rule in the instruction file the
+agent reads anyway: the repository's `CLAUDE.md` / `AGENTS.md`, or the person's global
+`~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`. Example rule:
 
 ```text
-Read .agent/HANDOFF.md and .agent/PLAN.md first. Then complete {{artifact_url}}. Never assume: ask if anything is unclear. Write a failing test before changing code, keep the change scoped to the issue, and open a draft PR when the checks pass.
+When a session opens with only a GitHub issue link (Orca worktrees start this way), read
+.agent/HANDOFF.md first, then treat the link as the work to start. Ask before assuming.
 ```
 
-`{{artifact_url}}` is replaced by Orca with the issue or PR link. The repository's own
-`CLAUDE.md` / `AGENTS.md` defines what "the checks" are.
+Worktrees created from the CLI are different: `orca worktree create --prompt "<text>"`
+does deliver the text as the agent's first prompt. The nightly dispatcher uses that path.
+
+Check which Orca version you run (`orca --version`) and re-test when #9066 lands.
 
 ## 5. Creating a worktree
 
