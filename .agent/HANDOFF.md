@@ -13,6 +13,11 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Release 4.3.0 cut on branch `release/4.3.0` (October 24, 2026): version, pins, fixtures and changelog
+moved to 4.3.0; Codex installer ships `autonomy.py`. After merge: annotated tag v4.3.0 on the merge
+commit, GitHub Release, public bootstrap smoke into a disposable repo, RELEASE-4.3.0.md, marketplace
+entry 4.3.0, installed plugin updated from 4.1.0. PR #14 merged October 24 after a resolve against main.
+
 GR01 enforcement on branch `gr01/enforcement` (October 23, 2026): sync tag labels, autonomous-run
 guardrails (`autonomy.py`, `guard-auto-publish.py`, blacklist additions), `dispatch-auto-issues.py`.
 Policy and config are in the private repo; the Aleph runner calls the dispatcher after the sync.

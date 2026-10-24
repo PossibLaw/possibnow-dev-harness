@@ -114,7 +114,7 @@ def test_installer_copies_guards_and_registers_hooks(tmp_path):
     result = install(tmp_path)
     assert result.returncode == 0, result.stderr
     dest = tmp_path / "hooks" / "possibnow"
-    for name in ("validate-bash.py", "protect-files.py", "blacklist.py"):
+    for name in ("validate-bash.py", "protect-files.py", "blacklist.py", "autonomy.py"):
         assert (dest / name).is_file()
     import tomllib
     config = tomllib.loads((tmp_path / "config.toml").read_text())
