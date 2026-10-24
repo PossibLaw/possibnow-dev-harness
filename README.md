@@ -43,6 +43,12 @@ permissions, learning mode, and Scale/wiki activation are not changed. Existing
 ignore rules are preserved; warnings identify shared files needing a deliberate
 ignore-rule review before committing sanitized continuity.
 
+## Orca worktrees
+
+To run agents in Orca worktrees that behave like the main checkout, follow
+[docs/orca.md](docs/orca.md) and point each project's Setup Script at
+`scripts/orca-worktree-setup`.
+
 ## Migrate preserved files
 
 Ask the agent in that project:

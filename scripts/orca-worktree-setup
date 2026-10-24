@@ -1,0 +1,57 @@
+#!/bin/bash
+# Make a new Orca worktree behave like the main checkout for Claude Code and Codex.
+# Called from each Orca project's Setup Script; Orca sets ORCA_ROOT_PATH and ORCA_WORKTREE_PATH.
+#
+# Usage: orca-worktree-setup [--clone <gitignored path>]...
+#   --clone PATH  copy a gitignored file or folder from the main checkout as an APFS
+#                 clone (instant, no extra disk; changes stay in the worktree).
+set -euo pipefail
+
+ROOT="${ORCA_ROOT_PATH:?ORCA_ROOT_PATH not set (run from an Orca setup script)}"
+WT="${ORCA_WORKTREE_PATH:?ORCA_WORKTREE_PATH not set}"
+CLONES=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --clone) CLONES+=("$2"); shift 2 ;;
+    "") shift ;;
+    *) echo "unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+clone() { # copy-on-write clone; never overwrite something already in the worktree
+  local rel="$1"
+  [ -e "$ROOT/$rel" ] || return 0
+  [ -e "$WT/$rel" ] && { echo "keep    $rel (already present)"; return 0; }
+  mkdir -p "$(dirname "$WT/$rel")"
+  cp -cR "$ROOT/$rel" "$WT/$rel" 2>/dev/null || cp -R "$ROOT/$rel" "$WT/$rel"
+  echo "copied  $rel"
+}
+
+# 1. Per-project Claude permissions and local env files.
+for rel in .claude/settings.local.json .env .env.local .dev.vars; do clone "$rel"; done
+
+# 2. Extra gitignored paths this project needs (indexes, data snapshots).
+for rel in "${CLONES[@]+"${CLONES[@]}"}"; do clone "$rel"; done
+
+# 3. Share Claude's project memory with the main checkout (memory is keyed by folder path).
+slug() { printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g'; }
+main_mem="$HOME/.claude/projects/$(slug "$ROOT")/memory"
+wt_proj="$HOME/.claude/projects/$(slug "$WT")"
+if [ -d "$main_mem" ] && [ ! -e "$wt_proj/memory" ]; then
+  mkdir -p "$wt_proj"
+  ln -s "$main_mem" "$wt_proj/memory"
+  echo "linked  Claude memory -> $main_mem"
+fi
+
+# 4. Dependencies, with the project's Node version when it pins one.
+if [ -f "$WT/package-lock.json" ]; then
+  cd "$WT"
+  if [ -f .nvmrc ] && command -v fnm >/dev/null; then
+    eval "$(fnm env --shell bash)"
+    fnm use --install-if-missing --silent-if-unchanged >/dev/null
+  fi
+  echo "node    $(node -v); running npm ci"
+  npm ci --no-audit --no-fund --loglevel=error
+fi
+
+echo "ready   $WT"

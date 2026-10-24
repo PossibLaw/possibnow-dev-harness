@@ -10,7 +10,8 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from blacklist import BLOCKED_PATTERNS, ESCALATE_PATTERNS
+from blacklist import BLOCKED_PATTERNS, ESCALATE_PATTERNS, AUTONOMOUS_BLOCKED_PATTERNS
+from autonomy import is_autonomous
 
 # Shared continuity file that must ship with every commit that changes it.
 HANDOFF_REL = ".agent/HANDOFF.md"
@@ -267,6 +268,17 @@ def main():
     command = data.get("tool_input", {}).get("command", "")
     if not command:
         sys.exit(0)
+
+    # Autonomous runs: no merging, no publishing (drafting is fine)
+    if is_autonomous(data.get("cwd")):
+        for pattern in AUTONOMOUS_BLOCKED_PATTERNS:
+            if re.search(pattern, command):
+                print(
+                    f"BLOCKED: this is an autonomous agent run; merging and publishing are never "
+                    f"allowed here (matched '{pattern}'). Leave the draft PR for the human to merge.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
 
     # Check blocked patterns first
     for pattern in BLOCKED_PATTERNS:

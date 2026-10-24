@@ -23,6 +23,8 @@ REQUIRED_FILES=(
   "skills/running-novice-safe-git-cycle/SKILL.md"
   "skills/applying-simplicity-ladder/SKILL.md"
   "skills/scaling-up-with-graphify/SKILL.md"
+  "skills/routing-work-to-a-repo/SKILL.md"
+  "tests/harness/test_routing_skill.py"
   "skills/splitting-work-into-tickets/SKILL.md"
   "skills/running-a-retro/SKILL.md"
   "docs/references/writing-for-agents.md"
@@ -34,6 +36,18 @@ REQUIRED_FILES=(
   "scripts/install-global.sh"
   "scripts/verify-pack.sh"
   "scripts/set-learning-mode.sh"
+  "scripts/orca-worktree-setup"
+  "scripts/sync-tasks-to-issues.py"
+  "scripts/dispatch-auto-issues.py"
+  "scripts/guardrails/guard-auto-publish.py"
+  "scripts/guardrails/autonomy.py"
+  "tests/harness/test_dispatch_auto_issues.py"
+  "tests/guardrails/test_autonomous_run_guards.py"
+  "scripts/sync-issues-to-ticktick.py"
+  "tests/harness/test_sync_issues_to_ticktick.py"
+  "tests/harness/test_sync_tasks_to_issues.py"
+  "docs/orca.md"
+  "tests/harness/test_orca_worktree_setup.py"
   "packs/project/AGENTS.md"
   "packs/project/CLAUDE.md"
   "packs/project/docs/roles/README.md"
@@ -112,7 +126,7 @@ if git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
   exit 1
 fi
 
-for script in "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh"; do
+for script in "$REPO_ROOT/scripts/dispatch-auto-issues.py" "$REPO_ROOT/scripts/guardrails/guard-auto-publish.py" "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh" "$REPO_ROOT/scripts/sync-issues-to-ticktick.py"; do
   if [[ ! -x "$script" ]]; then
     echo "BLOCKED: script is not executable: ${script#$REPO_ROOT/}"
     exit 1
@@ -224,6 +238,7 @@ require_text "$REPO_ROOT/skills/closing-sprint-and-syncing-state/SKILL.md" "name
 require_text "$REPO_ROOT/skills/running-novice-safe-git-cycle/SKILL.md" "name: running-novice-safe-git-cycle" "missing git cycle skill metadata"
 require_text "$REPO_ROOT/skills/applying-simplicity-ladder/SKILL.md" "name: applying-simplicity-ladder" "missing simplicity ladder skill metadata"
 require_text "$REPO_ROOT/skills/scaling-up-with-graphify/SKILL.md" "name: scaling-up-with-graphify" "missing scale mode skill metadata"
+require_text "$REPO_ROOT/skills/routing-work-to-a-repo/SKILL.md" "name: routing-work-to-a-repo" "missing work-router skill metadata"
 require_text "$REPO_ROOT/skills/splitting-work-into-tickets/SKILL.md" "name: splitting-work-into-tickets" "missing ticket-splitting skill metadata"
 require_text "$REPO_ROOT/skills/running-a-retro/SKILL.md" "name: running-a-retro" "missing retro skill metadata"
 
@@ -235,6 +250,7 @@ require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.2.1"' "plugi
 require_text "$REPO_ROOT/scripts/guardrails/validate-bash.py" "def check_handoff_commit" "missing shared-handoff commit guard in scripts/guardrails/validate-bash.py"
 require_text "$REPO_ROOT/tests/guardrails/test_validate_bash.py" "test_commit_blocked_when_handoff_untracked" "missing shared-handoff commit guard tests in tests/guardrails/test_validate_bash.py"
 require_text "$REPO_ROOT/hooks/hooks.json" "validate-bash.py" "validate-bash hook not wired in hooks/hooks.json"
+require_text "$REPO_ROOT/hooks/hooks.json" "guard-auto-publish.py" "autonomous publish guard not wired in hooks/hooks.json"
 
 agent_md_count="$(find "$REPO_ROOT/agents" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')"
 if [[ "$agent_md_count" -lt 8 ]]; then

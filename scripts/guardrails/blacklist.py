@@ -48,6 +48,36 @@ ESCALATE_PATTERNS = [
     r"chmod\s+(-[a-zA-Z]+\s+)*[0-7]{2,3}[2367]\b",
 ]
 
+# Merging a pull request asks first in every session (the human merges).
+ESCALATE_PATTERNS += [
+    r"gh\s+pr\s+merge\b",
+    r"gh\s+api\s.*\/pulls\/\d+\/merge\b",
+]
+
+# Autonomous runs (AGENT_AUTO=1 or a branch named orca/auto-*): blocked outright.
+# Merging is never theirs; publishing of any kind is never theirs. Drafting is fine.
+AUTONOMOUS_BLOCKED_PATTERNS = [
+    r"gh\s+pr\s+merge\b",
+    r"gh\s+api\s.*\/pulls\/\d+\/merge\b",
+    r"\bpost-note\b",
+    r"\bpublish[-_]draft\b",
+    r"\bprepublish[-_]draft\b",
+    r"[\"']publish[\"']\s*:\s*true",
+    r"[\"']send[\"']\s*:\s*true",
+    r"\bnpm\s+(run\s+)?publish\b",
+    r"\bgit\s+push\s+\S*\s*(origin\s+)?(main|master)\b",
+]
+
+# MCP tools an autonomous run may never call (matched against the tool name).
+AUTONOMOUS_DENIED_TOOL_PATTERNS = [
+    r"publish",
+    r"prepublish",
+    r"create_post",
+    r"send_newsletter",
+    r"linkedin",
+    r"slack.*(post|send)",
+]
+
 # Files that should never be written to
 PROTECTED_FILE_PATTERNS = [
     r"\.env$",
