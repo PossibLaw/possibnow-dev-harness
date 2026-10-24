@@ -180,6 +180,7 @@ def main(argv=None) -> int:
             if key and (key.rstrip("/") == str(Path(repo["path"]).expanduser()).rstrip("/") or key == f"path:{repo['path']}"):
                 per_repo[repo["name"]] = per_repo.get(repo["name"], 0) + 1
     started, skipped, flagged_all, errors = [], [], [], []
+    quiet_skips = 0  # issues that simply lack auto-ok: counted, not listed
     state = {"ran": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "started": [], "running_before": total}
 
     for repo in repos:
@@ -196,7 +197,9 @@ def main(argv=None) -> int:
             tag = f"{repo['name']} #{n} {issue.get('title', '')[:60]}"
             reason = reject_reason(issue, repo, eligible_labels)
             if reason:
-                if "not labelled" not in reason or "auto-ok" in reason:
+                if reason.startswith("not labelled"):
+                    quiet_skips += 1
+                else:
                     skipped.append(f"{tag}: {reason}")
                 continue
             if n in open_prs:
@@ -229,7 +232,7 @@ def main(argv=None) -> int:
             total += 1
             per_repo[repo["name"]] = per_repo.get(repo["name"], 0) + 1
 
-    lines.append(f"Running before this pass: {state['running_before']} auto worktree(s). Caps: {max_runs} total, {max_per_repo} per repo.")
+    lines.append(f"Running before this pass: {state['running_before']} auto worktree(s). Caps: {max_runs} total, {max_per_repo} per repo. {quiet_skips} issue(s) without auto-ok not listed.")
     for head, items in (("Started", started), ("Skipped", skipped), ("Pull requests flagged", flagged_all), ("Errors", errors)):
         if items:
             lines.append(f"- {head}:")
