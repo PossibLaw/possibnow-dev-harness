@@ -13,6 +13,9 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+GR01 enforcement on branch `gr01/enforcement` (October 23, 2026): sync tag labels, autonomous-run
+guardrails (`autonomy.py`, `guard-auto-publish.py`, blacklist additions), `dispatch-auto-issues.py`.
+Policy and config are in the private repo; the Aleph runner calls the dispatcher after the sync.
 TT01 on branch `tt01/ticktick` (October 23, 2026): `scripts/sync-issues-to-ticktick.py` with six tests;
 config in the private repo; the Aleph runner calls it after the issue sync with the keychain token.
 
