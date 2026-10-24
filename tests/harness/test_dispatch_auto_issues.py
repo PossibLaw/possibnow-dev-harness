@@ -116,7 +116,8 @@ def test_starts_only_eligible_issues_within_caps(world):
     issues = sorted(int(c[c.index('--issue') + 1]) for c in calls)
     assert issues == [1, 11], 'one per repo, two total: alpha #1 and beta #11'
     report = world['report'].read_text()
-    assert '#2' in report and 'not labelled' in report.lower() or 'auto-ok' in report
+    assert '#2' not in report, 'issues that simply lack auto-ok must not be listed one by one'
+    assert '1 issue(s) without auto-ok not listed' in report or '1 issues without auto-ok' in report
     assert '#3' in report and 'Sal' in report
     assert '#4' in report and 'config/secrets.json' in report
     assert '#5' in report and 'no path' in report.lower()
