@@ -40,6 +40,8 @@ REQUIRED_FILES=(
   "scripts/guardrails/autonomy.py"
   "tests/harness/test_dispatch_auto_issues.py"
   "tests/guardrails/test_autonomous_run_guards.py"
+  "scripts/sync-issues-to-ticktick.py"
+  "tests/harness/test_sync_issues_to_ticktick.py"
   "tests/harness/test_sync_tasks_to_issues.py"
   "docs/orca.md"
   "tests/harness/test_orca_worktree_setup.py"
@@ -121,7 +123,7 @@ if git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
   exit 1
 fi
 
-for script in "$REPO_ROOT/scripts/dispatch-auto-issues.py" "$REPO_ROOT/scripts/guardrails/guard-auto-publish.py" "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh"; do
+for script in "$REPO_ROOT/scripts/dispatch-auto-issues.py" "$REPO_ROOT/scripts/guardrails/guard-auto-publish.py" "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh" "$REPO_ROOT/scripts/sync-issues-to-ticktick.py"; do
   if [[ ! -x "$script" ]]; then
     echo "BLOCKED: script is not executable: ${script#$REPO_ROOT/}"
     exit 1
