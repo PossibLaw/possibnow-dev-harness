@@ -1,5 +1,5 @@
 {
-  "description": "PossibNow Dev Harness guardrails — blocks destructive commands, protects sensitive files, and keeps the shared .agent/HANDOFF.md in every commit",
+  "description": "PossibNow Dev Harness guardrails \u2014 blocks destructive commands, protects sensitive files, and keeps the shared .agent/HANDOFF.md in every commit",
   "hooks": {
     "PreToolUse": [
       {
@@ -17,6 +17,15 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guardrails/protect-files.py"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guardrails/guard-auto-publish.py"
           }
         ]
       }

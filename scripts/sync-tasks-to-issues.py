@@ -55,6 +55,9 @@ DEFAULT_DENY = [
     r"(?i)\b(?:exp(?:iry|ires|\.)?|valid thru)\s*:?\s*\d{1,2}/\d{2,4}\b",
 ]
 STATE_COLUMNS = ("state", "status", "state / next step", "resulting state", "state / evidence")
+# Upper-case tags in a row's state cell become labels (added, never removed by the sync).
+TAG_LABELS = {"AUTO-OK": "auto-ok", "MAINTENANCE": "maintenance", "URGENT": "urgent"}
+LABEL_COLORS = {"auto-ok": "0e8a16", "maintenance": "bfd4f2", "urgent": "d93f0b"}
 TASK_COLUMNS = ("task", "item", "work", "what it is", "title")
 
 
@@ -65,6 +68,11 @@ class Row:
     section: str
     text: str
     done: bool
+    tags: tuple = ()
+
+
+def row_tags(state: str) -> tuple:
+    return tuple(label for tag, label in TAG_LABELS.items() if re.search(rf"\b{re.escape(tag)}\b", state))
 
 
 def _clean(cell: str) -> str:
@@ -130,7 +138,7 @@ def parse_register(text: str) -> list[Row]:
             seen.add(rid)
             cells = {header[k] if k < len(header) else f"col{k}": v for k, v in enumerate(values[1:], start=1)}
             state = _state_of(cells)
-            rows.append(Row(rid, cells, section, line, bool(DONE_RE.match(_clean(state)))))
+            rows.append(Row(rid, cells, section, line, bool(DONE_RE.match(_clean(state))), row_tags(_clean(state))))
     return rows
 
 
@@ -208,10 +216,13 @@ class GitHub:
             time.sleep(2 * (attempt + 1))
         raise RuntimeError("unreachable")
 
-    def ensure_label(self, repo: str, label: str):
+    def ensure_labels(self, repo: str, label: str):
         names = {l["name"] for l in self.api(f"repos/{repo}/labels?per_page=100")}
-        if label not in names and not self.dry_run:
-            self.api(f"repos/{repo}/labels", "POST", {"name": label, "color": "5319e7", "description": "Mirrored from .agent/TASKS.md by sync-tasks-to-issues"})
+        wanted = {label: ("5319e7", "Mirrored from .agent/TASKS.md by sync-tasks-to-issues"),
+                  **{name: (color, f"Set by the sync from an upper-case {name.upper()} tag in the register row") for name, color in LABEL_COLORS.items()}}
+        for name, (color, desc) in wanted.items():
+            if name not in names and not self.dry_run:
+                self.api(f"repos/{repo}/labels", "POST", {"name": name, "color": color, "description": desc})
 
     def labelled_issues(self, repo: str, label: str) -> list[dict]:
         out, page = [], 1
@@ -222,8 +233,8 @@ class GitHub:
                 return out
             page += 1
 
-    def create(self, repo: str, title: str, body: str, label: str) -> dict:
-        return self.api(f"repos/{repo}/issues", "POST", {"title": title, "body": body, "labels": [label]})
+    def create(self, repo: str, title: str, body: str, labels: list[str]) -> dict:
+        return self.api(f"repos/{repo}/issues", "POST", {"title": title, "body": body, "labels": labels})
 
     def update(self, repo: str, number: int, **fields) -> dict:
         return self.api(f"repos/{repo}/issues/{number}", "PATCH", fields)
@@ -247,7 +258,7 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
     rows = parse_register(text)
     r["no_id"] = rows_without_id(text)
     try:
-        gh.ensure_label(github, label)
+        gh.ensure_labels(github, label)
         existing = gh.labelled_issues(github, label)
     except RuntimeError as exc:
         r["errors"].append(str(exc))
@@ -289,7 +300,7 @@ def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: d
             if gh.dry_run:
                 r["would_create"] += 1
             else:
-                created = gh.create(github, title, body, label)
+                created = gh.create(github, title, body, [label, *row.tags])
                 r["created"].append(f"{row.id} → #{created['number']}")
                 r["open_urls"].append(created.get("html_url") or f"https://github.com/{github}/issues/{created['number']}")
             return
@@ -307,10 +318,15 @@ def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: d
             r["drift"].append(f"{row.id} #{issue['number']}: closed on GitHub but the row is still open; not reopened")
             return
         r["open_urls"].append(issue.get("html_url") or f"https://github.com/{github}/issues/{issue['number']}")
-        if old_marker is None or old_marker["sha"] != new_marker["sha"]:
+        have = {l["name"] for l in issue.get("labels", []) if isinstance(l, dict)}
+        missing = [name for name in row.tags if name not in have]
+        if old_marker is None or old_marker["sha"] != new_marker["sha"] or missing:
+            fields = {"title": title, "body": body}
+            if missing:
+                fields["labels"] = sorted(have | set(missing))
             if not gh.dry_run:
-                gh.update(github, issue["number"], title=title, body=body)
-            r["updated"].append(f"{row.id} #{issue['number']}")
+                gh.update(github, issue["number"], **fields)
+            r["updated"].append(f"{row.id} #{issue['number']}" + (f" (+{', '.join(missing)})" if missing else ""))
 
 
 def board_step(cfg: dict, results: list[dict], state: dict, dry_run: bool) -> tuple[str, list[str]]:

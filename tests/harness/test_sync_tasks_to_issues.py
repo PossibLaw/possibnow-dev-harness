@@ -46,6 +46,7 @@ elif path.endswith("/labels") and method == "POST":
 elif "/issues/" in path and method == "PATCH":
     num = int(path.rsplit("/", 1)[1])
     issue = next(i for i in issues if i["number"] == num)
+    if "labels" in body: body["labels"] = [{"name": n} for n in body["labels"]]
     issue.update(body); out = issue
 elif "/issues/" in path and path.endswith("/comments") and method == "POST":
     out = {"id": 1}
@@ -76,6 +77,8 @@ Intro paragraph.
 | BL-A1 | Name the next round and its order | Sal | OPEN. Waiting since October 1 | Order recorded. This leads to the next round, which leads to launch, which gets me paying users. |
 | BL-A2 | Pay the vendor invoice | Sal | OPEN | card number 4111 1111 1111 1111 on file |
 | BL-A3 | Old item | Sal | DONE October 22 | Shipped |
+| BL-A5 | Agent-safe chore | Agent | OPEN. AUTO-OK | Touches `src/lib/x.js`. This leads to a, which leads to b, which gets me c. |
+| BL-A6 | Housekeeping | Sal | OPEN. MAINTENANCE URGENT | tidy |
 
 ### B. Plain
 
@@ -138,7 +141,7 @@ def read_world(world):
 def test_parse_register_reads_only_first_section_and_identified_rows():
     rows = module().parse_register(REGISTER)
     ids = [r.id for r in rows]
-    assert ids == ['BL-A1', 'BL-A2', 'BL-A3', 'E1']
+    assert ids == ['BL-A1', 'BL-A2', 'BL-A3', 'BL-A5', 'BL-A6', 'E1']
     assert rows[0].section == 'A. Waiting on Sal'
     assert rows[0].cells['Item'] == 'Name the next round and its order'
 
@@ -183,9 +186,9 @@ def test_first_run_creates_issues_with_label_and_skips_private_rows(world):
     assert res.returncode == 0, res.stderr
     w = read_world(world)
     titles = sorted(i['title'] for i in w['issues']['Owner/alpha'])
-    assert titles == ['[BL-A1] Name the next round and its order', '[E1] Send the agreement to the client']
+    assert titles == ['[BL-A1] Name the next round and its order', '[BL-A5] Agent-safe chore', '[BL-A6] Housekeeping', '[E1] Send the agreement to the client']
     assert 'agent-task' in w['labels']['Owner/alpha']
-    assert all(i['labels'] == [{'name': 'agent-task'}] for i in w['issues']['Owner/alpha'])
+    assert all({'name': 'agent-task'} in i['labels'] for i in w['issues']['Owner/alpha'])
     summary = world['summary'].read_text()
     assert 'BL-A2' in summary and 'card' in summary.lower() or 'private' in summary.lower()
     assert 'Row without an identifier' in summary
@@ -218,7 +221,7 @@ def test_row_marked_done_closes_the_issue_and_vanished_row_closes_with_comment(w
     run(world)
     w = read_world(world)
     states = {i['title'].split(']')[0][1:]: i['state'] for i in w['issues']['Owner/alpha']}
-    assert states == {'BL-A1': 'closed', 'E1': 'closed'}
+    assert states['BL-A1'] == 'closed' and states['E1'] == 'closed' and states['BL-A5'] == 'open'
     assert any('/comments' in ' '.join(c) for c in w['calls'])
 
 
@@ -248,7 +251,7 @@ def test_dry_run_writes_nothing_to_github(world):
     assert res.returncode == 0, res.stderr
     w = read_world(world)
     assert not w.get('issues', {}).get('Owner/alpha')
-    assert 'would create 2' in res.stdout
+    assert 'would create 4' in res.stdout
 
 
 def test_only_flag_limits_to_one_repo(world, tmp_path):
@@ -272,7 +275,7 @@ def test_transient_gh_failure_is_retried(world):
     res = run(world)
     assert res.returncode == 0, res.stderr
     titles = sorted(i['title'] for i in read_world(world)['issues']['Owner/alpha'])
-    assert len(titles) == 2
+    assert len(titles) == 4
     assert 'Errors' not in world['summary'].read_text()
 
 
@@ -281,7 +284,7 @@ def test_persistent_failure_on_one_row_does_not_abort_the_others(world):
     res = run(world)
     assert res.returncode == 0, res.stderr
     titles = [i['title'] for i in read_world(world)['issues']['Owner/alpha']]
-    assert titles == ['[E1] Send the agreement to the client']
+    assert '[BL-A1] Name the next round and its order' not in titles and '[E1] Send the agreement to the client' in titles
     summary = world['summary'].read_text()
     assert 'BL-A1' in summary and 'Errors' in summary and '422' in summary
 
@@ -296,10 +299,10 @@ def test_board_step_adds_every_open_synced_issue_once(world):
     enable_board(world)
     run(world)
     w = read_world(world)
-    assert sorted(w['board_items']) == ['https://github.com/Owner/alpha/issues/1', 'https://github.com/Owner/alpha/issues/2']
-    assert 'board: added 2' in world['summary'].read_text()
+    assert len(w['board_items']) == 4
+    assert 'board: added 4' in world['summary'].read_text()
     run(world)
-    assert len(read_world(world)['board_items']) == 2, 'already-added issues must not be re-added'
+    assert len(read_world(world)['board_items']) == 4, 'already-added issues must not be re-added'
     assert 'board: added 0' in world['summary'].read_text()
 
 
@@ -307,7 +310,7 @@ def test_board_step_adds_issues_that_existed_before_the_board_was_enabled(world)
     run(world)  # issues created with the board off
     enable_board(world)
     run(world)
-    assert len(read_world(world)['board_items']) == 2
+    assert len(read_world(world)['board_items']) == 4
 
 
 def test_board_failure_is_reported_not_fatal(world):
@@ -321,4 +324,30 @@ def test_board_failure_is_reported_not_fatal(world):
     res = run(world)
     assert res.returncode == 0, res.stderr
     assert 'Errors (board)' in world['summary'].read_text() or 'Errors' in world['summary'].read_text()
+
+
+def test_state_tags_become_labels_and_are_never_removed(world):
+    run(world)
+    w = read_world(world)
+    by_id = {i['title'].split(']')[0][1:]: i for i in w['issues']['Owner/alpha']}
+    assert {l['name'] for l in by_id['BL-A5']['labels']} == {'agent-task', 'auto-ok'}
+    assert {l['name'] for l in by_id['BL-A6']['labels']} == {'agent-task', 'maintenance', 'urgent'}
+    assert {l['name'] for l in by_id['BL-A1']['labels']} == {'agent-task'}
+    assert {'auto-ok', 'maintenance', 'urgent'} <= set(w['labels']['Owner/alpha'])
+    # Sal adds auto-ok by hand on GitHub; the next run keeps it
+    by_id['BL-A1']['labels'].append({'name': 'auto-ok'}); world['path'].write_text(json.dumps(w))
+    run(world)
+    w = read_world(world)
+    a1 = next(i for i in w['issues']['Owner/alpha'] if i['title'].startswith('[BL-A1]'))
+    assert {l['name'] for l in a1['labels']} == {'agent-task', 'auto-ok'}
+
+
+def test_tag_added_later_in_the_register_adds_the_label(world):
+    run(world)
+    tasks = world['repo'] / '.agent' / 'TASKS.md'
+    tasks.write_text(tasks.read_text().replace('| Sal | OPEN. Waiting since October 1 |', '| Sal | OPEN. AUTO-OK. Waiting since October 1 |'))
+    run(world)
+    w = read_world(world)
+    a1 = next(i for i in w['issues']['Owner/alpha'] if i['title'].startswith('[BL-A1]'))
+    assert 'auto-ok' in {l['name'] for l in a1['labels']}
 

@@ -13,6 +13,10 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+GR01 enforcement on branch `gr01/enforcement` (October 23, 2026): sync tag labels, autonomous-run
+guardrails (`autonomy.py`, `guard-auto-publish.py`, blacklist additions), `dispatch-auto-issues.py`.
+Policy and config are in the private repo; the Aleph runner calls the dispatcher after the sync.
+
 Merged to main on October 23, 2026: PR #15 (ORC00), then #19 carrying #16 (FD01), #17 (ORC01)
 and #18 (ORC02), which had merged into their stacked bases rather than main. Branches and
 worktrees removed. No release cut; version stays 4.2.1 until PR #14 lands and v4.3.0 is cut.
