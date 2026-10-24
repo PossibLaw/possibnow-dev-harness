@@ -14,7 +14,11 @@ BLOCKED_PATTERNS = [
     r"chmod\s+-R\s+777",
     r"git\s+push\s+--force\s+origin\s+(main|master)",
     r"git\s+reset\s+--hard",
-    r"git\s+clean\s+-f",
+    # Any force flag (-f, -df, -xdf, --force) deletes untracked files.
+    r"git\s+clean\b[^;&|\n]*\s(-[a-zA-Z]*f[a-zA-Z]*|--force)\b",
+    # Force-push to main/master in any spelling: -f, trailing flag, lease, or +refspec.
+    r"git\s+push\b(?=[^;&|\n]*\s(-[a-zA-Z]*f[a-zA-Z]*|--force(-with-lease)?(=\S*)?)(\s|$))(?=[^;&|\n]*\s(\S*:)?(main|master)(\s|$))",
+    r"git\s+push\b[^;&|\n]*\s\+(\S*:)?(main|master)(\s|$)",
     r"mkfs\.",
     r":\(\)\{\s*:\|:&\s*\};:",
 ]
@@ -24,6 +28,14 @@ ESCALATE_PATTERNS = [
     r"git\s+reset(?!\s+--hard)",
     r"git\s+rebase",
     r"git\s+push\s+--force(?!\s+origin\s+(main|master))",
+    # Other force-push spellings, branch force-delete, and discarding all working-tree changes.
+    r"git\s+push\b[^;&|\n]*\s(-[a-zA-Z]*f[a-zA-Z]*|--force\S*)(\s|$)",
+    r"git\s+push\b[^;&|\n]*\s\+\S",
+    r"git\s+branch\b[^;&|\n]*\s-[a-zA-Z]*D",
+    r"git\s+branch\b(?=[^;&|\n]*\s(--delete|-d)\b)(?=[^;&|\n]*\s(--force|-f)\b)",
+    r"git\s+checkout\s+(--\s+)?\.(\s|$)",
+    r"git\s+restore\b(?![^;&|\n]*--staged)[^;&|\n]*\s\.(\s|$)",
+    r"git\s+restore\b[^;&|\n]*(--worktree|\s-W\b)[^;&|\n]*\s\.(\s|$)",
     r"rm\s+-r(?!f)\s",
     # chmod: escalate only genuinely risky forms — recursive, world-writable
     # (others get write), setuid/setgid. Scoped changes (644, 755, 600, 000,

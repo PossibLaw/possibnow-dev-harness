@@ -21,7 +21,7 @@
 - `.agent/WIKI.md`: optional Tier-2 wiki-mode config (vault path, wiki root, sync rules).
 - `.agent/LEARNINGS.md`: optional, validation-gated learning log for reusable observations and improvement proposals.
 - `.agent/integrations/*`: local advisory checkpoint helper (`run-checkpoint.sh`) that prints the required PLAN/HANDOFF updates; it does not write state or call a backend.
-- `.claude/skills/*/SKILL.md`: repo-local workflow skills for repeated procedures (sprint closeout, novice-safe git cycle, the simplicity ladder, scaling up with Graphify).
+- `.claude/skills/*/SKILL.md`: repo-local workflow skills for repeated procedures (sprint closeout, novice-safe git cycle, the simplicity ladder, scaling up with Graphify, splitting work into tickets, running a retro).
 
 ## Global Pack (`packs/global`)
 - `codex/.codex/AGENTS.md`: Codex user-level global policy.
@@ -42,6 +42,10 @@
 - `commands/guardrails.md`: `/possibnow-dev-harness:guardrails` — views active Tier-1 safety hooks.
 - `skills/applying-simplicity-ladder/SKILL.md`: the always-on simplicity-ladder procedure.
 - `skills/scaling-up-with-graphify/SKILL.md`: Tier-2 procedure for indexing a larger codebase.
+- `skills/splitting-work-into-tickets/SKILL.md`: user-invoked; turns a plan into tracer-bullet tickets with blocking edges (GitHub Issues or local `.agent/tickets/`). Adapted from mattpocock/skills (MIT).
+- `skills/running-a-retro/SKILL.md`: user-invoked; reviews a session and proposes environment improvements. Adapted from mattpocock/skills (MIT).
+- `scripts/install_codex_guardrails.py`: installs the guardrail scripts as Codex PreToolUse hooks in `~/.codex/config.toml`; trust them with `/hooks` in Codex.
+- `docs/references/writing-for-agents*.md`: maintainer reference for writing skills and entry files; not shipped to projects. From mattpocock/skills (MIT).
 - `agents/*.md`: host-agnostic specialist agents promoted to the top level.
 - `hooks/hooks.json`: Tier-1 Claude runtime hooks, on by default with the plugin; `hooks/tier2-hooks.json` is the opt-in Tier-2 set.
 - `scripts/guardrails/*`: hook implementations — destructive-command blocker and shared-handoff commit guard (`validate-bash.py`), protected-file check, format check, and the Tier-2 helpers; unit tests live in `tests/guardrails/`.
