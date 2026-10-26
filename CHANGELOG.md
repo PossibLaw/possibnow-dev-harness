@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Dispatcher**: repo paths from the config are tilde-expanded before they reach `orca worktree create --repo path:...` (Orca does not expand `~`, so every start failed with `repo_not_found` on the night of October 25, 2026); when Orca exits non-zero with an empty stderr, the `--json` error on stdout is read and its code reaches the morning report instead of a blank. Two tests, red first.
 - **Dispatcher**: a backticked token counts as a path only when it exists in the repo checkout or its parent folder does, so model names, keychain items and branch names no longer count; a row with no Owner column is rejected when its text waits on a person ("Sal decides", "ask Sal", "Sal's call"). Two tests, red first.
 
 ## 4.3.0 — 2026-10-24 — Orca-first operating system, autonomy guardrails, Codex hooks

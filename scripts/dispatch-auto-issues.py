@@ -45,8 +45,20 @@ def sh(cmd: list[str], payload: dict | None = None):
     data = json.dumps(payload) if payload is not None else None
     res = subprocess.run(cmd, input=data, capture_output=True, text=True)
     if res.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd[:4])}: {res.stderr.strip()[:200]}")
+        raise RuntimeError(f"{' '.join(cmd[:4])}: {failure_text(res)}")
     return json.loads(res.stdout) if res.stdout.strip() else {}
+
+
+def failure_text(res: subprocess.CompletedProcess) -> str:
+    """Orca with --json reports errors on stdout as {"ok": false, "error": {...}} and leaves stderr empty."""
+    if res.stderr.strip():
+        return res.stderr.strip()[:200]
+    try:
+        err = json.loads(res.stdout).get("error") or {}
+    except (ValueError, AttributeError):
+        return res.stdout.strip()[:200]
+    code, msg = err.get("code", ""), err.get("message", "")
+    return (f"{code}: {msg}" if msg and msg != code else code or res.stdout.strip())[:200]
 
 
 def gh(path: str, method: str = "GET", payload: dict | None = None):
@@ -235,7 +247,8 @@ def main(argv=None) -> int:
                 skipped.append(f"{tag}: cap reached ({max_per_repo} per repo)")
                 continue
             prompt = prompt_tpl.replace("{issue_url}", issue["html_url"]).replace("{issue_number}", str(n)).replace("{repo}", repo["github"])
-            cmd = ["orca", "worktree", "create", "--repo", f"path:{repo['path']}", "--name", f"auto-{n}", "--issue", str(n),
+            repo_selector = f"path:{Path(repo['path']).expanduser()}"  # Orca does not expand ~ itself
+            cmd = ["orca", "worktree", "create", "--repo", repo_selector, "--name", f"auto-{n}", "--issue", str(n),
                    "--agent", cfg.get("agent", "claude"), "--prompt", prompt, "--json"]
             if cfg.get("model"):
                 cmd += ["--model", cfg["model"]]
