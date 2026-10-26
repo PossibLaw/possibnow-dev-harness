@@ -13,6 +13,12 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `feat/content-freshness` (October 26, 2026): shared content-freshness engine (Sal: same loop as the Claude Code
+work order, for PossibNow articles and everything Trazomo teaches). Watch list `~/agent-tasks/freshness.json`: PossibNow
+library (44 pages, 127 sources) and the six Trazomo Claude modules. Aleph PR #160 adds the weekly runner step; Trazomo
+PR #864 widens the Claude Code check to all six Claude modules. Next: Builder articles once their current-edition files
+are confirmed; then the other Trazomo tool modules (Sal chose Claude first).
+
 Branch `fix/dispatcher-pagination` (October 26, 2026): the dispatcher read only the first 100 issues per repo; Trazomo's
 weekly "Claude Code content update" (now a work order, Trazomo PR #863; policy allows the Claude Code lesson folders)
 sat on page 2. Pagination fixed; flagged PRs are named in the report. Aleph's October 27 newsletter is a Substack review
