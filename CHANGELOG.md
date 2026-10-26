@@ -1,7 +1,10 @@
 # CHANGELOG
 
-## Unreleased
+## 4.3.1 — 2026-10-26 — Autonomous runs actually start, stay guarded, and free their slot
 
+The first autonomous night (October 25, 2026) started nothing; these fixes come from that run and the by-hand run the next morning. Bootstrap and pack pinned to v4.3.1.
+
+- **Dispatcher caps**: an auto worktree stops counting against the caps once its linked issue is closed (Orca keeps the worktree, and people keep working in the pane), so the next night is not stalled; the report lists such worktrees under "Finished, still open in Orca". Running worktrees are now matched to their repo through `orca repo list` (Orca records carry `repoId`, never `repoPath`), so the per-repo cap counts them at all; running-issue checks are per repo. Two tests, red first.
 - **Autonomous-run detection**: Orca 1.4.240 names a worktree's branch after `--name`, so dispatcher runs live on `auto-<n>`, not `orca/auto-<n>`. The guard (`scripts/guardrails/autonomy.py`, new `auto_issue`), the dispatcher's worktree count and PR flagging now accept both spellings; `auto-complete-widget` and similar human branches stay normal. Four tests, two red first.
 - **Dispatcher**: repo paths from the config are tilde-expanded before they reach `orca worktree create --repo path:...` (Orca does not expand `~`, so every start failed with `repo_not_found` on the night of October 25, 2026); when Orca exits non-zero with an empty stderr, the `--json` error on stdout is read and its code reaches the morning report instead of a blank. Two tests, red first.
 - **Dispatcher**: a backticked token counts as a path only when it exists in the repo checkout or its parent folder does, so model names, keychain items and branch names no longer count; a row with no Owner column is rejected when its text waits on a person ("Sal decides", "ask Sal", "Sal's call"). Two tests, red first.

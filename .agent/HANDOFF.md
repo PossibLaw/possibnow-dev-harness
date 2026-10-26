@@ -13,6 +13,13 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Release 4.3.1 cut on branch `release/4.3.1` (October 26, 2026): PRs #35 and #36 plus the caps fix (closed issue frees
+the slot; worktrees matched to repos by Orca `repoId`). After merge: tag v4.3.1, GitHub Release, bootstrap smoke,
+RELEASE-4.3.1.md, marketplace entry 4.3.1, `claude plugin update`, Codex hook refresh.
+Open decision (Sal): autonomous detection is by branch name, so it switches off when a session changes branch, as
+both October 26 runs did on Sal's instructions. Options are a sticky worktree marker, with or without a human-takeover
+release; see the October 26 session summary. Running sessions keep the hooks they started with.
+
 Branch `Fix-GitHub-Issues` (October 26, 2026): the first autonomous night (October 25, 22:01) started nothing.
 Both `auto-ok` issues (aleph #130, Trazomo #850) passed eligibility, then `orca worktree create` failed with
 `repo_not_found` because the dispatcher passed `path:~/Aleph` unexpanded, and the report showed a blank reason
