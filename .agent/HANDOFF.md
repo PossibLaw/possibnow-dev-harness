@@ -13,6 +13,11 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `feat/issue-triage` (October 26, 2026): nightly triage with Sal's approved shape: a Slack brief with the top five
+decisions, agent-set urgent/important labels that Sal can override, a Monday sweep of finished issues, and a first pass run
+today. TickTick map switched to the four quadrants (private config). Sync adoption limited to the team's issues (public
+repos). Aleph PR #161 adds the runner step. UNCONFIRMED: `claude -p` under launchd until tonight's run.
+
 Branch `feat/content-freshness` (October 26, 2026): shared content-freshness engine (Sal: same loop as the Claude Code
 work order, for PossibNow articles and everything Trazomo teaches). Watch list `~/agent-tasks/freshness.json`: PossibNow
 library (44 pages, 127 sources) and the six Trazomo Claude modules. Aleph PR #160 adds the weekly runner step; Trazomo

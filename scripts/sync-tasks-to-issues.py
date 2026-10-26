@@ -329,11 +329,14 @@ def track_github_issues(cfg: dict, github: str, label: str, gh: GitHub, r: dict,
     def labels_of(issue: dict) -> set[str]:
         return {l["name"] for l in issue.get("labels", []) if isinstance(l, dict)}
 
+    team = {"OWNER", "MEMBER", "COLLABORATOR"}
     open_count = 0
     for issue in gh.issues(github, "open"):
         names = labels_of(issue)
         if ignore in names:
             continue
+        if label not in names and issue.get("author_association", "OWNER") not in team:
+            continue  # public repositories: a stranger's issue is never handed to agents
         open_count += 1
         if label not in names:
             if not gh.dry_run:
