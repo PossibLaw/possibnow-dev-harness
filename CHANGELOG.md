@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## Unreleased
+## 4.3.3 — 2026-10-26 — Work orders across repos, nightly triage, morning brief
+
+Bootstrap and pack pinned to v4.3.3. The v4.3.3 tag was created on 7cf243d, the merge before this version bump, so files installed from that tag still report 4.3.2. The plugin installs from main and reports 4.3.3.
 
 - **Nightly triage**: `scripts/triage-issues.py` reads every open tracked issue, plus the merged pull requests that mention each one. It asks a classifier, normally headless Claude Code with no tools and no MCP servers, to sort each issue into decide / do / agent / done / stale / duplicate, mark it urgent and important, and write the question, options and recommendation for each decision. It sets the `urgent` and `important` labels; a label Sal set before the first triage, or changed since, is never touched again. It writes the brief: Sal's top five decisions as one numbered list, then what only he can do, what agents could take, what looks finished, and what looks stale. On the sweep day (Monday) it closes issues judged done that a merged pull request mentions, naming that pull request in a comment. Stale and duplicate issues are only proposed. Eight tests, red first.
 - **Answering the brief**: the user-invoked skill `answering-the-morning-brief` applies Sal's replies. A pick like `2B` becomes a comment on the issue, plus the action the option names; register-backed decisions go to the repository's register row through a pull request. `opt in <names>` adds `auto-ok` only where the dispatcher would accept the issue. `close stale` closes the stale list. Labels Sal set are never changed. Three tests.

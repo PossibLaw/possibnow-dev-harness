@@ -11,10 +11,10 @@ cost-savings claim. Original research remains under `docs/references/`.
 Run from the target repository root (macOS/Linux, Bash, Git, Python 3):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PossibLaw/possibnow-dev-harness/v4.3.2/scripts/bootstrap-project.sh | DEV_HARNESS_REF=v4.3.2 bash -s -- . --adopt
+curl -fsSL https://raw.githubusercontent.com/PossibLaw/possibnow-dev-harness/v4.3.3/scripts/bootstrap-project.sh | DEV_HARNESS_REF=v4.3.3 bash -s -- . --adopt
 ```
 
-Both the downloaded script and the pack it clones are pinned to `v4.3.2`.
+Both the downloaded script and the pack it clones are pinned to `v4.3.3`.
 Add `--dry-run` to preview without target writes. The installer reports the pack
 version and source commit. A clean repository can use the same command.
 `--adopt` and `--preserve-progress` remain compatibility aliases for preservation.
@@ -27,13 +27,13 @@ is conservatively preserved. Existing oversized roots can remain pending; they
 are never truncated to pass the new cap. Repeating the same install/options/ref
 makes no file changes or duplicate backups.
 
-The snapshot under `.harness/releases/4.3.2/` supplies the current guidance and
+The snapshot under `.harness/releases/4.3.3/` supplies the current guidance and
 candidate versions. Root/skill candidates use a `.candidate` suffix so clients
 do not discover them as active nested instructions. `INSTALL.json` records created-file hashes, pending file
 hashes/candidate paths, and ignored-file warnings at installation time. A candidate
 is a starting point for a reviewed diff, not permission to discard custom content.
 The snapshot is a release artifact; its policy is authored once in the source pack.
-For a local comparison, run `git diff --no-index -- AGENTS.md .harness/releases/4.3.2/AGENTS.md.candidate`
+For a local comparison, run `git diff --no-index -- AGENTS.md .harness/releases/4.3.3/AGENTS.md.candidate`
 (exit 1 means differences). This exposes the template difference for review; it is
 not a customization-preserving patch to apply wholesale.
 
@@ -54,7 +54,7 @@ To run agents in Orca worktrees that behave like the main checkout, follow
 Ask the agent in that project:
 
 ```text
-Follow .harness/releases/4.3.2/docs/workflows/optimization.md in check mode.
+Follow .harness/releases/4.3.3/docs/workflows/optimization.md in check mode.
 Prepare a read-only migration proposal preserving my project routes, commands,
 content instructions, active constraints, unresolved tasks, and continuity.
 ```
@@ -76,7 +76,7 @@ command uses the policy bundled with that installed plugin version.
 To undo an installation that has not subsequently been edited:
 
 ```bash
-python3 .harness/releases/4.3.2/tools/rollback.py . --receipt .harness/releases/4.3.2/INSTALL.json
+python3 .harness/releases/4.3.3/tools/rollback.py . --receipt .harness/releases/4.3.3/INSTALL.json
 ```
 
 This checks all created-file hashes first, removes only files listed in that

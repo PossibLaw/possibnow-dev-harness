@@ -13,6 +13,9 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+v4.3.3 published October 26, 2026 (tag by Sal on 7cf243d, before the version bump: files installed from that tag report
+4.3.2). Branch `release/4.3.3` moves version and pins to 4.3.3 on main; marketplace entry and plugin update follow.
+
 Branch `feat/issue-triage` (October 26, 2026): nightly triage with Sal's approved shape: a Slack brief with the top five
 decisions, agent-set urgent/important labels that Sal can override, a Monday sweep of finished issues, and a first pass run
 today. TickTick map switched to the four quadrants (private config). Sync adoption limited to the team's issues (public
