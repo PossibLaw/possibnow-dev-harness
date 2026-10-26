@@ -67,6 +67,18 @@ def failure_text(res: subprocess.CompletedProcess) -> str:
     return (f"{code}: {msg}" if msg and msg != code else code or res.stdout.strip())[:200]
 
 
+def gh_all(path: str) -> list:
+    """Every page of a GET listing (100 per page). Trazomo alone has more than 100 open agent-task issues."""
+    out, page = [], 1
+    sep = "&" if "?" in path else "?"
+    while True:
+        batch = gh(f"{path}{sep}per_page=100&page={page}")
+        out += batch
+        if len(batch) < 100:
+            return out
+        page += 1
+
+
 def gh(path: str, method: str = "GET", payload: dict | None = None):
     cmd = ["gh", "api", "--method", method, path]
     if payload is not None:
@@ -180,7 +192,7 @@ def flag_auto_prs(repo: dict, pr_label: str, dry_run: bool) -> tuple[list[str], 
     """Returns (flagged lines, {issue number: pr url} for open auto PRs, errors)."""
     flagged, open_by_issue, errors = [], {}, []
     try:
-        pulls = gh(f"repos/{repo['github']}/pulls?state=open&per_page=100")
+        pulls = gh_all(f"repos/{repo['github']}/pulls?state=open")
     except RuntimeError as exc:
         return flagged, open_by_issue, [str(exc)]
     for pr in pulls:
@@ -195,14 +207,14 @@ def flag_auto_prs(repo: dict, pr_label: str, dry_run: bool) -> tuple[list[str], 
         if not (needs_label or needs_title):
             continue
         if dry_run:
-            flagged.append(f"would flag {repo['name']} #{pr['number']} {pr['html_url']}")
+            flagged.append(f"would flag {repo['name']}: {pr['title']} (#{pr['number']}) {pr['html_url']}")
             continue
         try:
             if needs_label:
                 gh(f"repos/{repo['github']}/issues/{pr['number']}/labels", "POST", {"labels": [pr_label]})
             if needs_title:
                 gh(f"repos/{repo['github']}/pulls/{pr['number']}", "PATCH", {"title": f"[auto] {pr['title']}"})
-            flagged.append(f"{repo['name']} #{pr['number']} flagged {pr_label}: {pr['html_url']}")
+            flagged.append(f"{repo['name']}: [auto] {pr['title'].removeprefix('[auto] ')} ready for review (#{pr['number']}) {pr['html_url']}")
         except RuntimeError as exc:
             errors.append(f"flag #{pr['number']}: {exc}")
     return flagged, open_by_issue, errors
@@ -281,7 +293,7 @@ def main(argv=None) -> int:
         flagged_all += flagged
         errors += ferr
         try:
-            issues = [i for i in gh(f"repos/{repo['github']}/issues?state=open&labels={eligible_labels[0]}&per_page=100") if "pull_request" not in i]
+            issues = [i for i in gh_all(f"repos/{repo['github']}/issues?state=open&labels={eligible_labels[0]}") if "pull_request" not in i]
         except RuntimeError as exc:
             errors.append(f"{repo['name']}: {exc}")
             continue

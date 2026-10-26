@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dispatcher pagination**: open issues and pull requests are read page by page. Trazomo has more than 100 open `agent-task` issues, so older eligible ones (the weekly Claude Code content update among them) were never seen. One test, red first.
+- **Dispatcher report names pull requests**: a flagged pull request is reported by title (number and link after), so the Slack post says what is ready for review.
 - **Issue sync as a status report**: the nightly summary leads with each repository's open count and names the issues opened and completed since the last summary that reached Slack, whatever their labels. Before, it listed only what the sync itself changed, so a day's finished work showed as zeros. The window is kept in the state file as `reported` and only a posted summary moves it, so the feeder's daytime `--only` runs no longer shrink it.
 - **Issues started anywhere are tracked**: an open issue without `agent-task`, for example one written on GitHub or from Orca, gets the label, so the board, TickTick and the summary follow it ("Added from GitHub"). No register row is written and the register logic never closes it. `not-tracked` (config `ignore_label`) keeps an issue out.
 - **Weekly worktree line**: on `worktree_day` (default Monday) the summary names linked worktrees that are merged and hold nothing uncommitted, per repository; locked ones are left out.

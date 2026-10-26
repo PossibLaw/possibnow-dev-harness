@@ -13,6 +13,11 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `fix/dispatcher-pagination` (October 26, 2026): the dispatcher read only the first 100 issues per repo; Trazomo's
+weekly "Claude Code content update" (now a work order, Trazomo PR #863; policy allows the Claude Code lesson folders)
+sat on page 2. Pagination fixed; flagged PRs are named in the report. Aleph's October 27 newsletter is a Substack review
+draft (Aleph PR #159 closes its issue on merge).
+
 Branch `feat/sync-status-report` (October 26, 2026): Sal saw the nightly Slack post miss new and finished issues.
 Cause: the post listed only the sync's own changes, and an issue written on GitHub (Aleph "Tuesday October 27
 Learn AI Issue: Video") carried no label, so nothing followed it. Now the post names opened and completed issues and
