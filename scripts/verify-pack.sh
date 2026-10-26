@@ -24,6 +24,8 @@ REQUIRED_FILES=(
   "skills/applying-simplicity-ladder/SKILL.md"
   "skills/scaling-up-with-graphify/SKILL.md"
   "skills/routing-work-to-a-repo/SKILL.md"
+  "skills/answering-the-morning-brief/SKILL.md"
+  "tests/harness/test_answering_brief_skill.py"
   "tests/harness/test_routing_skill.py"
   "skills/splitting-work-into-tickets/SKILL.md"
   "skills/running-a-retro/SKILL.md"
