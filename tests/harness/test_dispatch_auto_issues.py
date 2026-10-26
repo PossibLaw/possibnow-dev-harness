@@ -175,3 +175,29 @@ def test_disabled_config_starts_nothing(world):
     cfg = json.loads(world['config'].read_text()); cfg['enabled'] = False; world['config'].write_text(json.dumps(cfg))
     res = run(world)
     assert res.returncode == 0 and started(world) == [] and 'disabled' in world['report'].read_text().lower()
+
+
+def test_paths_are_only_tokens_that_exist_in_the_repo(tmp_path):
+    m = module()
+    repo = tmp_path / 'r'; (repo / 'src' / 'lib').mkdir(parents=True); (repo / 'src' / 'lib' / 'x.js').write_text('')
+    body = "fix `src/lib/x.js`, model `qwen/qwen-plus`, keychain `aleph/SLACK_WEBHOOK_URL`, branch `orca/auto-3`, new file `src/lib/new.js`, folder `docs/`"
+    assert m.issue_paths(body, repo) == ['docs/', 'src/lib/new.js', 'src/lib/x.js'] or m.issue_paths(body, repo) == ['src/lib/new.js', 'src/lib/x.js']
+
+
+def test_rows_without_an_owner_line_are_rejected_when_the_text_says_sal_decides(tmp_path):
+    m = module()
+    repo = {'name': 'alpha', 'path': str(tmp_path), 'allowed_paths': ['src/']}
+    (tmp_path / 'src').mkdir()
+    labels = [{'name': 'agent-task'}, {'name': 'auto-ok'}]
+    needs_sal = {'labels': labels, 'body': "- **Work:** rewrite `src/a.js` once Sal decides the format\n- **Evidence / next:** Sal says go"}
+    agent_ok = {'labels': labels, 'body': "- **Work:** tidy `src/a.js`\n- **Evidence / next:** tests pass"}
+    assert 'Sal' in (m.reject_reason(needs_sal, repo, ['agent-task', 'auto-ok']) or '')
+    assert m.reject_reason(agent_ok, repo, ['agent-task', 'auto-ok']) is None
+
+
+def module():
+    import importlib.util, sys
+    spec = importlib.util.spec_from_file_location('dispatch_auto', TOOL)
+    mod = importlib.util.module_from_spec(spec); sys.modules[spec.name] = mod; spec.loader.exec_module(mod)
+    return mod
+
