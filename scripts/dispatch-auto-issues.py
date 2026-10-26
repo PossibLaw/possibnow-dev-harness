@@ -73,11 +73,27 @@ def auto_name(wt: dict) -> str | None:
     return None
 
 
-def issue_paths(body: str) -> list[str]:
-    """Paths the issue names in backticks, ignoring the sync's own Source line and register files."""
+def issue_paths(body: str, repo_path: str | Path | None = None) -> list[str]:
+    """Paths the issue names in backticks: a token counts only when it exists in the repo checkout,
+    or its parent folder does (a new file in an existing folder). Model names, keychain items and
+    branch names therefore do not count. The sync's own Source line and register files are ignored."""
     lines = [l for l in (body or "").splitlines() if not l.lstrip().startswith("**Source:**")]
-    found = {m.group(1).strip("./") for m in PATH_RE.finditer("\n".join(lines))}
-    return sorted(p for p in found if "/.agent/" not in f"/{p}" and not p.startswith("http"))
+    found = {m.group(1).lstrip("./") for m in PATH_RE.finditer("\n".join(lines))}
+    candidates = sorted(p for p in found if "/.agent/" not in f"/{p}" and not p.startswith("http") and ":" not in p and "@" not in p)
+    if repo_path is None:
+        return candidates
+    root = Path(repo_path).expanduser()
+    if not root.is_dir():
+        return candidates
+    kept = []
+    for p in candidates:
+        full = root / p
+        if full.exists() or full.parent.is_dir():
+            kept.append(p)
+    return kept
+
+
+HUMAN_PHRASES_RE = re.compile(r"\b(sal (decides|says|reviews|confirms|approves|answers|chooses|wants to)|ask sal|sal to |sal:|his (decision|answer|word)|sal's (decision|answer|word|call))", re.I)
 
 
 def reject_reason(issue: dict, repo: dict, eligible_labels: list[str]) -> str | None:
@@ -89,7 +105,11 @@ def reject_reason(issue: dict, repo: dict, eligible_labels: list[str]) -> str | 
     m = OWNER_RE.search(body)
     if m and HUMAN_OWNER_RE.search(m.group(1)):
         return f"owner is {m.group(1).strip()} (a person decides or acts)"
-    paths = issue_paths(body)
+    if not m:
+        hit = HUMAN_PHRASES_RE.search(body)
+        if hit:
+            return f"no owner column, and the row waits on a person (\"{hit.group(0).strip()}\")"
+    paths = issue_paths(body, repo.get("path"))
     if not paths:
         return "no paths named in the issue body; the policy needs the files it touches"
     allowed = tuple(p.rstrip("/") + "/" for p in repo.get("allowed_paths", []))

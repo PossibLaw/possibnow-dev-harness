@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- **Dispatcher**: a backticked token counts as a path only when it exists in the repo checkout or its parent folder does, so model names, keychain items and branch names no longer count; a row with no Owner column is rejected when its text waits on a person ("Sal decides", "ask Sal", "Sal's call"). Two tests, red first.
+
 ## 4.3.0 — 2026-10-24 — Orca-first operating system, autonomy guardrails, Codex hooks
 
 Orca worktree setup helper and runbook; issue sync, board step, TickTick mirror, work router and autonomy dispatcher; git guardrail gaps and Pocock-derived skills (PR #14); guardrails as Codex hooks. Bootstrap and pack pinned to v4.3.0.
