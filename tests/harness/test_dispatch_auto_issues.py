@@ -189,6 +189,27 @@ def test_orca_json_error_reaches_the_report(world):
     assert 'Nothing started' in report
 
 
+def test_prs_on_the_branch_orca_actually_creates_are_flagged_and_block_a_restart(world):
+    # Orca 1.4.240 names the branch auto-<n>, not orca/auto-<n>; both spellings must count.
+    w = read(world)
+    w['pulls']['Owner/alpha'] = [{"number": 92, "title": "shortlist", "state": "open", "head": {"ref": "auto-1"}, "body": "", "labels": [], "html_url": "https://github.com/Owner/alpha/pull/92"}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    w = read(world)
+    assert next(p for p in w['pulls']['Owner/alpha'] if p['number'] == 92)['title'] == '[auto] shortlist'
+    assert 'agent-auto' in w.get('pr_labels', {}).get('Owner/alpha#92', [])
+    assert 1 not in [int(c[c.index('--issue') + 1]) for c in started(world)], 'issue #1 already has an open auto PR'
+
+
+def test_worktrees_on_the_branch_orca_actually_creates_count_against_caps(world):
+    w = read(world)
+    w['worktrees'] = [{"displayName": "auto-1", "branch": "refs/heads/auto-1", "linkedIssue": 1, "isArchived": False, "path": "/wt/auto-1", "repoPath": "/repos/alpha"}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [11], 'alpha is at its per-repo cap and #1 is already running'
+
+
 def test_dry_run_starts_nothing_and_reports(world):
     res = run(world, '--dry-run')
     assert res.returncode == 0, res.stderr

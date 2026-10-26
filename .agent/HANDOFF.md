@@ -19,6 +19,11 @@ Both `auto-ok` issues (aleph #130, Trazomo #850) passed eligibility, then `orca 
 because Orca `--json` writes errors to stdout. Fixed in `scripts/dispatch-auto-issues.py` (expanduser on the
 selector; `failure_text` reads the JSON error), two tests red first, suite 315, verify-pack DONE. Nights 2 and 3
 of the plan in `~/.agents/research/2026-10-25-auto-ok-candidates.md` stay as written (Sal's call, October 26).
+After merging that fix (PR #35) the dispatcher was run by hand at 10:39 on October 26 and started
+`auto-130` (Aleph) and `auto-850` (Trazomo). Second finding: Orca names the branch `auto-<n>`, not
+`orca/auto-<n>`, so the no-merge/no-publish guard and the `agent-auto` PR flag would not have fired; both now
+accept either spelling (four tests). The two running agents use whatever hook copy their checkout carries,
+so the guard reaches them only once the installed pack is updated (UNCONFIRMED which copy they load).
 
 v4.3.0 published October 24, 2026 from 8275b16 (tag, GitHub Release, public bootstrap smoke passed; receipt in
 `.agent/RELEASE-4.3.0.md`). Marketplace PR open in PossibLaw-Plugins; installed plugin update pending.
