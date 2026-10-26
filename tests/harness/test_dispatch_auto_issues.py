@@ -19,10 +19,15 @@ wp = os.environ["FAKE_WORLD"]; world = json.load(open(wp)); args = sys.argv[1:]
 world.setdefault("calls", []).append(["gh", *args])
 def save(): json.dump(world, open(wp, "w"), indent=1)
 method = args[args.index("--method") + 1] if "--method" in args else "GET"
-path = next(a for a in args[1:] if not a.startswith("-") and a != method).split("?")[0]
+full = next(a for a in args[1:] if not a.startswith("-") and a != method)
+path = full.split("?")[0]
+from urllib.parse import parse_qs
+query = {k: v[0] for k, v in parse_qs(full.split("?")[1] if "?" in full else "").items()}
 body = json.load(sys.stdin) if "--input" in args else {}
 if path.endswith("/issues") and method == "GET":
     repo = "/".join(path.split("/")[1:3]); out = world.get("issues", {}).get(repo, [])
+    per, page = int(query.get("per_page", 30)), int(query.get("page", 1))
+    out = out[(page - 1) * per: page * per]  # GitHub pages, newest first in real life
 elif path.endswith("/pulls") and method == "GET":
     repo = "/".join(path.split("/")[1:3]); out = world.get("pulls", {}).get(repo, [])
 elif "/pulls/" in path and method == "PATCH":
@@ -181,6 +186,7 @@ def test_open_auto_prs_are_flagged_with_label_and_title_prefix(world):
     assert 'agent-auto' in w.get('pr_labels', {}).get('Owner/alpha#90', [])
     assert 'Owner/alpha#91' not in w.get('pr_labels', {})
     assert '#90' in world['report'].read_text()
+    assert 'fix the thing' in world['report'].read_text(), 'the report names the pull request, not just its number'
 
 
 def test_tilde_repo_paths_are_expanded_before_orca_sees_them(world, tmp_path, monkeypatch):
@@ -284,6 +290,18 @@ def guard_module():
     spec = importlib.util.spec_from_file_location('autonomy_for_dispatch', ROOT / 'scripts' / 'guardrails' / 'autonomy.py')
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     return mod
+
+
+def test_issues_beyond_the_first_page_are_considered(world):
+    # October 26, 2026: Trazomo has 118 open agent-task issues; the oldest (the weekly Claude Code
+    # content update) sat on page 2 and was never seen.
+    w = read(world)
+    filler = [issue("Owner/beta", 1000 - i, ["agent-task"], BODY_OK, f"filler {i}") for i in range(120)]
+    w['issues']['Owner/beta'] = filler + [issue("Owner/beta", 11, ["agent-task", "auto-ok"], BODY_OK, "beta chore on page two")]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert 11 in issues, 'the eligible issue on page two must start'
 
 
 def test_dry_run_starts_nothing_and_reports(world):
