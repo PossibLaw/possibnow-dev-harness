@@ -13,6 +13,9 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+v4.3.0 published October 24, 2026 from 8275b16 (tag, GitHub Release, public bootstrap smoke passed; receipt in
+`.agent/RELEASE-4.3.0.md`). Marketplace PR open in PossibLaw-Plugins; installed plugin update pending.
+
 Release 4.3.0 cut on branch `release/4.3.0` (October 24, 2026): version, pins, fixtures and changelog
 moved to 4.3.0; Codex installer ships `autonomy.py`. After merge: annotated tag v4.3.0 on the merge
 commit, GitHub Release, public bootstrap smoke into a disposable repo, RELEASE-4.3.0.md, marketplace
