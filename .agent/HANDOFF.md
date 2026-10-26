@@ -13,6 +13,15 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `feat/sync-status-report` (October 26, 2026): Sal saw the nightly Slack post miss new and finished issues.
+Cause: the post listed only the sync's own changes, and an issue written on GitHub (Aleph "Tuesday October 27
+Learn AI Issue: Video") carried no label, so nothing followed it. Now the post names opened and completed issues and
+open counts, adopts unlabelled issues (`not-tracked` opts out), and adds a Monday removable-worktree line. Local
+`~/.agents/sync-state.json` got `reported` = last night's post so tonight's window starts there. Same day: 21
+merged, clean worktrees removed with Sal's approval (branches kept; superpowers notes archived to
+`~/.agents/archive/worktrees/`); kept: live sessions, this session, the SCBrand film-score WAVs, the Trazomo
+financial-model workspace, and three worktrees locked by a Claude session running since October 7.
+
 v4.3.1 published October 26, 2026 from a64b505 (tag and GitHub Release by Sal; public bootstrap smoke passed;
 receipt in `.agent/RELEASE-4.3.1.md`). Marketplace PR #10 in PossibLaw-Plugins; plugin update follows its merge.
 Sal chose option (b) for autonomous detection on October 26: sticky worktree marker released by a human prompt.
