@@ -16,8 +16,9 @@ memory:
 v4.3.1 published October 26, 2026 from a64b505 (tag and GitHub Release by Sal; public bootstrap smoke passed;
 receipt in `.agent/RELEASE-4.3.1.md`). Marketplace PR #10 in PossibLaw-Plugins; plugin update follows its merge.
 Sal chose option (b) for autonomous detection on October 26: sticky worktree marker released by a human prompt.
-Built and cut as 4.3.2 on branch `feat/autonomy-takeover-marker` (PLAN T1-T7, eleven tests). It reaches tonight's run
-only after the v4.3.2 tag, marketplace entry and plugin update; until then 4.3.1's `auto-<n>` branch check applies.
+v4.3.2 published October 26, 2026 from 39413b4 with that marker (PR #39; receipt `.agent/RELEASE-4.3.2.md`);
+marketplace entry 4.3.2 merged; user and Trazomo plugin installs updated to 4.3.2. Next: watch the first marked run
+(night 2: Aleph #131, Trazomo #791 once labelled) for the marker and the release notice.
 
 Release 4.3.1 cut on branch `release/4.3.1` (October 26, 2026): PRs #35 and #36 plus the caps fix (closed issue frees
 the slot; worktrees matched to repos by Orca `repoId`). After merge: tag v4.3.1, GitHub Release, bootstrap smoke,
