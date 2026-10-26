@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.3.2 — 2026-10-26 — Autonomous runs stay guarded across branch switches until a person takes over
+
+Bootstrap and pack pinned to v4.3.2.
+
+- **Autonomy marker with human takeover**: the dispatcher writes `agent-auto.json` into each worktree it starts (its git directory, so it survives branch switches and leaves with the worktree). The guard treats a marked worktree as autonomous until a person types into the session: the new UserPromptSubmit hook `scripts/guardrails/autonomy-takeover.py` records the dispatcher's first prompt and releases the guard on any later prompt, in that session or another one, and says so. An earlier prompt already in the transcript also counts, for the case where the dispatcher's prompt arrived before the marker. `AGENT_AUTO=1` still forces autonomous; an unmarked `auto-<n>` branch still counts. An autonomous run cannot touch the marker through Bash, and Write/Edit to it is refused in every session. A marker that cannot be written is reported and does not stop the run. Runbook: autonomous worktrees, how to finish them, and the branch-name correction. Eleven tests, red first. Codex has no takeover hook (UNCONFIRMED whether it supports one), so a Codex auto run stays guarded until its marker is removed.
+
 ## 4.3.1 — 2026-10-26 — Autonomous runs actually start, stay guarded, and free their slot
 
 The first autonomous night (October 25, 2026) started nothing; these fixes come from that run and the by-hand run the next morning. Bootstrap and pack pinned to v4.3.1.

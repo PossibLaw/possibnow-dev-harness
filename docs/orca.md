@@ -102,12 +102,26 @@ its default:
 | --- | --- |
 | Run on | the local machine |
 | Create From | `origin/main` for new work; the **GitHub** tab for an issue or PR; the **Branch** tab to continue an existing branch |
-| Name | the task, not the repository (it becomes the branch `orca/<name>`) |
+| Name | the task, not the repository (`orca worktree create` in Orca 1.4.240 uses it as the branch name unchanged; whether the app adds a prefix is UNCONFIRMED) |
 | Agent | the agent to start, or a blank terminal |
 | Sparse checkout | Full |
 
 Do not open a branch that is already checked out elsewhere (git refuses the same
 branch in two worktrees). From a terminal: `orca worktree create --help`.
+
+### Autonomous worktrees (started by the dispatcher)
+
+`scripts/dispatch-auto-issues.py` creates `auto-<n>` worktrees and writes `agent-auto.json`
+into each one's git directory. While that marker is present the guardrails treat the
+session as autonomous: no merging, no publishing, no pushing to main, even after the
+session switches branch. The first prompt is the dispatcher's. Type anything into the
+pane and the guard is released for that worktree; the session then follows the normal
+ask-first rules, and a notice says so.
+
+A worktree stops counting against the dispatcher's caps once its linked issue is closed.
+When you are done with it, archive it from the Orca sidebar, or remove it from a terminal
+with `orca worktree rm --worktree path:<worktree path>`. Removing deletes the checkout
+folder but keeps the branch, so push or merge first. Closing the terminal tab does neither.
 
 ## 6. What not to run in a worktree
 

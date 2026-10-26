@@ -40,6 +40,16 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guardrails/autonomy-takeover.py"
+          }
+        ]
+      }
     ]
   }
 }
