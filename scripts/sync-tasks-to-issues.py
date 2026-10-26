@@ -14,6 +14,14 @@ edited) are never written back into the prose: they are listed as drift in the
 summary. Rows that match the privacy patterns (card or bank details) are never
 sent; file names are fine. Rows without an ID are reported, not invented.
 
+Issues started anywhere else (GitHub, Orca, the work router) are tracked too: an open
+issue without the label gets it, so the board, TickTick and this summary follow it; no
+register row is written and such issues are never closed by the register logic. Label an
+issue `not-tracked` (config `ignore_label`) to keep it out. The summary leads with each
+repository's open count and names the issues opened and completed since the last summary
+that reached Slack (daytime `--only` runs do not move that mark). On `worktree_day`
+(default Monday) it also names linked worktrees that are merged and hold nothing uncommitted.
+
 GitHub access goes through `gh api` (REST), which works locally and in Claude Code
 cloud sessions. The Project board step runs only when `board.enabled` is true in the
 config and needs a token with the `project` scope. Issues are added once each
@@ -24,6 +32,8 @@ Config (JSON):
     {"label": "agent-task",
      "repos": [{"name": "Aleph", "path": "~/Aleph", "github": "Owner/repo"}, ...],
      "board": {"enabled": true, "owner": "AtticusDundee", "number": 1},
+     "ignore_label": "not-tracked",       # optional
+     "worktree_day": "Monday",            # optional; weekly removable-worktree line
      "deny_patterns": ["..."]}            # optional; defaults below
 
 Standard library only. Exit 0 even when some repositories fail; failures are in the
@@ -233,6 +243,20 @@ class GitHub:
                 return out
             page += 1
 
+    def issues(self, repo: str, state: str = "open", since: str | None = None) -> list[dict]:
+        """Issues with any label (pull requests dropped); `since` limits to issues updated since then."""
+        out, page = [], 1
+        query = f"state={state}&per_page=100" + (f"&since={since}" if since else "")
+        while True:
+            batch = self.api(f"repos/{repo}/issues?{query}&page={page}")
+            out += [i for i in batch if "pull_request" not in i]
+            if len(batch) < 100:
+                return out
+            page += 1
+
+    def add_labels(self, repo: str, number: int, labels: list[str]):
+        return self.api(f"repos/{repo}/issues/{number}/labels", "POST", {"labels": labels})
+
     def create(self, repo: str, title: str, body: str, labels: list[str]) -> dict:
         return self.api(f"repos/{repo}/issues", "POST", {"title": title, "body": body, "labels": labels})
 
@@ -245,11 +269,12 @@ class GitHub:
 
 # ---- sync ------------------------------------------------------------------------
 
-def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
+def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str], since: str | None = None) -> dict:
     name, github = repo["name"], repo["github"]
     label = cfg.get("label", "agent-task")
     r = {"repo": name, "github": github, "created": [], "updated": [], "closed": [], "drift": [],
-         "private": [], "no_id": [], "errors": [], "would_create": 0, "open_urls": []}
+         "private": [], "no_id": [], "errors": [], "would_create": 0, "open_urls": [],
+         "adopted": [], "opened": [], "completed": [], "open_count": None}
     tasks = Path(repo["path"]).expanduser() / ".agent" / "TASKS.md"
     if not tasks.is_file():
         r["errors"].append(f"no register at {tasks}")
@@ -286,7 +311,70 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str]) -> dict:
                 r["closed"].append(f"{rid} #{issue['number']} (row left the register)")
             except RuntimeError as exc:
                 r["errors"].append(f"{rid} #{issue['number']}: {exc}")
+    try:
+        track_github_issues(cfg, github, label, gh, r, since)
+    except RuntimeError as exc:
+        r["errors"].append(f"status: {exc}")
     return r
+
+
+def track_github_issues(cfg: dict, github: str, label: str, gh: GitHub, r: dict, since: str | None) -> None:
+    """Issues started anywhere (GitHub, Orca, the router) are tracked: an open issue without the sync label
+    gets it, so the board, TickTick, the dispatcher's view and this summary follow it. No register row is
+    written; such an issue is never closed by the register logic (it carries no marker). An issue labelled
+    `ignore_label` (default not-tracked) is left out of everything here. Also counts open issues and names
+    the issues opened and completed since the last run, whatever their labels."""
+    ignore = cfg.get("ignore_label", "not-tracked")
+
+    def labels_of(issue: dict) -> set[str]:
+        return {l["name"] for l in issue.get("labels", []) if isinstance(l, dict)}
+
+    open_count = 0
+    for issue in gh.issues(github, "open"):
+        names = labels_of(issue)
+        if ignore in names:
+            continue
+        open_count += 1
+        if label not in names:
+            if not gh.dry_run:
+                gh.add_labels(github, issue["number"], [label])
+            r["adopted"].append(f"{issue['title']} ({issue['html_url']})")
+            r["open_urls"].append(issue["html_url"])
+    r["open_count"] = open_count
+    if not since:
+        return
+    for issue in gh.issues(github, "all", since):
+        if ignore in labels_of(issue):
+            continue
+        if (issue.get("created_at") or "") >= since:
+            r["opened"].append(issue["title"])
+        if issue.get("state") == "closed" and (issue.get("closed_at") or "") >= since:
+            r["completed"].append(issue["title"])
+
+
+def removable_worktrees(repo_path: str) -> list[str]:
+    """Linked worktrees whose commit is already on the default branch and that hold nothing uncommitted.
+    Locked worktrees (a live agent holds them) are left out."""
+    def git(cwd, *args):
+        res = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True)
+        return res.stdout.strip() if res.returncode == 0 else None
+    main = str(Path(repo_path).expanduser())
+    listing = git(main, "worktree", "list", "--porcelain")
+    if listing is None:
+        return []
+    default = git(main, "symbolic-ref", "--short", "refs/remotes/origin/HEAD") or "origin/main"
+    out = []
+    for block in listing.split("\n\n")[1:]:
+        fields = dict((line.split(" ", 1) + [""])[:2] for line in block.splitlines())
+        path = fields.get("worktree")
+        if not path or "locked" in fields or "prunable" in fields or not Path(path).is_dir():
+            continue
+        head = fields.get("HEAD")
+        merged = head and subprocess.run(["git", "-C", main, "merge-base", "--is-ancestor", head, default],
+                                         capture_output=True).returncode == 0
+        if merged and git(path, "status", "--porcelain") == "":
+            out.append(Path(path).name)
+    return sorted(out)
 
 
 def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: dict, r: dict) -> None:
@@ -357,14 +445,27 @@ def board_step(cfg: dict, results: list[dict], state: dict, dry_run: bool) -> tu
     return f"board: added {added} to {owner}/projects/{number} ({len(added_before)} on it in total)", errors
 
 
-def summarize(results: list[dict], board_line: str, dry_run: bool, board_errors: list[str] | None = None) -> str:
+def summarize(results: list[dict], board_line: str, dry_run: bool, board_errors: list[str] | None = None,
+              since_label: str | None = None, worktrees: dict[str, list[str]] | None = None) -> str:
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     out = [f"# Task → issue sync {'(dry run) ' if dry_run else ''}{now}", ""]
+    since_txt = f" since {since_label}" if since_label else ""
     for r in results:
+        status = []
+        if r.get("open_count") is not None:
+            status.append(f"{r['open_count']} open")
+        if since_label:
+            status.append(f"{len(r['opened'])} opened, {len(r['completed'])} completed{since_txt}")
+        out.append(f"## {r['repo']} ({r['github']}): " + ("; ".join(status) if status else "status unavailable"))
+        for key, head in (("opened", f"Opened{since_txt}"), ("completed", f"Completed{since_txt}"),
+                          ("adopted", "Added from GitHub (now labelled and tracked; no register row needed)" if not dry_run else "Would add from GitHub")):
+            if r[key]:
+                out.append(f"- {head}:")
+                out += [f"  - {item}" for item in r[key]]
         if dry_run:
-            out.append(f"## {r['repo']} ({r['github']}): would create {r['would_create']}, update {len(r['updated'])}, close {len(r['closed'])}")
+            out.append(f"- Register sync: would create {r['would_create']}, update {len(r['updated'])}, close {len(r['closed'])}")
         else:
-            out.append(f"## {r['repo']} ({r['github']}): created {len(r['created'])}, updated {len(r['updated'])}, closed {len(r['closed'])}, drift {len(r['drift'])}")
+            out.append(f"- Register sync: created {len(r['created'])}, updated {len(r['updated'])}, closed {len(r['closed'])}, drift {len(r['drift'])}")
         for key, head in (("created", "Created"), ("updated", "Updated"), ("closed", "Closed"), ("drift", "Drift (GitHub differs from the register)"),
                           ("private", "Not sent (private data pattern)"), ("no_id", "Rows without an ID (add one in the register)"), ("errors", "Errors")):
             if r[key]:
@@ -375,6 +476,12 @@ def summarize(results: list[dict], board_line: str, dry_run: bool, board_errors:
     if board_errors:
         out.append("- Errors (board):")
         out += [f"  - {e}" for e in board_errors]
+    if worktrees is not None:
+        total = sum(len(v) for v in worktrees.values())
+        out += ["", f"## Worktrees you can remove (merged, nothing uncommitted): {total}"]
+        for repo_name, names in worktrees.items():
+            if names:
+                out.append(f"- {repo_name}: " + ", ".join(names))
     return "\n".join(out) + "\n"
 
 
@@ -413,21 +520,37 @@ def main(argv=None) -> int:
             return 2
     gh = GitHub(args.dry_run)
     deny = cfg.get("deny_patterns") or DEFAULT_DENY
-    results = [sync_repo(cfg, repo, gh, deny) for repo in repos]
     state_path = args.state.expanduser()
     try:
         state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {}
     except ValueError:
         state = {}
+    try:
+        # The window opens at the last summary that reached Slack (the nightly run). Daytime runs, such as
+        # the cross-repo feeder's `--only <repo>`, must not shrink it; "ran" is the fallback before any post.
+        last = dt.datetime.fromisoformat(str(state.get("reported") or state["ran"]).replace("Z", "+00:00"))
+    except (KeyError, ValueError):
+        last = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
+    since = last.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    since_label = last.astimezone().strftime("%b %d %H:%M")
+    results = [sync_repo(cfg, repo, gh, deny, since) for repo in repos]
     board_line, board_errors = board_step(cfg, results, state, args.dry_run)
-    summary = summarize(results, board_line, args.dry_run, board_errors)
+    worktrees = None
+    if dt.datetime.now().strftime("%A").lower() == str(cfg.get("worktree_day", "Monday")).lower():
+        worktrees = {repo["name"]: removable_worktrees(repo["path"]) for repo in repos}
+    summary = summarize(results, board_line, args.dry_run, board_errors, since_label, worktrees)
+    posted = False
     if args.slack:
-        summary += post_slack(summary) + "\n"
+        slack_line = post_slack(summary)
+        posted = slack_line == "slack: posted"
+        summary += slack_line + "\n"
     print(summary, end="")
     if not args.dry_run:
         for path in (args.summary, args.state):
             path.expanduser().parent.mkdir(parents=True, exist_ok=True)
         args.summary.expanduser().write_text(summary, encoding="utf-8")
+        if posted:
+            state["reported"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
         state.update({"ran": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
                       "results": [{k: v for k, v in r.items() if k != "open_urls"} for r in results]})
         state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")

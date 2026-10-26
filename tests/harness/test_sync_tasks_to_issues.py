@@ -34,30 +34,47 @@ if args[:1] != ["api"]:
 method = "GET"
 if "--method" in args:
     method = args[args.index("--method") + 1]
-path = next(a for a in args[1:] if not a.startswith("-") and a not in (method,)).split("?")[0]
+full = next(a for a in args[1:] if not a.startswith("-") and a not in (method,))
+path = full.split("?")[0]
+from urllib.parse import parse_qs
+query = {k: v[0] for k, v in parse_qs(full.split("?")[1] if "?" in full else "").items()}
+NOW = world.get("now", "2026-10-26T12:00:00Z")
 body = json.load(sys.stdin) if "--input" in args else {}
 repo = "/".join(path.split("/")[1:3])
 issues = world.setdefault("issues", {}).setdefault(repo, [])
 labels = world.setdefault("labels", {}).setdefault(repo, ["bug"])
 if path.endswith("/labels") and method == "GET":
     out = [{"name": n} for n in labels]
-elif path.endswith("/labels") and method == "POST":
+elif path.endswith("/labels") and method == "POST" and "/issues/" not in path:
     labels.append(body["name"]); out = {"name": body["name"]}
 elif "/issues/" in path and method == "PATCH":
     num = int(path.rsplit("/", 1)[1])
     issue = next(i for i in issues if i["number"] == num)
     if "labels" in body: body["labels"] = [{"name": n} for n in body["labels"]]
-    issue.update(body); out = issue
+    if body.get("state") == "closed" and issue.get("state") != "closed": issue["closed_at"] = NOW
+    issue.update(body); issue["updated_at"] = NOW; out = issue
+elif "/issues/" in path and path.endswith("/labels") and method == "POST":
+    num = int(path.split("/")[4])
+    issue = next(i for i in issues if i["number"] == num)
+    have = {l["name"] for l in issue["labels"]}
+    issue["labels"] += [{"name": n} for n in body["labels"] if n not in have]; issue["updated_at"] = NOW
+    out = issue["labels"]
 elif "/issues/" in path and path.endswith("/comments") and method == "POST":
     out = {"id": 1}
 elif path.endswith("/issues") and method == "GET":
-    out = [i for i in issues if any(l["name"] == "agent-task" for l in i["labels"])]
+    want_state = query.get("state", "open")
+    out = [i for i in issues if want_state == "all" or i.get("state", "open") == want_state]
+    if "labels" in query:
+        out = [i for i in out if any(l["name"] == query["labels"] for l in i["labels"])]
+    if "since" in query:
+        out = [i for i in out if i.get("updated_at", NOW) >= query["since"]]
 elif path.endswith("/issues") and method == "POST":
     if body.get("title") == world.get("fail_title"):
         save(); print("HTTP 422: Validation Failed", file=sys.stderr); sys.exit(1)
     num = max([i["number"] for i in issues], default=0) + 1
     issue = {"number": num, "title": body["title"], "body": body["body"], "state": "open",
-             "labels": [{"name": n} for n in body.get("labels", [])], "html_url": f"https://github.com/{repo}/issues/{num}"}
+             "labels": [{"name": n} for n in body.get("labels", [])], "html_url": f"https://github.com/{repo}/issues/{num}",
+             "created_at": NOW, "updated_at": NOW, "closed_at": None}
     issues.append(issue); out = issue
 else:
     print(f"fake gh: unhandled {method} {path}", file=sys.stderr); save(); sys.exit(1)
@@ -351,3 +368,124 @@ def test_tag_added_later_in_the_register_adds_the_label(world):
     a1 = next(i for i in w['issues']['Owner/alpha'] if i['title'].startswith('[BL-A1]'))
     assert 'auto-ok' in {l['name'] for l in a1['labels']}
 
+
+
+# ---- status report and issues started on GitHub (October 26, 2026) --------------------------
+
+def gh_issue(num, title, labels=(), state="open", created="2026-10-24T01:46:45Z", closed=None, repo="Owner/alpha"):
+    return {"number": num, "title": title, "body": "written on GitHub", "state": state, "labels": [{"name": l} for l in labels],
+            "html_url": f"https://github.com/{repo}/issues/{num}", "created_at": created,
+            "updated_at": closed or created, "closed_at": closed}
+
+
+def seed(world, issues, ran="2026-10-26T03:00:00+00:00", now="2026-10-27T03:00:00Z"):
+    w = read_world(world)
+    w.setdefault("issues", {})["Owner/alpha"] = issues
+    w["now"] = now
+    world['path'].write_text(json.dumps(w))
+    world['state'].write_text(json.dumps({"ran": ran}))
+
+
+def test_summary_names_issues_opened_and_completed_since_the_last_run(world):
+    seed(world, [
+        gh_issue(90, "Tuesday October 27 Learn AI Issue: Video", labels=["agent-task"], created="2026-10-26T15:00:00Z"),
+        gh_issue(91, "[RS01] Broad GitHub search for AI workflow repos", labels=["agent-task"], state="closed",
+                 created="2026-10-20T00:00:00Z", closed="2026-10-26T17:56:03Z"),
+        gh_issue(92, "Old closed thing", labels=["agent-task"], state="closed", created="2026-10-01T00:00:00Z", closed="2026-10-02T00:00:00Z"),
+        gh_issue(93, "Opened yesterday, before the last run", labels=["agent-task"], created="2026-10-25T10:00:00Z"),
+    ])
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    text = world['summary'].read_text()
+    assert "Opened since" in text and "Tuesday October 27 Learn AI Issue: Video" in text
+    assert "Completed since" in text and "[RS01] Broad GitHub search for AI workflow repos" in text
+    assert "Old closed thing" not in text and "Opened yesterday, before the last run" not in text
+    assert "open" in text.splitlines()[2].lower(), "each repo heading carries its open count"
+
+
+def test_issue_started_on_github_is_adopted_labelled_and_named(world):
+    seed(world, [gh_issue(151, "Tuesday October 27 Learn AI Issue: Video")])
+    run(world)
+    issue = next(i for i in read_world(world)["issues"]["Owner/alpha"] if i["number"] == 151)
+    assert "agent-task" in [l["name"] for l in issue["labels"]], "labelled so the board, TickTick and Slack follow it"
+    text = world['summary'].read_text()
+    assert "Added from GitHub" in text and "Tuesday October 27 Learn AI Issue: Video" in text
+    calls_before = len(read_world(world)["calls"])
+    run(world)
+    later = read_world(world)
+    assert not any("/issues/151/labels" in " ".join(c) for c in later["calls"][calls_before:]), "adopted once"
+    assert next(i for i in later["issues"]["Owner/alpha"] if i["number"] == 151)["state"] == "open", "never closed for lacking a register row"
+
+
+def test_not_tracked_label_keeps_an_issue_out_and_dry_run_labels_nothing(world):
+    seed(world, [gh_issue(22, "Claude Code content drift", labels=["not-tracked"]), gh_issue(23, "Plain GitHub issue")])
+    res = run(world, '--dry-run')
+    assert res.returncode == 0, res.stderr
+    issues = {i["number"]: i for i in read_world(world)["issues"]["Owner/alpha"]}
+    assert [l["name"] for l in issues[23]["labels"]] == [], "dry run writes nothing"
+    assert "Plain GitHub issue" in res.stdout and "Claude Code content drift" not in res.stdout
+    run(world)
+    issues = {i["number"]: i for i in read_world(world)["issues"]["Owner/alpha"]}
+    assert [l["name"] for l in issues[22]["labels"]] == ["not-tracked"]
+
+
+def test_adopted_issue_goes_on_the_board(world):
+    cfg = json.loads(world['config'].read_text()); cfg['board'] = {'enabled': True, 'owner': 'me', 'number': 1}
+    world['config'].write_text(json.dumps(cfg))
+    seed(world, [gh_issue(151, "Tuesday October 27 Learn AI Issue: Video")])
+    run(world)
+    assert "https://github.com/Owner/alpha/issues/151" in read_world(world).get("board_items", [])
+
+
+def _git(cwd, *args):
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, env=env)
+
+
+def worktree_fixture(tmp_path, repo):
+    """repo with an origin; one merged clean worktree, one with an unmerged commit, one with unsaved files."""
+    origin = tmp_path / 'origin.git'
+    _git(tmp_path, 'init', '-q', '--bare', '-b', 'main', str(origin))
+    _git(repo, 'init', '-q', '-b', 'main')
+    _git(repo, 'add', '-A'); _git(repo, 'commit', '-q', '-m', 'init')
+    _git(repo, 'remote', 'add', 'origin', str(origin)); _git(repo, 'push', '-q', '-u', 'origin', 'main')
+    _git(repo, 'remote', 'set-head', 'origin', 'main')
+    for name in ('wt-done-cats', 'wt-unmerged', 'wt-unsaved'):
+        _git(repo, 'worktree', 'add', '-q', '-b', name, str(tmp_path / name))
+    _git(tmp_path / 'wt-unmerged', 'commit', '-q', '--allow-empty', '-m', 'work in progress')
+    (tmp_path / 'wt-unsaved' / 'draft.md').write_text('not committed')
+
+
+def test_weekly_line_names_worktrees_that_can_be_removed(world, tmp_path):
+    import datetime as dt
+    worktree_fixture(tmp_path, world['repo'])
+    cfg = json.loads(world['config'].read_text()); cfg['worktree_day'] = dt.datetime.now().strftime('%A')
+    world['config'].write_text(json.dumps(cfg))
+    run(world)
+    text = world['summary'].read_text()
+    assert "Worktrees you can remove" in text and "wt-done-cats" in text
+    assert "wt-unmerged" not in text and "wt-unsaved" not in text
+
+
+def test_weekly_line_is_absent_on_other_days(world, tmp_path):
+    import datetime as dt
+    worktree_fixture(tmp_path, world['repo'])
+    other = (dt.datetime.now() + dt.timedelta(days=1)).strftime('%A')
+    cfg = json.loads(world['config'].read_text()); cfg['worktree_day'] = other
+    world['config'].write_text(json.dumps(cfg))
+    run(world)
+    assert "Worktrees you can remove" not in world['summary'].read_text()
+
+
+def test_window_starts_at_the_last_slack_post_not_at_a_daytime_feeder_run(world, monkeypatch):
+    # The cross-repo feeder runs `--only <repo>` during the day; that must not shrink the nightly window.
+    seed(world, [gh_issue(90, "Opened this morning", labels=["agent-task"], created="2026-10-26T15:00:00Z")],
+         ran="2026-10-26T18:48:23+00:00")
+    st = json.loads(world['state'].read_text()); st["reported"] = "2026-10-26T03:01:24+00:00"
+    world['state'].write_text(json.dumps(st))
+    run(world, '--only', 'alpha')
+    assert json.loads(world['state'].read_text())["reported"] == "2026-10-26T03:01:24+00:00", "a run without a Slack post keeps the mark"
+    monkeypatch.delenv('SLACK_WEBHOOK_URL', raising=False)
+    run(world, '--slack')
+    assert "Opened this morning" in world['summary'].read_text()
+    assert json.loads(world['state'].read_text())["reported"] == "2026-10-26T03:01:24+00:00", "an unposted summary keeps the mark"

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased
+
+- **Issue sync as a status report**: the nightly summary leads with each repository's open count and names the issues opened and completed since the last summary that reached Slack, whatever their labels. Before, it listed only what the sync itself changed, so a day's finished work showed as zeros. The window is kept in the state file as `reported` and only a posted summary moves it, so the feeder's daytime `--only` runs no longer shrink it.
+- **Issues started anywhere are tracked**: an open issue without `agent-task`, for example one written on GitHub or from Orca, gets the label, so the board, TickTick and the summary follow it ("Added from GitHub"). No register row is written and the register logic never closes it. `not-tracked` (config `ignore_label`) keeps an issue out.
+- **Weekly worktree line**: on `worktree_day` (default Monday) the summary names linked worktrees that are merged and hold nothing uncommitted, per repository; locked ones are left out.
+- Tests: eight new sync tests, red first; the fake `gh` now filters by label, state and `since`.
+
 ## 4.3.2 — 2026-10-26 — Autonomous runs stay guarded across branch switches until a person takes over
 
 Bootstrap and pack pinned to v4.3.2.
