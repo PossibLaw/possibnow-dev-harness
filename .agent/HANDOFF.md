@@ -13,6 +13,13 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `Fix-GitHub-Issues` (October 26, 2026): the first autonomous night (October 25, 22:01) started nothing.
+Both `auto-ok` issues (aleph #130, Trazomo #850) passed eligibility, then `orca worktree create` failed with
+`repo_not_found` because the dispatcher passed `path:~/Aleph` unexpanded, and the report showed a blank reason
+because Orca `--json` writes errors to stdout. Fixed in `scripts/dispatch-auto-issues.py` (expanduser on the
+selector; `failure_text` reads the JSON error), two tests red first, suite 315, verify-pack DONE. Nights 2 and 3
+of the plan in `~/.agents/research/2026-10-25-auto-ok-candidates.md` stay as written (Sal's call, October 26).
+
 v4.3.0 published October 24, 2026 from 8275b16 (tag, GitHub Release, public bootstrap smoke passed; receipt in
 `.agent/RELEASE-4.3.0.md`). Marketplace PR open in PossibLaw-Plugins; installed plugin update pending.
 

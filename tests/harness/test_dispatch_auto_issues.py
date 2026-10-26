@@ -48,6 +48,9 @@ if args[:2] == ["worktree", "list"]:
 elif args[:2] == ["worktree", "create"]:
     name = args[args.index("--name") + 1]
     repo = args[args.index("--repo") + 1]
+    if "~" in repo or world.get("orca_create_error"):
+        # Real Orca: no tilde expansion, and with --json the error goes to stdout, nothing to stderr, exit 1.
+        save(); print(json.dumps({"ok": False, "error": {"code": world.get("orca_create_error", "repo_not_found"), "message": "repo_not_found"}})); sys.exit(1)
     issue = int(args[args.index("--issue") + 1])
     world.setdefault("worktrees", []).append({"displayName": name, "branch": "refs/heads/orca/" + name, "linkedIssue": issue, "isArchived": False, "path": "/wt/" + name, "repoPath": repo})
     out = {"ok": True, "result": {"worktree": {"path": "/wt/" + name, "branch": "orca/" + name}}}
@@ -162,6 +165,28 @@ def test_open_auto_prs_are_flagged_with_label_and_title_prefix(world):
     assert 'agent-auto' in w.get('pr_labels', {}).get('Owner/alpha#90', [])
     assert 'Owner/alpha#91' not in w.get('pr_labels', {})
     assert '#90' in world['report'].read_text()
+
+
+def test_tilde_repo_paths_are_expanded_before_orca_sees_them(world, tmp_path, monkeypatch):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    cfg = json.loads(world['config'].read_text())
+    cfg['repos'][0]['path'] = '~/alpha'
+    world['config'].write_text(json.dumps(cfg))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    alpha = [c for c in started(world) if c[c.index('--issue') + 1] == '1']
+    assert alpha, 'alpha #1 must start; Orca rejects a literal ~ in path: selectors'
+    assert alpha[0][alpha[0].index('--repo') + 1] == f'path:{tmp_path}/alpha'
+    assert 'started alpha #1' in world['report'].read_text()
+
+
+def test_orca_json_error_reaches_the_report(world):
+    w = read(world); w['orca_create_error'] = 'repo_not_found'; world['path'].write_text(json.dumps(w))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    report = world['report'].read_text()
+    assert 'repo_not_found' in report, 'Orca --json writes the error to stdout; the report must carry it'
+    assert 'Nothing started' in report
 
 
 def test_dry_run_starts_nothing_and_reports(world):
