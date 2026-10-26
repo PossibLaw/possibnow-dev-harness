@@ -170,3 +170,20 @@ def test_dry_run_reads_but_writes_nothing(world):
     assert res.returncode == 0, res.stderr
     assert tasks() == [] and all(c[0] == "GET" for c in FakeTickTick.store["calls"])
     assert "would create 3" in res.stdout
+
+
+def test_urgent_and_important_labels_map_to_the_four_eisenhower_quadrants():
+    # October 26, 2026: every issue landed in one quadrant because nothing set the labels. The nightly
+    # triage now sets `urgent` and `important`; the map turns the pair into TickTick's four quadrants.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('tt_quadrants', ROOT / 'scripts' / 'sync-issues-to-ticktick.py')
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    pmap = {"urgent+important": 5, "important": 3, "urgent": 1, "default": 0, "maintenance": 0}
+    issue = lambda *names: {"labels": [{"name": n} for n in names]}
+    assert m.priority_for(issue("agent-task", "urgent", "important"), pmap) == 5
+    assert m.priority_for(issue("agent-task", "important"), pmap) == 3
+    assert m.priority_for(issue("agent-task", "urgent"), pmap) == 1
+    assert m.priority_for(issue("agent-task"), pmap) == 0
+    assert m.priority_for(issue("agent-task", "maintenance", "important"), pmap) == 3, 'important outranks the maintenance floor'
+    old = {"urgent": 5, "default": 3, "maintenance": 0}
+    assert m.priority_for(issue("agent-task", "urgent"), old) == 5 and m.priority_for(issue("agent-task"), old) == 3, 'old maps keep working'

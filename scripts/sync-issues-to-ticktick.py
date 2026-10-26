@@ -13,6 +13,7 @@ complete their task. Nothing is deleted.
 
 Config (JSON): {"list": "Agent tasks", "label": "agent-task",
   "priority": {"urgent": 5, "default": 3, "maintenance": 0},
+  (or the Eisenhower form: {"urgent+important": 5, "important": 3, "urgent": 1, "default": 0, "maintenance": 0})
   "repos": [{"name": "Aleph", "github": "Owner/repo"}, ...]}
 
 Environment: TICKTICK_TOKEN (required; personal API token or OAuth access token),
@@ -95,6 +96,16 @@ def gh_issues(repo: str, label: str) -> list[dict]:
 
 def priority_for(issue: dict, pmap: dict) -> int:
     names = {l["name"] for l in issue.get("labels", []) if isinstance(l, dict)}
+    if "urgent+important" in pmap:
+        # Eisenhower map (October 26, 2026): the nightly triage sets `urgent` and `important`.
+        urgent, important = "urgent" in names, "important" in names
+        if urgent and important:
+            return int(pmap["urgent+important"])
+        if important:
+            return int(pmap.get("important", pmap["default"]))
+        if urgent:
+            return int(pmap.get("urgent", pmap["default"]))
+        return int(pmap["maintenance"]) if "maintenance" in names and "maintenance" in pmap else int(pmap["default"])
     best = None
     for name in names:
         if name in pmap and name != "default":

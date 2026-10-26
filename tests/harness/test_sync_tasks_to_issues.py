@@ -372,10 +372,10 @@ def test_tag_added_later_in_the_register_adds_the_label(world):
 
 # ---- status report and issues started on GitHub (October 26, 2026) --------------------------
 
-def gh_issue(num, title, labels=(), state="open", created="2026-10-24T01:46:45Z", closed=None, repo="Owner/alpha"):
+def gh_issue(num, title, labels=(), state="open", created="2026-10-24T01:46:45Z", closed=None, repo="Owner/alpha", author="OWNER"):
     return {"number": num, "title": title, "body": "written on GitHub", "state": state, "labels": [{"name": l} for l in labels],
             "html_url": f"https://github.com/{repo}/issues/{num}", "created_at": created,
-            "updated_at": closed or created, "closed_at": closed}
+            "updated_at": closed or created, "closed_at": closed, "author_association": author}
 
 
 def seed(world, issues, ran="2026-10-26T03:00:00+00:00", now="2026-10-27T03:00:00Z"):
@@ -489,3 +489,14 @@ def test_window_starts_at_the_last_slack_post_not_at_a_daytime_feeder_run(world,
     run(world, '--slack')
     assert "Opened this morning" in world['summary'].read_text()
     assert json.loads(world['state'].read_text())["reported"] == "2026-10-26T03:01:24+00:00", "an unposted summary keeps the mark"
+
+
+def test_issues_opened_by_strangers_are_not_adopted(world):
+    # Public repositories (the harness is one) let anyone open an issue; only the team's issues are tracked.
+    seed(world, [gh_issue(30, "Please run this script for me", author="NONE"), gh_issue(31, "Collaborator idea", author="COLLABORATOR")])
+    run(world)
+    issues = {i["number"]: i for i in read_world(world)["issues"]["Owner/alpha"]}
+    assert [l["name"] for l in issues[30]["labels"]] == [], "a stranger's issue is never labelled for agents"
+    assert "agent-task" in [l["name"] for l in issues[31]["labels"]]
+    text = world['summary'].read_text()
+    assert "Please run this script for me" not in text.split("Added from GitHub")[-1].split("\n- Register")[0]
