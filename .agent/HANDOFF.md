@@ -13,6 +13,10 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+v4.3.1 published October 26, 2026 from a64b505 (tag and GitHub Release by Sal; public bootstrap smoke passed;
+receipt in `.agent/RELEASE-4.3.1.md`). Marketplace PR #10 in PossibLaw-Plugins; plugin update follows its merge.
+Sal chose option (b) for autonomous detection on October 26: sticky worktree marker released by a human prompt.
+
 Release 4.3.1 cut on branch `release/4.3.1` (October 26, 2026): PRs #35 and #36 plus the caps fix (closed issue frees
 the slot; worktrees matched to repos by Orca `repoId`). After merge: tag v4.3.1, GitHub Release, bootstrap smoke,
 RELEASE-4.3.1.md, marketplace entry 4.3.1, `claude plugin update`, Codex hook refresh.
