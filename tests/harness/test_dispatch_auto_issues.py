@@ -62,8 +62,14 @@ elif args[:2] == ["worktree", "create"]:
         # Real Orca: no tilde expansion, and with --json the error goes to stdout, nothing to stderr, exit 1.
         save(); print(json.dumps({"ok": False, "error": {"code": world.get("orca_create_error", "repo_not_found"), "message": "repo_not_found"}})); sys.exit(1)
     issue = int(args[args.index("--issue") + 1])
-    world.setdefault("worktrees", []).append({"displayName": name, "branch": "refs/heads/orca/" + name, "linkedIssue": issue, "isArchived": False, "path": "/wt/" + name, "repoPath": repo})
-    out = {"ok": True, "result": {"worktree": {"path": "/wt/" + name, "branch": "orca/" + name}}}
+    wt_path = "/wt/" + name
+    if os.environ.get("FAKE_WT_ROOT"):
+        import subprocess
+        wt_path = os.path.join(os.environ["FAKE_WT_ROOT"], name)
+        os.makedirs(wt_path)
+        subprocess.run(["git", "init", "-q", "-b", name, wt_path], check=True)
+    world.setdefault("worktrees", []).append({"displayName": name, "branch": "refs/heads/" + name, "linkedIssue": issue, "isArchived": False, "path": wt_path, "repoPath": repo})
+    out = {"ok": True, "result": {"worktree": {"path": wt_path, "branch": name}} if not world.get("create_without_path") else {}}
 else:
     print("fake orca: unhandled", args, file=sys.stderr); save(); sys.exit(1)
 save(); print(json.dumps(out))
@@ -245,6 +251,39 @@ def test_auto_worktree_whose_issue_is_closed_no_longer_counts_against_caps(world
     issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
     assert issues == [6], 'alpha #1 is closed so its worktree is finished; beta #11 is open and still running'
     assert 'Running before this pass: 1 auto worktree(s)' in world['report'].read_text()
+
+
+def test_t6_dispatcher_marks_each_started_worktree(world, tmp_path, monkeypatch):
+    monkeypatch.setenv('FAKE_WT_ROOT', str(tmp_path / 'wts'))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    m = guard_module()
+    marker = m.read_marker(str(tmp_path / 'wts' / 'auto-1'))
+    assert marker and marker['repo'] == 'Owner/alpha' and marker['issue'] == 1 and marker['worktree'] == 'auto-1'
+    assert m.is_autonomous(str(tmp_path / 'wts' / 'auto-1'))
+    assert 'marker' not in world['report'].read_text().lower()
+
+
+def test_t6_dispatcher_finds_the_worktree_when_orca_omits_the_path(world, tmp_path, monkeypatch):
+    monkeypatch.setenv('FAKE_WT_ROOT', str(tmp_path / 'wts'))
+    w = read(world); w['create_without_path'] = True; world['path'].write_text(json.dumps(w))
+    run(world)
+    assert guard_module().read_marker(str(tmp_path / 'wts' / 'auto-11'))
+
+
+def test_t6_a_marker_failure_is_reported_and_the_run_continues(world):
+    res = run(world)  # the default fake reports /wt/auto-<n>, which does not exist
+    assert res.returncode == 0, res.stderr
+    report = world['report'].read_text()
+    assert 'started alpha #1' in report and 'started beta #11' in report
+    assert 'marker was not written' in report
+
+
+def guard_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('autonomy_for_dispatch', ROOT / 'scripts' / 'guardrails' / 'autonomy.py')
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    return mod
 
 
 def test_dry_run_starts_nothing_and_reports(world):

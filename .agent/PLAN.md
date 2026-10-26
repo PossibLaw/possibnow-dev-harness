@@ -10,6 +10,39 @@ memory:
   tags: [plan]
 ---
 
+# Unreleased: sticky autonomous-run marker with human takeover (GR01 follow-up)
+
+Baseline: main 63364ef (v4.3.1 published). Branch: feat/autonomy-takeover-marker.
+Decision: Sal chose option (b) on October 26, 2026. Detection by branch name switched off in both
+October 26 runs when the session changed branch; a strict marker would have blocked Sal's own merges.
+
+Design: after `orca worktree create` returns, the dispatcher writes `agent-auto.json` into the new
+worktree's private git directory (survives branch switches, goes away with the worktree). The guard
+treats a marked worktree as autonomous until the marker says a person took over. A new
+UserPromptSubmit hook records the first prompt as the dispatcher's; any later prompt, in that session
+or another one in the same worktree, is a person, so the marker is released and normal ask-first
+rules apply. `AGENT_AUTO=1` still forces autonomous; `auto-<n>` branches without a marker still count.
+
+Acceptance (Given/When/Then):
+- T1 happy path: Given a dispatcher-marked worktree on any branch, When the agent runs `gh pr merge`
+  or a publishing MCP tool, Then it is blocked, even after switching to `fix/anything`.
+- T2 takeover: Given the dispatcher's prompt was recorded, When a person types a second prompt,
+  Then the hook says the guard is released and `gh pr merge` asks first instead of blocking.
+- T3 other session: Given a recorded dispatcher session, When a prompt arrives from a different
+  session in that worktree, Then the guard is released.
+- T4 race edge: Given the dispatcher's prompt reached the session before the marker existed, When the
+  first person's prompt arrives, Then the transcript shows an earlier prompt and the guard is released.
+- T5 failure/security: Given an autonomous run, When the agent tries to delete or rewrite
+  `agent-auto.json` through Bash, Then it is blocked; a Write or Edit to it is refused in every session.
+- T6 dispatcher: Given an eligible issue, When the dispatcher starts it, Then the new worktree carries
+  a marker naming the repo and issue; a marker failure is reported and does not stop the run.
+- T7 unmarked: Given no marker and an ordinary branch, Then behaviour is unchanged (merge asks first),
+  and the prompt hook prints nothing.
+
+UNCONFIRMED: whether Claude Code writes the current prompt to the transcript before UserPromptSubmit
+fires (T4 does not depend on it: only prompts with different text count); Codex has no takeover hook,
+so a Codex auto run stays blocked until its marker is removed by hand.
+
 # Unreleased: Orca worktree setup helper and runbook (ORC00)
 
 Baseline: main 58ba0c0 (v4.2.1 published). Branch: orc00/orca-setup.

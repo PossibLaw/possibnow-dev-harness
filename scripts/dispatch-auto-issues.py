@@ -14,7 +14,9 @@ Policy (the autonomy page in the private repo is the source; this is the mechani
   and open auto PRs count.
 - Start: `orca worktree create --repo path:<repo> --name auto-<n> --issue <n> --agent <id>
   --prompt <text>`; Orca names the branch auto-<n> (older designs assumed orca/auto-<n>; both
-  count), which the harness guardrails recognise as autonomous (no merge, no publish).
+  count). Then the worktree is marked with `agent-auto.json` in its git directory, which the
+  harness guardrails treat as autonomous (no merge, no publish) across branch switches until a
+  person types into the session (scripts/guardrails/autonomy-takeover.py).
 - Flag: every open PR whose head branch is auto-<n> or orca/auto-<n> gets the label `labels.pr`
   (default agent-auto) and the title prefix "[auto] ". Nothing is ever merged here.
 - Report: Markdown for the morning summary, plus a JSON state file.
@@ -35,6 +37,9 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "guardrails"))
+from autonomy import write_marker  # noqa: E402  (the guard reads the same marker)
 
 PATH_RE = re.compile(r"`([^`\s]+/[^`\s]*)`")
 AUTO_BRANCH_RE = re.compile(r"^(orca/)?auto-(\d+)$")  # kept in step with scripts/guardrails/autonomy.py
@@ -93,6 +98,25 @@ def issue_is_closed(repo: dict, number: int) -> bool:
         return gh(f"repos/{repo['github']}/issues/{number}").get("state") == "closed"
     except RuntimeError:
         return False
+
+
+def mark_autonomous(create_out: dict, name: str, repo: dict, issue: dict) -> str:
+    """Write the autonomy marker into the worktree Orca just made; returns its path. Raises on failure.
+    The path comes from Orca's reply when present, else from `orca worktree list` by name and repo."""
+    result = create_out.get("result", create_out) if isinstance(create_out, dict) else {}
+    path = ((result or {}).get("worktree") or {}).get("path")
+    if not path:
+        repo_root = str(Path(repo["path"]).expanduser()).rstrip("/")
+        repo_ids = {rid for rid, rpath in orca_repo_paths().items() if rpath.rstrip("/") == repo_root}
+        for wt in orca_worktrees():
+            same_repo = wt.get("repoId") in repo_ids or (wt.get("repoPath") or "").rstrip("/") in (repo_root, f"path:{repo['path']}")
+            if wt.get("displayName") == name and same_repo:
+                path = wt.get("path") or (wt.get("git") or {}).get("path")
+                break
+    if not path:
+        raise RuntimeError("worktree path not found in Orca")
+    return write_marker(path, {"repo": repo["github"], "issue": issue["number"], "url": issue["html_url"], "worktree": name,
+                               "started": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
 
 
 def auto_name(wt: dict) -> str | None:
@@ -293,12 +317,17 @@ def main(argv=None) -> int:
                 started.append(f"would start {tag}")
             else:
                 try:
-                    sh(cmd)
+                    create_out = sh(cmd)
                     started.append(f"started {tag} → worktree auto-{n}")
                     state["started"].append({"repo": repo["name"], "issue": n, "url": issue["html_url"], "worktree": f"auto-{n}"})
                 except RuntimeError as exc:
                     errors.append(f"{tag}: {exc}")
                     continue
+                try:
+                    mark_autonomous(create_out, f"auto-{n}", repo, issue)
+                except (OSError, RuntimeError, ValueError) as exc:
+                    errors.append(f"{tag}: started, but the autonomy marker was not written ({exc}); "
+                                  f"the guard relies on the auto-{n} branch name until the session changes branch")
             total += 1
             per_repo[repo["name"]] = per_repo.get(repo["name"], 0) + 1
 

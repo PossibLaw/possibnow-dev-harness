@@ -41,8 +41,10 @@ REQUIRED_FILES=(
   "scripts/dispatch-auto-issues.py"
   "scripts/guardrails/guard-auto-publish.py"
   "scripts/guardrails/autonomy.py"
+  "scripts/guardrails/autonomy-takeover.py"
   "tests/harness/test_dispatch_auto_issues.py"
   "tests/guardrails/test_autonomous_run_guards.py"
+  "tests/guardrails/test_autonomy_takeover.py"
   "scripts/sync-issues-to-ticktick.py"
   "tests/harness/test_sync_issues_to_ticktick.py"
   "tests/harness/test_sync_tasks_to_issues.py"
@@ -126,7 +128,7 @@ if git -C "$REPO_ROOT" check-ignore -q .agent/PLAN.md; then
   exit 1
 fi
 
-for script in "$REPO_ROOT/scripts/dispatch-auto-issues.py" "$REPO_ROOT/scripts/guardrails/guard-auto-publish.py" "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh" "$REPO_ROOT/scripts/sync-issues-to-ticktick.py"; do
+for script in "$REPO_ROOT/scripts/dispatch-auto-issues.py" "$REPO_ROOT/scripts/guardrails/guard-auto-publish.py" "$REPO_ROOT/scripts/guardrails/autonomy-takeover.py" "$REPO_ROOT/scripts/sync-tasks-to-issues.py" "$REPO_ROOT/scripts/orca-worktree-setup" "$REPO_ROOT/scripts/bootstrap-project.sh" "$REPO_ROOT/scripts/install-project.sh" "$REPO_ROOT/scripts/install-global.sh" "$REPO_ROOT/scripts/verify-pack.sh" "$REPO_ROOT/scripts/set-learning-mode.sh" "$REPO_ROOT/scripts/sync-issues-to-ticktick.py"; do
   if [[ ! -x "$script" ]]; then
     echo "BLOCKED: script is not executable: ${script#$REPO_ROOT/}"
     exit 1
@@ -244,13 +246,14 @@ require_text "$REPO_ROOT/skills/running-a-retro/SKILL.md" "name: running-a-retro
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"
-require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.3.1"' "plugin.json not bumped to version 4.3.1"
+require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.3.2"' "plugin.json not bumped to version 4.3.2"
 
 # Shared handoff commit guard (Claude runtime) and its tests
 require_text "$REPO_ROOT/scripts/guardrails/validate-bash.py" "def check_handoff_commit" "missing shared-handoff commit guard in scripts/guardrails/validate-bash.py"
 require_text "$REPO_ROOT/tests/guardrails/test_validate_bash.py" "test_commit_blocked_when_handoff_untracked" "missing shared-handoff commit guard tests in tests/guardrails/test_validate_bash.py"
 require_text "$REPO_ROOT/hooks/hooks.json" "validate-bash.py" "validate-bash hook not wired in hooks/hooks.json"
 require_text "$REPO_ROOT/hooks/hooks.json" "guard-auto-publish.py" "autonomous publish guard not wired in hooks/hooks.json"
+require_text "$REPO_ROOT/hooks/hooks.json" "autonomy-takeover.py" "autonomy takeover hook not wired in hooks/hooks.json"
 
 agent_md_count="$(find "$REPO_ROOT/agents" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')"
 if [[ "$agent_md_count" -lt 8 ]]; then

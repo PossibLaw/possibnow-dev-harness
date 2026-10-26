@@ -66,6 +66,7 @@ AUTONOMOUS_BLOCKED_PATTERNS = [
     r"[\"']send[\"']\s*:\s*true",
     r"\bnpm\s+(run\s+)?publish\b",
     r"\bgit\s+push\s+\S*\s*(origin\s+)?(main|master)\b",
+    r"agent-auto\.json",  # the dispatcher's marker: an autonomous run never touches it
 ]
 
 # MCP tools an autonomous run may never call (matched against the tool name).
@@ -80,6 +81,7 @@ AUTONOMOUS_DENIED_TOOL_PATTERNS = [
 
 # Files that should never be written to
 PROTECTED_FILE_PATTERNS = [
+    r"agent-auto\.json$",  # autonomous-run marker; only the dispatcher and the takeover hook write it
     r"\.env$",
     r"\.env\.",
     r"\.git/config$",
