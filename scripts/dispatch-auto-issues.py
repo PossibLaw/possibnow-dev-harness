@@ -13,9 +13,9 @@ Policy (the autonomy page in the private repo is the source; this is the mechani
 - Caps: `max_runs` across all repos, `max_per_repo` per repo; running `auto-*` worktrees
   and open auto PRs count.
 - Start: `orca worktree create --repo path:<repo> --name auto-<n> --issue <n> --agent <id>
-  --prompt <text>`; the branch is therefore orca/auto-<n>, which the harness guardrails
-  recognise as autonomous (no merge, no publish).
-- Flag: every open PR whose head branch is orca/auto-* gets the label `labels.pr`
+  --prompt <text>`; Orca names the branch auto-<n> (older designs assumed orca/auto-<n>; both
+  count), which the harness guardrails recognise as autonomous (no merge, no publish).
+- Flag: every open PR whose head branch is auto-<n> or orca/auto-<n> gets the label `labels.pr`
   (default agent-auto) and the title prefix "[auto] ". Nothing is ever merged here.
 - Report: Markdown for the morning summary, plus a JSON state file.
 
@@ -37,6 +37,7 @@ import sys
 from pathlib import Path
 
 PATH_RE = re.compile(r"`([^`\s]+/[^`\s]*)`")
+AUTO_BRANCH_RE = re.compile(r"^(orca/)?auto-(\d+)$")  # kept in step with scripts/guardrails/autonomy.py
 OWNER_RE = re.compile(r"\*\*Owner:\*\*\s*([^\n|]+)", re.I)
 HUMAN_OWNER_RE = re.compile(r"\b(sal|salvador|client|human)\b", re.I)
 
@@ -78,8 +79,9 @@ def orca_worktrees() -> list[dict]:
 def auto_name(wt: dict) -> str | None:
     branch = (wt.get("branch") or "").replace("refs/heads/", "")
     name = wt.get("displayName") or ""
-    if branch.startswith("orca/auto-"):
-        return branch[len("orca/"):]
+    m = AUTO_BRANCH_RE.match(branch)
+    if m:
+        return f"auto-{m.group(2)}"
     if name.startswith("auto-"):
         return name
     return None
@@ -140,12 +142,10 @@ def flag_auto_prs(repo: dict, pr_label: str, dry_run: bool) -> tuple[list[str], 
         return flagged, open_by_issue, [str(exc)]
     for pr in pulls:
         head = (pr.get("head") or {}).get("ref", "")
-        if not head.startswith("orca/auto-"):
+        m = AUTO_BRANCH_RE.match(head)
+        if not m:
             continue
-        try:
-            open_by_issue[int(head[len("orca/auto-"):])] = pr["html_url"]
-        except ValueError:
-            pass
+        open_by_issue[int(m.group(2))] = pr["html_url"]
         names = {l["name"] for l in pr.get("labels", []) if isinstance(l, dict)}
         needs_label = pr_label not in names
         needs_title = not pr["title"].startswith("[auto]")

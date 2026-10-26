@@ -60,6 +60,20 @@ def test_merge_is_blocked_on_an_auto_branch(tmp_path):
     assert res.returncode == 2 and "autonomous" in res.stderr.lower()
 
 
+def test_merge_is_blocked_on_the_branch_orca_actually_creates(tmp_path):
+    # Orca 1.4.240 names the worktree branch after the --name, with no orca/ prefix: auto-<n>.
+    repo = tmp_path / "plain"; repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "auto-42", str(repo)], check=True)
+    res = bash("gh pr merge 5", cwd=str(repo))
+    assert res.returncode == 2 and "autonomous" in res.stderr.lower()
+
+
+def test_a_human_branch_that_merely_starts_with_auto_is_not_autonomous(tmp_path):
+    repo = tmp_path / "human"; repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "auto-complete-widget", str(repo)], check=True)
+    assert asks(bash("gh pr merge 5", cwd=str(repo)))
+
+
 def test_publishing_commands_are_blocked_only_in_autonomous_runs(tmp_path):
     for cmd in ("node src/cli.js post-note --id 3", 'curl -d \'{"publish": true}\' https://x', "npm run publish-draft"):
         assert bash(cmd).returncode == 0, cmd

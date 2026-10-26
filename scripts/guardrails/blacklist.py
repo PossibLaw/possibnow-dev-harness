@@ -54,7 +54,7 @@ ESCALATE_PATTERNS += [
     r"gh\s+api\s.*\/pulls\/\d+\/merge\b",
 ]
 
-# Autonomous runs (AGENT_AUTO=1 or a branch named orca/auto-*): blocked outright.
+# Autonomous runs (AGENT_AUTO=1 or a branch named auto-<n> / orca/auto-<n>): blocked outright.
 # Merging is never theirs; publishing of any kind is never theirs. Drafting is fine.
 AUTONOMOUS_BLOCKED_PATTERNS = [
     r"gh\s+pr\s+merge\b",
