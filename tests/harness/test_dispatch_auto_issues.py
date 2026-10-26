@@ -33,6 +33,14 @@ elif "/issues/" in path and path.endswith("/labels") and method == "POST":
     world.setdefault("pr_labels", {}).setdefault(f"{repo}#{num}", []).extend(body["labels"]); out = []
 elif "/issues/" in path and path.endswith("/comments") and method == "POST":
     out = {"id": 1}
+elif path.count("/") == 4 and "/issues/" in path and method == "GET":
+    repo = "/".join(path.split("/")[1:3]); num = int(path.rsplit("/", 1)[1])
+    if num in world.get("closed", {}).get(repo, []):
+        out = {"number": num, "state": "closed"}
+    elif any(i["number"] == num for i in world.get("issues", {}).get(repo, [])):
+        out = {"number": num, "state": "open"}
+    else:
+        print("fake gh: 404", path, file=sys.stderr); save(); sys.exit(1)
 else:
     print("fake gh: unhandled", method, path, file=sys.stderr); save(); sys.exit(1)
 save(); print(json.dumps(out))
@@ -45,6 +53,8 @@ world.setdefault("calls", []).append(["orca", *args])
 def save(): json.dump(world, open(wp, "w"), indent=1)
 if args[:2] == ["worktree", "list"]:
     out = {"ok": True, "result": {"worktrees": world.get("worktrees", [])}}
+elif args[:2] == ["repo", "list"]:
+    out = {"ok": True, "result": {"repos": world.get("repos", [{"id": "id-alpha", "path": "/repos/alpha"}, {"id": "id-beta", "path": "/repos/beta"}])}}
 elif args[:2] == ["worktree", "create"]:
     name = args[args.index("--name") + 1]
     repo = args[args.index("--repo") + 1]
@@ -208,6 +218,33 @@ def test_worktrees_on_the_branch_orca_actually_creates_count_against_caps(world)
     run(world)
     issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
     assert issues == [11], 'alpha is at its per-repo cap and #1 is already running'
+
+
+def test_per_repo_cap_counts_worktrees_in_the_shape_orca_really_sends(world):
+    # Orca 1.4.240 records carry repoId and git.path (the worktree), never repoPath.
+    w = read(world)
+    w['worktrees'] = [{"displayName": "auto-1", "branch": "refs/heads/auto-1", "linkedIssue": 1, "isArchived": False,
+                       "path": "/wt/auto-1", "repoId": "id-alpha", "git": {"path": "/wt/auto-1", "branch": "refs/heads/auto-1"}}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [11], 'alpha already has one running auto worktree, so only beta may start'
+
+
+def test_auto_worktree_whose_issue_is_closed_no_longer_counts_against_caps(world):
+    # October 26, 2026: auto-130 and auto-850 stayed open in Orca after their issues closed,
+    # so the next night saw both caps full and would have started nothing.
+    w = read(world)
+    w['worktrees'] = [{"displayName": "auto-1", "branch": "refs/heads/some-human-branch", "linkedIssue": 1, "isArchived": False, "path": "/wt/auto-1", "repoPath": "/repos/alpha"},
+                      {"displayName": "auto-11", "branch": "refs/heads/auto-11", "linkedIssue": 11, "isArchived": False, "path": "/wt/auto-11", "repoPath": "/repos/beta"}]
+    w['issues']['Owner/alpha'] = [i for i in w['issues']['Owner/alpha'] if i['number'] != 1]
+    w['closed'] = {"Owner/alpha": [1]}
+    world['path'].write_text(json.dumps(w))
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [6], 'alpha #1 is closed so its worktree is finished; beta #11 is open and still running'
+    assert 'Running before this pass: 1 auto worktree(s)' in world['report'].read_text()
 
 
 def test_dry_run_starts_nothing_and_reports(world):
