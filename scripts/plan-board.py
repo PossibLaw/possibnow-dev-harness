@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from board_github import create_fields, load_board, setup_gaps, write  # noqa: E402
-from board_rules import Change, plan_changes  # noqa: E402
+from board_rules import Change, plan_changes, triage_problem  # noqa: E402
 
 UI_STEPS = ("In the GitHub board, add a Board view: New view → Board, columns by Status, sorted by Priority. "
             "Then rerun plan-board.py --setup until nothing is missing.")
@@ -45,17 +45,6 @@ def load_json(path: Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
     except ValueError:
         return {}
-
-
-def triage_problem(triage: dict, now: dt.datetime) -> str | None:
-    if not triage.get("ran"):
-        return "no triage state; the board was left as it was"
-    if triage.get("classifier_ok") is False:
-        return "the triage classifier failed last night; the board was left as it was"
-    ran = dt.datetime.fromisoformat(triage["ran"]).replace(tzinfo=None)
-    if now - ran > dt.timedelta(hours=36):
-        return f"the triage state is older than 36 hours ({triage['ran']}); the board was left as it was"
-    return None
 
 
 def apply(board, changes: list[Change], state: dict, dry_run: bool) -> tuple[int, list[str]]:

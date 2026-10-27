@@ -9,6 +9,7 @@ Pure functions; scripts/board_github.py reads and writes the board.
 """
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass, field
 
 STATUSES = ("Backlog", "Needs your decision", "This week", "Today", "Being worked on", "Needs your review", "Done")
@@ -119,3 +120,14 @@ def automatic_changes(cards: list[Card], started_urls: set[str]) -> list[Change]
         if want and want != c.status:
             out.append(Change(c.item_id, c.key, "Status", want))
     return out
+
+
+def triage_problem(triage: dict, now: dt.datetime) -> str | None:
+    if not triage.get("ran"):
+        return "no triage state; the board was left as it was"
+    if triage.get("classifier_ok") is False:
+        return "the triage classifier failed last night; the board was left as it was"
+    ran = dt.datetime.fromisoformat(triage["ran"]).replace(tzinfo=None)
+    if now - ran > dt.timedelta(hours=36):
+        return f"the triage state is older than 36 hours ({triage['ran']}); the board was left as it was"
+    return None

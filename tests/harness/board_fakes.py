@@ -16,7 +16,9 @@ def flag(name):  # -f name=value / -F name=value
     for i, a in enumerate(args):
         if a in ("-f", "-F") and args[i + 1].startswith(name + "="):
             return args[i + 1].split("=", 1)[1]
-proj = world["project"]
+proj = world.get("project")
+if args[:2] == ["api", "graphql"] and proj is None:
+    save(); print("Could not resolve to a ProjectV2", file=sys.stderr); sys.exit(1)
 if args[:2] == ["api", "graphql"]:
     after = int(flag("after") or 0)
     page = proj["items"][after:after + 100]
