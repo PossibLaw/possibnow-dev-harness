@@ -265,7 +265,7 @@ require_text "$REPO_ROOT/skills/running-a-retro/SKILL.md" "name: running-a-retro
 
 # Plugin manifest
 require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"name": "possibnow-dev-harness"' "missing plugin name in .claude-plugin/plugin.json"
-require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.3.4"' "plugin.json not bumped to version 4.3.4"
+require_text "$REPO_ROOT/.claude-plugin/plugin.json" '"version": "4.3.5"' "plugin.json not bumped to version 4.3.5"
 
 # Shared handoff commit guard (Claude runtime) and its tests
 require_text "$REPO_ROOT/scripts/guardrails/validate-bash.py" "def check_handoff_commit" "missing shared-handoff commit guard in scripts/guardrails/validate-bash.py"

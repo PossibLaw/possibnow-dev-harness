@@ -10,14 +10,17 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.3.4 on main; board and morning brief merged, rollout next; linked-issue hook in review (October 27, 2026)
+# Current Handoff — 4.3.5 release in review; board rollout under way (October 27, 2026)
 
 ## Status
 Main is at v4.3.4 plus the auto-cleanup change (PR #49, unreleased; the dispatcher runs from the main checkout, so it is
 live without a release). Merged October 27, 2026: "A board and a short morning brief instead of TickTick" (PR #58,
-for Sal's issue "How I do work", #56; the issue stays open until the rollout is done). In review: the linked-issue
-SessionStart hook for the issue "Orca mobile: give Claude the worktree's linked issue at session start" (#59, branch
-`feat/linked-issue-at-start`). The existing GitHub Project becomes Sal's board with seven
+for Sal's issue "How I do work", #56; the issue stays open until the rollout is done) and the linked-issue
+SessionStart hook (PR #60, which closed "Orca mobile: give Claude the worktree's linked issue at session start", #59).
+In review: release 4.3.5 (version and pins; branch `release/4.3.5`), which lets `claude plugin update` deliver the hook.
+Rollout so far: the main checkout was fast-forwarded. `plan-board.py --setup` created the fields (run by Sal), and Sal
+set up the Status options. Sal's first planner run was in progress. Aleph draft PR #165 changes the nightly runner and
+adds the morning runner. The TickTick count is 143 mirrored tasks and 0 others; nothing is deleted yet. The existing GitHub Project becomes Sal's board with seven
 columns and an agent-suggested Priority. `scripts/plan-board.py` proposes Today and This week each night and leaves
 Sal's own moves alone. `scripts/morning-brief.py` posts one short Slack message. TickTick is retired, and the
 mirror's tasks are purged on request. Design and plan:
@@ -93,9 +96,9 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-0. Run the board rollout (Task 9) with Sal, starting with a pull of the main checkout and `plan-board.py --setup`. Sal
-   reviews the linked-issue hook PR (issue #59); after merge the installed plugin needs `claude plugin update`, which
-   ships it with the next release.
+0. Sal merges the 4.3.5 version PR, then creates the v4.3.5 tag and Release. After that: run `claude plugin update` for
+   the user scope and Trazomo's local scope, and refresh the Codex guard copy. When Sal merges Aleph PR #165, install
+   the 6:30 morning job from `~/aleph`. With Sal's yes, run `--purge --yes` on the 143 TickTick tasks.
 1. After the next nightly run: read its reports and log; confirm auto-22 was removed and that any new run's notice arrived.
 2. Sal answers the morning brief (H-TR02); apply with the answering-the-morning-brief skill.
 3. Add Builder articles to the freshness watch (H-FR02).
