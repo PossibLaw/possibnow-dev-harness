@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- **Auto-clean finished autonomous worktrees** (Sal, October 27, 2026): the dispatcher removes an `auto-*` worktree, with `orca worktree rm` and its branch kept, when its issue is closed, nothing is uncommitted, it has been idle for `active_hours` (default 6), and its commit is on the default branch or its branch's pull request was merged (squash merges count). Anything else stays, and the report says why. Removals are named in the report and in Slack. Config: `auto_cleanup` (default on), `active_hours`. Three tests, red first.
+
 ## 4.3.4 — 2026-10-27 — Autonomous runs: under their own repo, and a notice the moment they finish
 
 Bootstrap and pack pinned to v4.3.4.
