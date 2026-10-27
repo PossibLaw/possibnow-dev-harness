@@ -266,6 +266,7 @@ def test_t6_dispatcher_marks_each_started_worktree(world, tmp_path, monkeypatch)
     m = guard_module()
     marker = m.read_marker(str(tmp_path / 'wts' / 'auto-1'))
     assert marker and marker['repo'] == 'Owner/alpha' and marker['issue'] == 1 and marker['worktree'] == 'auto-1'
+    assert marker['title'] == '[X1] safe chore', 'the completion notice names the issue without another lookup'
     assert m.is_autonomous(str(tmp_path / 'wts' / 'auto-1'))
     assert 'marker' not in world['report'].read_text().lower()
 
@@ -302,6 +303,14 @@ def test_issues_beyond_the_first_page_are_considered(world):
     run(world)
     issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
     assert 11 in issues, 'the eligible issue on page two must start'
+
+
+def test_worktrees_are_created_without_a_parent_so_they_show_under_their_own_repo(world):
+    # October 27, 2026: the nightly runner works from ~/Aleph, so Orca guessed Aleph's main checkout as the
+    # parent and filed the Trazomo run "auto-22" under Aleph in the sidebar.
+    run(world)
+    for call in started(world):
+        assert '--no-parent' in call, call
 
 
 def test_dry_run_starts_nothing_and_reports(world):

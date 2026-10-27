@@ -127,7 +127,7 @@ def mark_autonomous(create_out: dict, name: str, repo: dict, issue: dict) -> str
                 break
     if not path:
         raise RuntimeError("worktree path not found in Orca")
-    return write_marker(path, {"repo": repo["github"], "issue": issue["number"], "url": issue["html_url"], "worktree": name,
+    return write_marker(path, {"repo": repo["github"], "issue": issue["number"], "title": issue.get("title", ""), "url": issue["html_url"], "worktree": name,
                                "started": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
 
 
@@ -322,7 +322,8 @@ def main(argv=None) -> int:
             prompt = prompt_tpl.replace("{issue_url}", issue["html_url"]).replace("{issue_number}", str(n)).replace("{repo}", repo["github"])
             repo_selector = f"path:{Path(repo['path']).expanduser()}"  # Orca does not expand ~ itself
             cmd = ["orca", "worktree", "create", "--repo", repo_selector, "--name", f"auto-{n}", "--issue", str(n),
-                   "--agent", cfg.get("agent", "claude"), "--prompt", prompt, "--json"]
+                   "--agent", cfg.get("agent", "claude"), "--prompt", prompt, "--no-parent", "--json"]
+            # --no-parent: the runner works from ~/Aleph, and Orca would otherwise file every run under Aleph.
             if cfg.get("model"):
                 cmd += ["--model", cfg["model"]]
             if args.dry_run:
