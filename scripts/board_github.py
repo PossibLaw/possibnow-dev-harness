@@ -7,12 +7,15 @@ skipped. Needs a `gh` token with the `project` scope. Standard library only.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+from pathlib import Path
 from dataclasses import dataclass, field
 
 from board_rules import PRIORITIES, STATUSES, Card, Change
 
 TEXT_FIELDS = ("Why", "Decision")
+TIMEOUT = 60
 
 QUERY = """query($login: String!, $number: Int!, $after: String) {
   %s(login: $login) {
@@ -54,10 +57,31 @@ class Board:
 
 
 def _gh(args: list[str]) -> str:
-    res = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=60)
+    try:
+        res = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=TIMEOUT)
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        raise RuntimeError(f"gh {' '.join(args[:2])}: {exc}") from None
     if res.returncode != 0:
         raise RuntimeError(f"gh {' '.join(args[:2])}: {res.stderr.strip()[:200]}")
     return res.stdout
+
+
+def load_state(path: Path) -> dict:
+    """The board state file; {} when it does not exist. Raises ValueError when it exists but cannot be read,
+    because planning from an empty record would treat the agent's own past writes as Sal's."""
+    if not path.is_file():
+        return {}
+    state = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(state, dict):
+        raise ValueError(f"{path} does not hold a JSON object")
+    return state
+
+
+def save_state(path: Path, state: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(state, indent=1), encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def load_board(owner: str, number: int, owner_type: str = "user") -> Board:

@@ -10,8 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from board_rules import (PRIORITIES, Card, automatic_changes, decision_text, is_agents,  # noqa: E402
-                         plan_changes, priority_from_labels)
+from board_rules import (PRIORITIES, SAL, Card, automatic_changes, decision_text, is_agents,  # noqa: E402
+                         ownership_marks, plan_changes, priority_from_labels)
 
 
 def card(key, status=None, priority=None, labels=(), state='OPEN', created='2026-10-01T00:00:00Z', open_prs=()):
@@ -94,3 +94,27 @@ def test_automatic_moves_override_sals_choice():
              card('R', status='Backlog'), card('N', status='Needs your review', open_prs=['u'])]
     ch = changed(automatic_changes(cards, {'https://github.com/O/r/issues/R'}), 'Status')
     assert ch == {'P': 'Needs your review', 'C': 'Done', 'R': 'Being worked on'}
+
+
+def test_sal_marker_keeps_a_card_his():
+    assert not is_agents('Backlog', {'Status': SAL}, 'Status') and not is_agents(None, {'Priority': SAL}, 'Priority')
+
+
+def test_ownership_marks_record_baselines_and_sals_cards():
+    cards = [card('A', status='Backlog'), card('B', status='Today'), card('C', status='Today', priority='High')]
+    marks = ownership_marks(cards, {'cards': {'C': {'Status': 'Backlog', 'Priority': 'High'}}})
+    assert marks['A'] == {'Status': 'Backlog', 'Priority': None}
+    assert marks['B'] == {'Status': SAL, 'Priority': None}
+    assert marks['C'] == {'Status': SAL, 'Priority': 'High'}
+
+
+def test_answered_decision_is_planned_not_reasked():
+    ch = plan_changes([card('D', status='Backlog')], triage({'D': 'decide'}, decision={'question': 'Q?'}),
+                      {'cards': {'D': {'Status': 'Backlog', 'answered': True}}}, 3, 10)
+    assert changed(ch, 'Status') == {'D': 'Today'} and changed(ch, 'Decision') == {}
+
+
+def test_closed_pull_request_returns_review_card_to_backlog():
+    cards = [card('V', status='Needs your review'), card('W', status='Needs your review')]
+    ch = changed(automatic_changes(cards, set(), {'V': {'Status': 'Needs your review'}}), 'Status')
+    assert ch == {'V': 'Backlog'}, 'only a card the agent moved there goes back; W is Sal\'s'

@@ -19,6 +19,8 @@ def flag(name):  # -f name=value / -F name=value
 proj = world.get("project")
 if args[:2] == ["api", "graphql"] and proj is None:
     save(); print("Could not resolve to a ProjectV2", file=sys.stderr); sys.exit(1)
+if args[:2] == ["api", "graphql"] and world.get("hang_graphql"):
+    import time; time.sleep(5)
 if args[:2] == ["api", "graphql"]:
     after = int(flag("after") or 0)
     page = proj["items"][after:after + 100]
@@ -37,6 +39,8 @@ if args[:2] == ["api", "graphql"]:
                           "items": {"pageInfo": {"hasNextPage": more, "endCursor": str(after + 100) if more else None}, "nodes": [node(i) for i in page]}}}
     save(); print(json.dumps({"data": {world.get("owner_type", "user"): data}})); sys.exit(0)
 if args[:2] == ["project", "item-edit"]:
+    if world.get("hang_edit_at") and sum(1 for c in world["calls"] if c[:2] == ["project", "item-edit"]) == world["hang_edit_at"]:
+        save(); import time; time.sleep(30)
     item = next(i for i in proj["items"] if i["id"] == opt("--id"))
     if item["id"] in world.get("fail_edit", []):
         save(); print("edit refused", file=sys.stderr); sys.exit(1)

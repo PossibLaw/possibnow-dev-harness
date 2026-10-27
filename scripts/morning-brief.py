@@ -9,12 +9,12 @@ that worked was the autonomous-run notice, one line with a link. He wants "the t
 get done ... today and then this week", each with what it is, the repo, the priority and a link, plus the
 board. Each run:
 1. applies the automatic moves (scripts/board_rules.py): issue closed → Done, an open linked pull request →
-   Needs your review, an autonomous run the dispatcher started → Being worked on; each is recorded as the
-   agent's in the board state;
+   Needs your review (and back to Backlog when that pull request is gone), an autonomous run the dispatcher
+   started since the last brief → Being worked on; each is recorded as the agent's in the board state;
 2. Overnight: one line per open pull request carrying `pr_label` opened since the last posted brief;
 3. at most 10 cards, Today first, then This week, each by priority then age, and "+N more on the board";
-4. a closing line counting cards in Needs your decision and triage's stale or duplicate issues, and the
-   board link;
+4. a closing line counting cards in Needs your decision and open cards triage calls stale or duplicate,
+   and the board link; a triage that is missing, failed, or older than the last brief is named;
 5. posts to $SLACK_WEBHOOK_URL; only a posted brief moves the `reported` mark that opens the next window.
 `--dry-run` prints the message and writes and posts nothing.
 
@@ -33,7 +33,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from board_github import load_board, setup_gaps, write  # noqa: E402
+from board_github import load_board, load_state, save_state, setup_gaps, write  # noqa: E402
 from board_rules import PRIORITIES, automatic_changes, triage_problem  # noqa: E402
 
 LIMIT = 10
@@ -95,14 +95,18 @@ def main(argv=None) -> int:
         return 2
     names = {r["github"].lower(): r["name"] for r in repos}
     state_path = args.state.expanduser()
-    state = load_json(state_path)
+    notes, cards = [], []
+    try:
+        state, keep_state = load_state(state_path), True
+    except ValueError:
+        state, keep_state = {}, False  # never overwrite a state file plan-board refuses to read
+        notes.append("The board state file is unreadable; the nightly plan is paused until it is fixed.")
     now = dt.datetime.now(dt.timezone.utc)
     try:
         since = dt.datetime.fromisoformat(state["reported"])
     except (KeyError, ValueError):
         since = now - dt.timedelta(days=1)
 
-    notes, cards = [], []
     try:
         board = load_board(owner, number, cfg.get("owner_type", "user"))
     except RuntimeError as exc:
@@ -116,8 +120,13 @@ def main(argv=None) -> int:
         cards = [c for c in board.cards if c.repo.lower() in names]
         for c in cards:
             c.key = c.key.lower()
-        started = {s.get("url") for s in load_json(args.dispatch_state.expanduser()).get("started", [])}
-        for ch in automatic_changes(cards, started):
+        dispatch = load_json(args.dispatch_state.expanduser())
+        try:
+            fresh = dt.datetime.fromisoformat(dispatch["ran"].replace("Z", "+00:00")) > since
+        except (KeyError, ValueError, AttributeError):
+            fresh = False  # a dispatcher that did not run since the last brief started nothing new
+        started = {s.get("url") for s in dispatch.get("started", [])} if fresh else set()
+        for ch in automatic_changes(cards, started, state.get("cards", {})):
             card = next(c for c in cards if c.key == ch.key)
             if args.dry_run:
                 print(f"- would move {ch.key} to {ch.value}")
@@ -128,10 +137,17 @@ def main(argv=None) -> int:
                     notes.append(f"Could not move {esc(card.title)} to {ch.value} ({esc(str(exc))[:80]}).")
                     continue
                 state.setdefault("cards", {}).setdefault(ch.key, {})["Status"] = ch.value
+                if keep_state:
+                    save_state(state_path, state)
             card.status = ch.value
 
     triage = load_json(args.triage_state.expanduser())
-    if triage_problem(triage, dt.datetime.now()):
+    try:
+        ran = dt.datetime.fromisoformat(triage["ran"]).astimezone()
+        before_last_brief = "reported" in state and ran < dt.datetime.fromisoformat(state["reported"])
+    except (KeyError, ValueError, TypeError):
+        before_last_brief = True
+    if before_last_brief or triage_problem(triage, dt.datetime.now()):
         notes.append("Triage did not run cleanly last night; priorities and the plan were left as they were.")
     runs, errors = overnight(repos, cfg.get("pr_label", "agent-auto"), since)
     notes += [f"Could not read pull requests for {e}." for e in errors]
@@ -157,7 +173,8 @@ def main(argv=None) -> int:
     if len(today) + len(week) > shown:
         lines.append(f"+{len(today) + len(week) - shown} more on the board")
     decisions = sum(1 for c in open_cards if c.status == "Needs your decision")
-    stale = sum(1 for v in triage.get("issues", {}).values() if v.get("outcome") in ("stale", "duplicate"))
+    verdicts = {k.lower(): v for k, v in triage.get("issues", {}).items()}
+    stale = sum(1 for c in open_cards if verdicts.get(c.key, {}).get("outcome") in ("stale", "duplicate"))
     lines.append(f"{decisions} decisions waiting · {stale} look stale. Reply in Claude to answer (\"brief 1A\", \"close stale\").")
     lines.append(f"<{board_url}|Open the board>")
     text = "\n".join(lines)
@@ -168,8 +185,8 @@ def main(argv=None) -> int:
     print(slack_line)
     if slack_line == "slack: posted":
         state["reported"] = now.isoformat(timespec="seconds")
-    state_path.parent.mkdir(parents=True, exist_ok=True)
-    state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
+    if keep_state:
+        save_state(state_path, state)
     return 0
 
 

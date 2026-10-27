@@ -2,8 +2,9 @@
 
 Sal, October 27, 2026 (issue "How I do work"): the agent suggests a priority for every issue and
 proposes Today and This week; his moves stick. A value is the agent's while it still equals what the
-agent last wrote (the state file records that); with no record, an empty or Backlog column and an empty
-priority are the agent's. Anything else is Sal's and the plan leaves it alone. Automatic moves describe
+agent last wrote or last saw (the state file records that); with no record, an empty or Backlog column and
+an empty priority are the agent's. Anything else is Sal's: the record then says SAL and the plan leaves it
+alone for good, even if Sal later moves it back. An automatic move or an answered decision records anew. Automatic moves describe
 facts (a pull request is open, the issue closed, an autonomous run started) and always apply.
 Pure functions; scripts/board_github.py reads and writes the board.
 """
@@ -16,6 +17,7 @@ STATUSES = ("Backlog", "Needs your decision", "This week", "Today", "Being worke
 PRIORITIES = ("Urgent", "High", "Medium", "Low")
 UNCLAIMED = {"Status": (None, "Backlog"), "Priority": (None,)}
 FACTS = ("Being worked on", "Needs your review", "Done")
+SAL = "(sal)"
 
 
 @dataclass
@@ -50,8 +52,20 @@ def priority_from_labels(labels: set[str]) -> str:
 
 def is_agents(current: str | None, recorded: dict, field: str) -> bool:
     if field in recorded:
-        return current == recorded[field]
+        return recorded[field] != SAL and current == recorded[field]
     return current in UNCLAIMED[field]
+
+
+def ownership_marks(cards: list[Card], state: dict) -> dict[str, dict]:
+    """What to record for each open card before planning: the value it holds if it is the agent's, SAL if not."""
+    records = state.get("cards", {})
+    marks = {}
+    for c in cards:
+        if c.state != "OPEN":
+            continue
+        rec = records.get(c.key, {})
+        marks[c.key] = {f: (cur if is_agents(cur, rec, f) else SAL) for f, cur in (("Status", c.status), ("Priority", c.priority))}
+    return marks
 
 
 def decision_text(decision: dict) -> str:
@@ -81,17 +95,18 @@ def plan_changes(cards: list[Card], triage: dict, state: dict, today_cap: int, t
     sal_today = sal_week = 0
     candidates, rest = [], []
     for c, v, rec in live:
+        outcome = "do" if v.get("outcome") == "decide" and rec.get("answered") else v.get("outcome")
         if not is_agents(c.status, rec, "Status"):
             sal_today += c.status == "Today"
             sal_week += c.status == "This week"
             continue
         if c.status in FACTS:
             continue
-        if v.get("outcome") == "decide":
+        if outcome == "decide":
             emit(c, "Status", "Needs your decision", c.status)
             if v.get("decision"):
                 emit(c, "Decision", decision_text(v["decision"]), c.decision)
-        elif v.get("outcome") in ("do", "agent"):
+        elif outcome in ("do", "agent"):
             candidates.append(c)
         else:
             rest.append(c)
@@ -106,7 +121,8 @@ def plan_changes(cards: list[Card], triage: dict, state: dict, today_cap: int, t
     return out
 
 
-def automatic_changes(cards: list[Card], started_urls: set[str]) -> list[Change]:
+def automatic_changes(cards: list[Card], started_urls: set[str], records: dict | None = None) -> list[Change]:
+    records = records or {}
     out = []
     for c in cards:
         if c.state != "OPEN":
@@ -115,6 +131,8 @@ def automatic_changes(cards: list[Card], started_urls: set[str]) -> list[Change]
             want = "Needs your review" if c.status != "Done" else None
         elif c.url in started_urls:
             want = "Being worked on"
+        elif c.status == "Needs your review" and records.get(c.key, {}).get("Status") == "Needs your review":
+            want = "Backlog"  # the agent moved it there for a pull request that is no longer open
         else:
             want = None
         if want and want != c.status:

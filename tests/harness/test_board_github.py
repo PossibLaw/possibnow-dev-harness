@@ -13,7 +13,8 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from board_fakes import install, issue_item, ready_fields, select_field  # noqa: E402
-from board_github import create_fields, load_board, setup_gaps, write  # noqa: E402
+import board_github  # noqa: E402
+from board_github import create_fields, load_board, load_state, save_state, setup_gaps, write  # noqa: E402
 from board_rules import Change  # noqa: E402
 
 
@@ -83,3 +84,20 @@ def test_create_fields_adds_only_missing_ones(tmp_path, monkeypatch):
     fields = {f['name']: f for f in json.loads(wp.read_text())['project']['fields']}
     assert [o['name'] for o in fields['Priority']['options']] == ['Urgent', 'High', 'Medium', 'Low']
     assert 'options' not in fields['Decision']
+
+
+def test_a_hung_gh_call_raises_runtime_error(tmp_path, monkeypatch):
+    install(tmp_path, monkeypatch, world(hang_graphql=True))
+    monkeypatch.setattr(board_github, 'TIMEOUT', 1)
+    with pytest.raises(RuntimeError):
+        load_board('someone', 1)
+
+
+def test_state_is_saved_whole_and_garbage_is_refused(tmp_path):
+    p = tmp_path / 'state.json'
+    assert load_state(p) == {}
+    save_state(p, {'cards': {'o/r#1': {'Status': 'Today'}}})
+    assert load_state(p) == {'cards': {'o/r#1': {'Status': 'Today'}}} and not list(tmp_path.glob('*.tmp'))
+    p.write_text('{bad')
+    with pytest.raises(ValueError):
+        load_state(p)

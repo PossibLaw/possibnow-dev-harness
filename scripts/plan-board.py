@@ -12,11 +12,13 @@ stick. Each run:
 3. for each open issue card in a configured repository, applies scripts/board_rules.py: Priority from the
    `urgent`/`important` labels with the triage reason in `Why`; decisions to "Needs your decision" with the
    question in `Decision`; the top `do`/`agent` issues into Today and This week around Sal's own cards;
-4. records each value it wrote in the state file, only after the write succeeded. A value that no longer
-   matches the record is Sal's and is never changed again.
+4. records, before planning, what each card holds if it is the agent's and SAL if it is Sal's, and then
+   each value it writes, only after the write succeeded; the state file is saved after every write, so a
+   run that dies part way keeps what it did. A value that no longer matches the record is Sal's and is
+   never changed again. An unreadable state file stops the run rather than being treated as empty.
 `--setup` creates the Priority, Why and Decision fields and prints the steps only Sal can do in the GitHub
-UI. `--answered KEY` (owner/repo#n) moves an answered decision back to Backlog; the
-answering-the-morning-brief skill calls it. `--dry-run` writes nothing.
+UI. `--answered KEY` (owner/repo#n) moves an answered decision from Needs your decision back to Backlog
+and keeps it from being asked again; the answering-the-morning-brief skill calls it. `--dry-run` writes nothing.
 
 Config (JSON, private): {"owner": "...", "owner_type": "user", "number": 1, "url": "https://github.com/...",
   "plan": {"today": 3, "total": 10}, "repos": [{"name": "Aleph", "github": "Owner/repo"}], "pr_label": "agent-auto"}
@@ -33,8 +35,8 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from board_github import create_fields, load_board, setup_gaps, write  # noqa: E402
-from board_rules import Change, plan_changes, triage_problem  # noqa: E402
+from board_github import create_fields, load_board, load_state, save_state, setup_gaps, write  # noqa: E402
+from board_rules import Change, ownership_marks, plan_changes, triage_problem  # noqa: E402
 
 UI_STEPS = ("In the GitHub board, add a Board view: New view → Board, columns by Status, sorted by Priority. "
             "Then rerun plan-board.py --setup until nothing is missing.")
@@ -47,7 +49,7 @@ def load_json(path: Path) -> dict:
         return {}
 
 
-def apply(board, changes: list[Change], state: dict, dry_run: bool) -> tuple[int, list[str]]:
+def apply(board, changes: list[Change], state: dict, state_path: Path, dry_run: bool) -> tuple[int, list[str]]:
     failed = []
     for ch in changes:
         if dry_run:
@@ -59,6 +61,7 @@ def apply(board, changes: list[Change], state: dict, dry_run: bool) -> tuple[int
             failed.append(f"{ch.key} {ch.field}: {exc}")
             continue
         state.setdefault("cards", {}).setdefault(ch.key, {})[ch.field] = ch.value
+        save_state(state_path, state)
     return len(changes) - len(failed), failed
 
 
@@ -101,7 +104,12 @@ def main(argv=None) -> int:
         return 2
 
     state_path = args.state.expanduser()
-    state = load_json(state_path)
+    try:
+        state = load_state(state_path)
+    except ValueError as exc:
+        print(f"BLOCKED: board state {state_path} is unreadable ({exc}); fix or move it. Planning from nothing would "
+              "treat the agent's past writes as Sal's.", file=sys.stderr)
+        return 2
     configured = {r["github"].lower() for r in repos}
     cards = [c for c in board.cards if c.repo.lower() in configured]
     for c in cards:
@@ -113,18 +121,28 @@ def main(argv=None) -> int:
         if card is None:
             print(f"board: {args.answered} is not on the board")
             return 0
-        changes = [Change(card.item_id, card.key, "Status", "Backlog")] if card.status != "Backlog" else []
+        if not args.dry_run:
+            state.setdefault("cards", {}).setdefault(card.key, {})["answered"] = True
+            save_state(state_path, state)
+        if card.status != "Needs your decision":
+            print(f"board: {args.answered} answered; its card stays in {card.status or 'no column'}")
+            return 0
+        changes = [Change(card.item_id, card.key, "Status", "Backlog")]
     else:
         triage = load_json(args.triage_state.expanduser())
         problem = triage_problem(triage, now)
         if problem:
             print(f"board: {problem}")
             return 0
+        if not args.dry_run:
+            for key, mark in ownership_marks(cards, state).items():
+                state.setdefault("cards", {}).setdefault(key, {}).update(mark)
+            save_state(state_path, state)
         verdicts = {"issues": {k.lower(): v for k, v in triage.get("issues", {}).items()}}
         plan = cfg.get("plan") or {}
         changes = plan_changes(cards, verdicts, state, int(plan.get("today", 3)), int(plan.get("total", 10)))
 
-    done, failed = apply(board, changes, state, args.dry_run)
+    done, failed = apply(board, changes, state, state_path, args.dry_run)
     by_field = Counter(ch.field for ch in changes)
     counts = ", ".join(f"{f} {by_field[f]}" for f in ("Status", "Priority", "Why", "Decision"))
     verb = "would make" if args.dry_run else "made"
@@ -133,8 +151,7 @@ def main(argv=None) -> int:
         print(f"- failed: {f}")
     if not args.dry_run:
         state["planned"] = now.isoformat(timespec="seconds")
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
+        save_state(state_path, state)
     return 0
 
 

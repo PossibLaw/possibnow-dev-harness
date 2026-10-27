@@ -109,7 +109,8 @@ def test_failed_write_is_not_recorded(env):
     res = run(env)
     assert res.returncode == 0 and '3 failed' in res.stdout
     cards = json.loads(env['state'].read_text())['cards']
-    assert 'o/r#2' not in cards and cards['o/r#3']['Status'] == 'This week'
+    assert cards['o/r#2']['Status'] is None and cards['o/r#2']['Priority'] is None, 'only the baseline, not the failed values'
+    assert cards['o/r#3']['Status'] == 'This week'
 
 
 def test_issue_text_cannot_steer_the_plan(env):
@@ -144,3 +145,40 @@ def test_blocked_until_board_is_set_up(env):
     res = run(env, '--setup')
     assert res.returncode == 0 and 'created: Priority, Why, Decision' in res.stdout
     assert 'rename Todo → Backlog' in res.stdout and 'Board view' in res.stdout
+
+
+def test_state_is_saved_after_each_write(env):
+    w = json.loads(env['world'].read_text()); w['hang_edit_at'] = 3; env['world'].write_text(json.dumps(w))
+    with pytest.raises(subprocess.TimeoutExpired):
+        subprocess.run([sys.executable, str(TOOL), '--config', str(env['config']), '--triage-state', str(env['triage']),
+                        '--state', str(env['state'])], capture_output=True, text=True, timeout=8)
+    recorded = sum(len([k for k in rec if k in ('Status', 'Priority', 'Why', 'Decision')])
+                   for rec in json.loads(env['state'].read_text())['cards'].values())
+    assert recorded >= 2, 'the writes made before the crash are on record'
+
+
+def test_unreadable_state_refuses_to_plan(env):
+    env['state'].write_text('{bad')
+    res = run(env)
+    assert res.returncode == 2 and 'BLOCKED' in res.stderr and edits(env) == []
+
+
+def test_a_backlog_card_sal_moved_out_and_back_stays(env):
+    w = json.loads(env['world'].read_text())
+    w['project']['items'].append(issue_item('O/r', 5, title='Low thing', created='2026-10-09T00:00:00Z', Status='Backlog'))
+    env['world'].write_text(json.dumps(w))
+    write_triage(env['triage'], {'O/r#2': ('do', None), 'O/r#3': ('agent', None), 'O/r#5': ('do', None)})
+    run(env)
+    assert values(env)[5]['Status'] == 'Backlog'
+    set_value(env, 5, 'Status', 'Today'); run(env)
+    set_value(env, 5, 'Status', 'Backlog')
+    write_triage(env['triage'], {'O/r#2': ('do', None), 'O/r#3': ('stale', None), 'O/r#5': ('do', None)})  # a slot opens
+    run(env)
+    assert values(env)[5]['Status'] == 'Backlog'
+
+
+def test_answered_leaves_a_card_sal_moved_alone(env):
+    run(env)
+    set_value(env, 1, 'Status', 'This week')
+    run(env, '--answered', 'O/r#1')
+    assert values(env)[1]['Status'] == 'This week'

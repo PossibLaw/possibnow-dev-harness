@@ -60,15 +60,18 @@ def env(tmp_path, monkeypatch, slack):
              issue_item('O/r', 6, title='Approve the cover', Status='Needs your decision'),
              issue_item('O/r', 7, title='Has a pull request', Status='Backlog', prs=('https://github.com/O/r/pull/70',)),
              issue_item('O/r', 8, title='Closed already', Status='Today', state='CLOSED'),
-             issue_item('O/r', 9, title='Started overnight', Status='Backlog')]
+             issue_item('O/r', 9, title='Started overnight', Status='Backlog'),
+             issue_item('O/r', 10, title='Stale one', Status='Backlog'),
+             issue_item('O/r', 12, title='Closed stale', Status='Done', state='CLOSED')]
     wp = install(tmp_path, monkeypatch, {
         'project': {'id': 'P1', 'fields': ready_fields(), 'items': items},
         'pulls': {'O/r': [pr(865, '[auto] Claude Code content update'), pr(800, '[auto] Old run', hours_ago=72), pr(801, 'Sal fixes a typo', label=False)]}})
     triage = tmp_path / 'triage-state.json'
     triage.write_text(json.dumps({'ran': dt.datetime.now().isoformat(timespec='seconds'), 'classifier_ok': True,
-                                  'issues': {'O/r#10': {'outcome': 'stale'}, 'O/r#11': {'outcome': 'do'}}}))
+                                  'issues': {'O/r#10': {'outcome': 'stale'}, 'O/r#11': {'outcome': 'do'}, 'O/r#12': {'outcome': 'stale'},
+                                             'O/r#13': {'outcome': 'duplicate'}}}))
     dispatch = tmp_path / 'dispatch-state.json'
-    dispatch.write_text(json.dumps({'started': [{'url': 'https://github.com/O/r/issues/9'}]}))
+    dispatch.write_text(json.dumps({'ran': iso(6), 'started': [{'url': 'https://github.com/O/r/issues/9'}]}))
     config = tmp_path / 'board.json'
     config.write_text(json.dumps({'owner': 'someone', 'number': 1, 'url': 'https://github.com/users/someone/projects/1',
                                   'repos': [{'name': 'Trazomo', 'github': 'O/r'}], 'pr_label': 'agent-auto'}))
@@ -177,3 +180,18 @@ def test_unreadable_board_still_posts(env, slack):
     assert res.returncode == 0
     text = slack['posts'][0]['text']
     assert 'Could not read the board' in text and 'Claude Code content update' in text
+
+
+def test_stale_dispatch_state_is_ignored(env):
+    env['state'].write_text(json.dumps({'reported': (NOW - dt.timedelta(hours=20)).isoformat(timespec='seconds')}))
+    env['dispatch'].write_text(json.dumps({'ran': iso(72), 'started': [{'url': 'https://github.com/O/r/issues/9'}]}))
+    run(env)
+    assert statuses(env)[9] == 'Backlog'
+
+
+def test_triage_older_than_last_brief_is_flagged(env, slack):
+    env['state'].write_text(json.dumps({'reported': (NOW - dt.timedelta(hours=1)).isoformat(timespec='seconds')}))
+    env['triage'].write_text(json.dumps({'ran': (dt.datetime.now() - dt.timedelta(hours=10)).isoformat(timespec='seconds'),
+                                         'classifier_ok': True, 'issues': {}}))
+    run(env)
+    assert 'Triage did not run cleanly last night' in slack['posts'][0]['text']

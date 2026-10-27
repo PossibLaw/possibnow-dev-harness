@@ -28,6 +28,8 @@ method = args[args.index("--method") + 1] if "--method" in args else "GET"
 full = next(a for a in args[1:] if not a.startswith("-") and a != method)
 path, q = full.split("?")[0], {k: v[0] for k, v in parse_qs(full.split("?")[1] if "?" in full else "").items()}
 body = json.load(sys.stdin) if "--input" in args else {}
+if world.get("fail_all"):
+    print("GitHub is down", file=sys.stderr); save(); sys.exit(1)
 repo = "/".join(path.split("/")[1:3])
 issues = world.setdefault("issues", {}).setdefault(repo, [])
 def page(items):
@@ -221,3 +223,9 @@ def test_state_says_when_the_classifier_failed(env):
     w['classifier_fails'] = False; env['world'].write_text(json.dumps(w))
     run(env)
     assert json.loads(env['state'].read_text())['classifier_ok'] is True
+
+
+def test_all_repos_failing_is_not_ok(env):
+    w = world(env); w['fail_all'] = True; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is False

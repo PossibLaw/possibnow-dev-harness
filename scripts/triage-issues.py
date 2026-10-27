@@ -303,7 +303,7 @@ def main(argv=None) -> int:
     if not args.dry_run:
         for p in (state_path, args.brief.expanduser()):
             p.parent.mkdir(parents=True, exist_ok=True)
-        state.update(ran=now.isoformat(timespec="seconds"), decisions=decisions, classifier_ok=bool(verdicts) or not items)
+        state.update(ran=now.isoformat(timespec="seconds"), decisions=decisions, classifier_ok=bool(verdicts) or not (items or errors))
         state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
         args.brief.expanduser().write_text(brief, encoding="utf-8")
     return 0
