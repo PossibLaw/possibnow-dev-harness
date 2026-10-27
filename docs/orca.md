@@ -138,6 +138,7 @@ right: Backlog, Needs your decision, This week, Today, Being worked on, Needs yo
   `urgent` and `important` labels) with the agent's reason in `Why`, puts decisions in Needs your decision with the
   question in `Decision`, and proposes Today and This week (at most `plan.total` cards, `plan.today` of them today).
 - Drag cards or change a priority whenever you like: anything you set is yours, and the agent never changes it back.
+  To give a card back to the agent, drag it to "No Status" (or clear its Priority); the next night plans it again.
 - In the morning, `scripts/morning-brief.py` moves cards that changed by themselves (an open linked pull request goes
   to Needs your review, a closed issue to Done, an autonomous run the dispatcher started to Being worked on), then
   posts one short Slack message: what finished overnight, at most ten cards (Today first), a count of decisions and

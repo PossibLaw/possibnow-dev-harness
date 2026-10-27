@@ -4,7 +4,9 @@ Sal, October 27, 2026 (issue "How I do work"): the agent suggests a priority for
 proposes Today and This week; his moves stick. A value is the agent's while it still equals what the
 agent last wrote or last saw (the state file records that); with no record, an empty or Backlog column and
 an empty priority are the agent's. Anything else is Sal's: the record then says SAL and the plan leaves it
-alone for good, even if Sal later moves it back. An automatic move or an answered decision records anew. Automatic moves describe
+alone for good, even if Sal later moves it back. An automatic move or an answered decision records anew.
+An empty column or priority is always the agent's: dragging a card to "No Status" (or clearing its
+Priority) is how Sal hands it back. Automatic moves describe
 facts (a pull request is open, the issue closed, an autonomous run started) and always apply.
 Pure functions; scripts/board_github.py reads and writes the board.
 """
@@ -51,6 +53,8 @@ def priority_from_labels(labels: set[str]) -> str:
 
 
 def is_agents(current: str | None, recorded: dict, field: str) -> bool:
+    if current is None:
+        return True
     if field in recorded:
         return recorded[field] != SAL and current == recorded[field]
     return current in UNCLAIMED[field]

@@ -97,7 +97,14 @@ def test_automatic_moves_override_sals_choice():
 
 
 def test_sal_marker_keeps_a_card_his():
-    assert not is_agents('Backlog', {'Status': SAL}, 'Status') and not is_agents(None, {'Priority': SAL}, 'Priority')
+    assert not is_agents('Backlog', {'Status': SAL}, 'Status') and not is_agents('Low', {'Priority': SAL}, 'Priority')
+
+
+def test_clearing_a_field_hands_the_card_back():
+    # Sal, October 27, 2026: drag a card to "No Status" (or clear its Priority) to give it back to the agent.
+    assert is_agents(None, {'Status': SAL}, 'Status') and is_agents(None, {'Priority': SAL}, 'Priority')
+    ch = plan_changes([card('A', labels={'important'})], triage({'A': 'do'}), {'cards': {'A': {'Status': SAL, 'Priority': SAL}}}, 3, 10)
+    assert changed(ch, 'Status') == {'A': 'Today'} and changed(ch, 'Priority') == {'A': 'High'}
 
 
 def test_ownership_marks_record_baselines_and_sals_cards():

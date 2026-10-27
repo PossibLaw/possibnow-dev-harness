@@ -81,6 +81,8 @@ His day has two moments:
    and runbook). Runs that end after it appear the next morning.
 10. **One daily post:** the nightly issue sync stops posting its summary to Slack; the summary is still written to
     its file. The morning message is the only daily Slack post (Stop-hook notices stay as they are).
+11. **Handing a card back** (decided October 27, 2026, after review): an empty column or priority is always the
+    agent's. Dragging a card to "No Status", or clearing its Priority, gives it back; the next night plans it again.
 
 ## Builder's calls (made during brainstorming; Sal can overturn)
 

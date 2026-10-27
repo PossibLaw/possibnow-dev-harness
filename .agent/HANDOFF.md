@@ -40,8 +40,8 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
   4. A morning launchd job at the time recorded privately.
   5. `sync-issues-to-ticktick.py --purge`, then `--purge --yes` after Sal confirms the count.
   6. Update the private runbook and TASKS rows.
-- Decision pending (Sal): how he hands a card back to the agent once he has moved it. A: the "No Status" column or a
-  cleared Priority (recommended). B: `plan-board.py --release`. C: leave as is. Recorded in PR #58.
+- Decided October 27, 2026 (Sal approved option A): dragging a card to "No Status" or clearing its Priority hands
+  it back to the agent. This is in PR #58, and Sal approved merging it.
 - Deferred minors from the PR #58 review are listed in its body: Sal's untriaged cards and the 10-card cap, merged
   overnight PRs, the field-value limit, reopened issues in Done and GitHub's built-in board workflows, wording when
   the board is unreadable, anchoring the TickTick marker, naming a blocked night, and the `--answered` race.
@@ -91,7 +91,7 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-0. Sal reviews draft PR #58 and answers the hand-back decision; after merge, run the rollout (Task 9) with him.
+0. After PR #58 merges, run the rollout (Task 9) with Sal. Next: issue "Orca mobile: give Claude the worktree's linked issue at session start" (Sal approved building it).
 1. After the next nightly run: read its reports and log; confirm auto-22 was removed and that any new run's notice arrived.
 2. Sal answers the morning brief (H-TR02); apply with the answering-the-morning-brief skill.
 3. Add Builder articles to the freshness watch (H-FR02).
