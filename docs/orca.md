@@ -88,6 +88,11 @@ When a session opens with only a GitHub issue link (Orca worktrees start this wa
 .agent/HANDOFF.md first, then treat the link as the work to start. Ask before assuming.
 ```
 
+The Orca mobile app starts the agent without the issue link. The harness's SessionStart hook
+(`scripts/guardrails/session-issue-link.py`) closes that gap for Claude Code. When a session starts in a worktree linked to an
+issue, it asks `orca worktree current --json` for the link and adds it to the session's context. A one-word first message
+such as "go" then starts the same work. Only the link is given; outside a linked worktree the hook adds nothing.
+
 Worktrees created from the CLI are different: `orca worktree create --prompt "<text>"`
 does deliver the text as the agent's first prompt. The nightly dispatcher uses that path.
 

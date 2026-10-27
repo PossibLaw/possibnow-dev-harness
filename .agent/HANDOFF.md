@@ -10,12 +10,14 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.3.4 on main; board and short morning brief in review (October 27, 2026)
+# Current Handoff — v4.3.4 on main; board and morning brief merged, rollout next; linked-issue hook in review (October 27, 2026)
 
 ## Status
 Main is at v4.3.4 plus the auto-cleanup change (PR #49, unreleased; the dispatcher runs from the main checkout, so it is
-live without a release). In review: "A board and a short morning brief instead of TickTick" (draft PR #58, branch
-`how-i-do-work`, for Sal's issue "How I do work", #56). The existing GitHub Project becomes Sal's board with seven
+live without a release). Merged October 27, 2026: "A board and a short morning brief instead of TickTick" (PR #58,
+for Sal's issue "How I do work", #56; the issue stays open until the rollout is done). In review: the linked-issue
+SessionStart hook for the issue "Orca mobile: give Claude the worktree's linked issue at session start" (#59, branch
+`feat/linked-issue-at-start`). The existing GitHub Project becomes Sal's board with seven
 columns and an agent-suggested Priority. `scripts/plan-board.py` proposes Today and This week each night and leaves
 Sal's own moves alone. `scripts/morning-brief.py` posts one short Slack message. TickTick is retired, and the
 mirror's tasks are purged on request. Design and plan:
@@ -31,7 +33,7 @@ First full autonomous run: Trazomo "Claude Code content update" (worktree auto-2
 follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight.
 
 ## Unresolved work
-- Board and morning brief (draft PR #58, issue #56): Sal reviews and merges. Then comes the rollout, Task 9 of the plan,
+- Board and morning brief (PR #58 merged, issue #56): the rollout is next. It is Task 9 of the plan,
   each outward step confirmed with Sal:
   1. `plan-board.py --setup` creates the fields; Sal fixes the Status options and adds a Board view in GitHub's UI.
   2. Dry runs of both scripts; Sal reads the message.
@@ -91,7 +93,9 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-0. After PR #58 merges, run the rollout (Task 9) with Sal. Next: issue "Orca mobile: give Claude the worktree's linked issue at session start" (Sal approved building it).
+0. Run the board rollout (Task 9) with Sal, starting with a pull of the main checkout and `plan-board.py --setup`. Sal
+   reviews the linked-issue hook PR (issue #59); after merge the installed plugin needs `claude plugin update`, which
+   ships it with the next release.
 1. After the next nightly run: read its reports and log; confirm auto-22 was removed and that any new run's notice arrived.
 2. Sal answers the morning brief (H-TR02); apply with the answering-the-morning-brief skill.
 3. Add Builder articles to the freshness watch (H-FR02).
