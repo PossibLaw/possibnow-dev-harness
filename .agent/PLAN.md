@@ -10,11 +10,11 @@ memory:
   tags: [plan]
 ---
 
-# Current (October 27, 2026): v4.3.4 on main; board and short morning brief in review
+# Current (October 27, 2026): v4.3.5 published; board and short morning brief live
 
-In review: draft PR #58 for Sal's issue "How I do work" (#56). Design `docs/superpowers/specs/2026-10-27-how-i-do-work-design.md`;
-plan with tasks, tests and the rollout (Task 9) `docs/superpowers/plans/2026-10-27-how-i-do-work.md`. Tasks 1 to 8 are done,
-test-first (427 tests pass, verify-pack DONE). Task 9 runs with Sal after merge.
+Shipped in v4.3.5: PR #58 for Sal's issue "How I do work" (#56), PR #60 for Orca mobile (#59); rollout (Task 9) done October 27. Design `docs/superpowers/specs/2026-10-27-how-i-do-work-design.md`;
+plan with tasks, tests and the rollout (Task 9) `docs/superpowers/plans/2026-10-27-how-i-do-work.md`. Tasks 1 to 9 are done,
+test-first (434 tests pass, verify-pack DONE). Open: the first live night and morning, then close #56.
 
 
 Shipped October 26 and 27, 2026 (PRs #35 to #49, releases v4.3.1 to v4.3.4): autonomous runs work end to end (start,
