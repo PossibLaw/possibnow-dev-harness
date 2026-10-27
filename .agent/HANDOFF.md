@@ -14,7 +14,8 @@ memory:
 
 ## Status
 v4.3.3 published October 26, 2026 (tag by Sal on 7cf243d, before the version bump: files installed from that tag report
-4.3.2). Branch `release/4.3.3` moves version and pins to 4.3.3 on main; marketplace entry and plugin update follow.
+4.3.2). Main moved to 4.3.3 (PR #45); smoke passed; marketplace entry 4.3.3 merged; user and Trazomo plugin installs on 4.3.3.
+Receipt: `.agent/RELEASE-4.3.3.md`.
 
 Branch `feat/issue-triage` (October 26, 2026): nightly triage with Sal's approved shape: a Slack brief with the top five
 decisions, agent-set urgent/important labels that Sal can override, a Monday sweep of finished issues, and a first pass run
