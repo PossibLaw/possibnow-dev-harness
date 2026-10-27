@@ -118,6 +118,10 @@ session switches branch. The first prompt is the dispatcher's. Type anything int
 pane and the guard is released for that worktree; the session then follows the normal
 ask-first rules, and a notice says so.
 
+Each run appears under its own repository in the sidebar (the dispatcher creates it with no parent). When the agent
+finishes its turn, a Stop hook posts to Slack at once: the issue and its pull request when one exists, or a note that the
+run stopped without a pull request, quoting the agent's last message.
+
 A worktree stops counting against the dispatcher's caps once its linked issue is closed.
 When you are done with it, archive it from the Orca sidebar, or remove it from a terminal
 with `orca worktree rm --worktree path:<worktree path>`. Removing deletes the checkout

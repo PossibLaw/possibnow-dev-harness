@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.3.4 — 2026-10-27 — Autonomous runs: under their own repo, and a notice the moment they finish
+
+Bootstrap and pack pinned to v4.3.4.
+
+- **Completion notice**: a new Stop hook (`scripts/guardrails/autonomy-notify.py`) runs only in dispatcher-marked worktrees that no person has taken over. When the agent ends its turn it posts to Slack straight away. If a pull request exists, the post names the issue and the pull request, ready for review. If not, it says the run stopped without one and quotes the agent's last message. Each outcome is announced once, and a failed post is retried at the next stop. It never blocks the agent. The dispatcher's marker now carries the issue title. Six tests, red first.
+- **Own repo in Orca**: the dispatcher creates worktrees with `--no-parent`. Before, Orca inferred the runner's working folder (~/Aleph) as the parent and filed every run under Aleph. One test.
+
 ## 4.3.3 — 2026-10-26 — Work orders across repos, nightly triage, morning brief
 
 Bootstrap and pack pinned to v4.3.3. The v4.3.3 tag was created on 7cf243d, the merge before this version bump, so files installed from that tag still report 4.3.2. The plugin installs from main and reports 4.3.3.

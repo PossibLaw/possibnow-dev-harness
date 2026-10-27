@@ -13,6 +13,10 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `feat/auto-runs-own-repo-and-notify` (October 27, 2026): Sal found last night's run (auto-22, Trazomo PR #865) filed
+under Aleph and announced only a day later. Fixed: `--no-parent` on create (auto-22 moved by hand) and a Stop-hook Slack
+notice the moment a run finishes or stalls. Cut as 4.3.4 (version bumped in the same PR, tag after merge).
+
 v4.3.3 published October 26, 2026 (tag by Sal on 7cf243d, before the version bump: files installed from that tag report
 4.3.2). Main moved to 4.3.3 (PR #45); smoke passed; marketplace entry 4.3.3 merged; user and Trazomo plugin installs on 4.3.3.
 Receipt: `.agent/RELEASE-4.3.3.md`.
