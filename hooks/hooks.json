@@ -60,6 +60,16 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guardrails/session-issue-link.py"
+          }
+        ]
+      }
     ]
   }
 }
