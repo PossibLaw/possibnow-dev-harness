@@ -10,6 +10,16 @@ memory:
   tags: [plan]
 ---
 
+# Current (October 27, 2026): v4.3.4 on main; nothing in progress
+
+Shipped October 26 and 27, 2026 (PRs #35 to #49, releases v4.3.1 to v4.3.4): autonomous runs work end to end (start,
+guard, takeover, notice, own-repo placement, cleanup); the issue sync reports status by name and tracks issues started
+anywhere; the content-freshness engine and the nightly triage with the morning brief are live. Each change was test-first;
+acceptance evidence is in the PR bodies and the release receipts. The sections below are the per-change plans, kept as
+history; their acceptance cases all pass.
+
+Open work and next actions live in `.agent/TASKS.md` (rows H-MIG01, H-FR02, H-FR03, H-TR02, H-CDX01) and `.agent/HANDOFF.md`.
+
 # Unreleased: sticky autonomous-run marker with human takeover (GR01 follow-up)
 
 Baseline: main 63364ef (v4.3.1 published). Branch: feat/autonomy-takeover-marker.
