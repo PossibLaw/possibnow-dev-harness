@@ -28,6 +28,8 @@ method = args[args.index("--method") + 1] if "--method" in args else "GET"
 full = next(a for a in args[1:] if not a.startswith("-") and a != method)
 path, q = full.split("?")[0], {k: v[0] for k, v in parse_qs(full.split("?")[1] if "?" in full else "").items()}
 body = json.load(sys.stdin) if "--input" in args else {}
+if world.get("fail_all"):
+    print("GitHub is down", file=sys.stderr); save(); sys.exit(1)
 repo = "/".join(path.split("/")[1:3])
 issues = world.setdefault("issues", {}).setdefault(repo, [])
 def page(items):
@@ -204,3 +206,26 @@ def test_a_classifier_failure_changes_no_labels_and_says_so(env):
     assert res.returncode == 0
     assert 'urgent' not in labels(env, 'Owner/aleph', 1)
     assert 'classifier' in env['brief'].read_text().lower()
+
+
+def test_state_keeps_each_decision_for_the_board(env):
+    assert run(env).returncode == 0
+    issues = json.loads(env['state'].read_text())['issues']
+    assert issues['Owner/aleph#1']['decision']['question'] == 'Which newsletter platform?'
+    assert issues['Owner/aleph#1']['decision']['recommend'] == 'A'
+    assert issues['Owner/aleph#2']['decision'] is None
+
+
+def test_state_says_when_the_classifier_failed(env):
+    w = world(env); w['classifier_fails'] = True; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is False
+    w['classifier_fails'] = False; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is True
+
+
+def test_all_repos_failing_is_not_ok(env):
+    w = world(env); w['fail_all'] = True; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is False

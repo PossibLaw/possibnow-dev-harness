@@ -3,13 +3,19 @@
 
 Usage:
     sync-issues-to-ticktick.py --config PATH [--dry-run] [--state PATH]
+    sync-issues-to-ticktick.py --config PATH --purge [--yes] [--dry-run]
 
 Each open issue carrying the configured label becomes one task in the configured list
 (created when missing). The task title is the issue title; the content carries a marker
 `agent-task:<repo>#<n>` and the issue link; `priority` comes from the issue labels through
 the config's `priority` map (keys are label names plus `default`; TickTick values 0 none,
 1 low, 3 medium, 5 high, which its Eisenhower matrix reads as quadrants). Closed issues
-complete their task. Nothing is deleted.
+complete their task. Nothing is deleted, except by `--purge --yes`.
+
+`--purge` (Sal, October 27, 2026: TickTick is retired; delete what the mirror made so he does not have
+to): counts the open tasks in the list whose content carries the marker, and the other tasks it leaves
+alone. Only with `--yes` (and not `--dry-run`) does it delete the marked ones. Completed tasks are not
+listed by the open API's project data call, so they are left and the output says so.
 
 Config (JSON): {"list": "Agent tasks", "label": "agent-task",
   "priority": {"urgent": 5, "default": 3, "maintenance": 0},
@@ -74,6 +80,10 @@ class TickTick:
         self.writes += 1
         return self.call("POST", f"/open/v1/task/{task['id']}", {"id": task["id"], "projectId": task["projectId"], **fields})
 
+    def delete(self, task: dict):
+        self.writes += 1
+        return self.call("DELETE", f"/open/v1/project/{task['projectId']}/task/{task['id']}")
+
     def complete(self, task: dict):
         self.writes += 1
         return self.call("POST", f"/open/v1/project/{task['projectId']}/task/{task['id']}/complete")
@@ -120,11 +130,38 @@ def content_for(repo_name: str, issue: dict) -> str:
     return f"agent-task:{repo_name}#{issue['number']}\n{issue['html_url']}\nSynced from GitHub; edits here are not written back."
 
 
+def purge(tt: TickTick, list_name: str, confirmed: bool) -> int:
+    try:
+        pid = next((p["id"] for p in tt.call("GET", "/open/v1/project") if p.get("name") == list_name), None)
+        existing = tt.open_tasks(pid) if pid else []
+    except RuntimeError as exc:
+        print(f"ticktick purge: {exc}")
+        return 0
+    marked = [t for t in existing if MARKER_RE.search(t.get("content") or "")]
+    print(f"ticktick purge: {len(marked)} mirrored tasks in \"{list_name}\"; {len(existing) - len(marked)} other tasks left alone")
+    if not confirmed:
+        print("Nothing deleted; rerun with --purge --yes to delete the mirrored tasks.")
+        return 0
+    failed = []
+    for t in marked:
+        try:
+            tt.delete(t)
+        except RuntimeError as exc:
+            failed.append(str(exc))
+    print(f"deleted {len(marked) - len(failed)}, failed {len(failed)}")
+    print("Completed mirrored tasks are not listed by the TickTick open API and were left as they are.")
+    for f in failed[:5]:
+        print(f"- {f}")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", required=True, type=Path)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--state", type=Path, default=Path.home() / ".agents" / "ticktick-state.json")
+    ap.add_argument("--purge", action="store_true", help="count, and with --yes delete, the tasks this mirror created")
+    ap.add_argument("--yes", action="store_true", help="confirm --purge deletes")
     args = ap.parse_args(argv)
     try:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
@@ -137,6 +174,8 @@ def main(argv=None) -> int:
         print("BLOCKED: TICKTICK_TOKEN is not set (load it from the keychain item named in the private config)", file=sys.stderr)
         return 2
     tt = TickTick(token, os.environ.get("TICKTICK_BASE_URL", "https://api.ticktick.com"), args.dry_run)
+    if args.purge:
+        return purge(tt, list_name, args.yes and not args.dry_run)
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     created = updated = completed = would = 0
     errors: list[str] = []

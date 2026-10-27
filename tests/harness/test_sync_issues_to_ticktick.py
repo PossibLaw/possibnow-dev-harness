@@ -63,6 +63,13 @@ class FakeTickTick(BaseHTTPRequestHandler):
             tid = self.path.split("/")[4]; s["tasks"][tid].update(body); return self._send(200, s["tasks"][tid])
         self._send(404, {})
 
+    def do_DELETE(self):
+        s = self.store; s["calls"].append(("DELETE", self.path))
+        parts = self.path.split("/")
+        if len(parts) == 7 and parts[5] == "task" and parts[6] in s["tasks"]:
+            del s["tasks"][parts[6]]; return self._send(200, {})
+        self._send(404, {})
+
 
 @pytest.fixture
 def api():
@@ -187,3 +194,31 @@ def test_urgent_and_important_labels_map_to_the_four_eisenhower_quadrants():
     assert m.priority_for(issue("agent-task", "maintenance", "important"), pmap) == 3, 'important outranks the maintenance floor'
     old = {"urgent": 5, "default": 3, "maintenance": 0}
     assert m.priority_for(issue("agent-task", "urgent"), old) == 5 and m.priority_for(issue("agent-task"), old) == 3, 'old maps keep working'
+
+
+def seed_purge():
+    FakeTickTick.store["projects"].append({"id": "p2", "name": "Agent tasks"})
+    for i, content in enumerate(["agent-task:alpha#1\nlink", "agent-task:alpha#2\nlink", "agent-task:beta#7\nlink", "Buy milk", "Call the bank"]):
+        FakeTickTick.store["tasks"][f"s{i}"] = {"id": f"s{i}", "projectId": "p2", "title": f"t{i}", "content": content, "status": 0}
+
+
+def test_purge_without_yes_only_counts(world):
+    seed_purge()
+    res = run(world, '--purge')
+    assert res.returncode == 0, res.stderr
+    assert 'ticktick purge: 3 mirrored tasks in "Agent tasks"; 2 other tasks left alone' in res.stdout
+    assert len(tasks()) == 5 and not [c for c in FakeTickTick.store["calls"] if c[0] == "DELETE"]
+
+
+def test_purge_yes_deletes_only_marked_tasks(world):
+    seed_purge()
+    res = run(world, '--purge', '--yes')
+    assert res.returncode == 0, res.stderr
+    assert sorted(t["content"] for t in tasks()) == ["Buy milk", "Call the bank"]
+    assert 'deleted 3, failed 0' in res.stdout and 'completed' in res.stdout.lower()
+
+
+def test_purge_dry_run_deletes_nothing(world):
+    seed_purge()
+    res = run(world, '--purge', '--yes', '--dry-run')
+    assert res.returncode == 0 and len(tasks()) == 5

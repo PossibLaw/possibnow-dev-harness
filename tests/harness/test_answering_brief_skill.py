@@ -24,3 +24,10 @@ def test_skill_opts_in_only_what_the_dispatcher_would_accept_and_never_touches_s
     assert 'auto-ok' in text and 'dispatch-auto-issues.py' in text and '--dry-run' in text
     assert 'urgent' in text and 'important' in text and 'override' in text.lower()
     assert 'names, not numbers' in text.lower() or 'by name' in text.lower()
+
+
+def test_skill_returns_answered_cards_to_backlog():
+    # Sal, October 27, 2026: decisions sit in the board's "Needs your decision" column; an answered one goes back
+    # to Backlog so the next plan can pick it up.
+    text = SKILL.read_text()
+    assert 'plan-board.py' in text and '--answered' in text

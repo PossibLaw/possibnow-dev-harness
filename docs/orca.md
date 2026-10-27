@@ -129,6 +129,23 @@ When you are done with it, archive it from the Orca sidebar, or remove it from a
 with `orca worktree rm --worktree path:<worktree path>`. Removing deletes the checkout
 folder but keeps the branch, so push or merge first. Closing the terminal tab does neither.
 
+### The board and the morning brief
+
+Open issues sit on a GitHub Project board you can keep open beside Orca, on a laptop or a phone. Columns, left to
+right: Backlog, Needs your decision, This week, Today, Being worked on, Needs your review, Done.
+
+- Each night, after triage, `scripts/plan-board.py` gives every card a Priority (Urgent, High, Medium, Low, from the
+  `urgent` and `important` labels) with the agent's reason in `Why`, puts decisions in Needs your decision with the
+  question in `Decision`, and proposes Today and This week (at most `plan.total` cards, `plan.today` of them today).
+- Drag cards or change a priority whenever you like: anything you set is yours, and the agent never changes it back.
+  To give a card back to the agent, drag it to "No Status" (or clear its Priority); the next night plans it again.
+- In the morning, `scripts/morning-brief.py` moves cards that changed by themselves (an open linked pull request goes
+  to Needs your review, a closed issue to Done, an autonomous run the dispatcher started to Being worked on), then
+  posts one short Slack message: what finished overnight, at most ten cards (Today first), a count of decisions and
+  stale issues, and the board link.
+- First time: `scripts/plan-board.py --config <private config> --setup` creates the fields and prints the steps only
+  you can do in GitHub (the Status options, and a Board view sorted by Priority).
+
 ## 6. What not to run in a worktree
 
 A worktree holds a snapshot of any `--clone`d data directory. Jobs that write to that

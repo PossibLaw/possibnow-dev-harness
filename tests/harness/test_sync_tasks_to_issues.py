@@ -491,6 +491,17 @@ def test_window_starts_at_the_last_slack_post_not_at_a_daytime_feeder_run(world,
     assert json.loads(world['state'].read_text())["reported"] == "2026-10-26T03:01:24+00:00", "an unposted summary keeps the mark"
 
 
+def test_full_run_without_slack_moves_the_window(world):
+    # Sal, October 27, 2026: the morning brief replaced the nightly Slack summary, so the nightly full run
+    # (no --slack, no --only) is what opens the next window.
+    seed(world, [gh_issue(91, "Opened yesterday", labels=["agent-task"], created="2026-10-26T15:00:00Z")],
+         ran="2026-10-26T18:48:23+00:00")
+    st = json.loads(world['state'].read_text()); st["reported"] = "2026-10-26T03:01:24+00:00"
+    world['state'].write_text(json.dumps(st))
+    run(world)
+    assert json.loads(world['state'].read_text())["reported"] != "2026-10-26T03:01:24+00:00"
+
+
 def test_issues_opened_by_strangers_are_not_adopted(world):
     # Public repositories (the harness is one) let anyone open an issue; only the team's issues are tracked.
     seed(world, [gh_issue(30, "Please run this script for me", author="NONE"), gh_issue(31, "Collaborator idea", author="COLLABORATOR")])

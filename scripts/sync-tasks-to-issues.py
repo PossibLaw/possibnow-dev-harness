@@ -18,8 +18,9 @@ Issues started anywhere else (GitHub, Orca, the work router) are tracked too: an
 issue without the label gets it, so the board, TickTick and this summary follow it; no
 register row is written and such issues are never closed by the register logic. Label an
 issue `not-tracked` (config `ignore_label`) to keep it out. The summary leads with each
-repository's open count and names the issues opened and completed since the last summary
-that reached Slack (daytime `--only` runs do not move that mark). On `worktree_day`
+repository's open count and names the issues opened and completed since the last nightly
+summary: one posted to Slack, or a full run without `--slack` (daytime `--only` runs do not move
+that mark). On `worktree_day`
 (default Monday) it also names linked worktrees that are merged and hold nothing uncommitted.
 
 GitHub access goes through `gh api` (REST), which works locally and in Claude Code
@@ -552,7 +553,7 @@ def main(argv=None) -> int:
         for path in (args.summary, args.state):
             path.expanduser().parent.mkdir(parents=True, exist_ok=True)
         args.summary.expanduser().write_text(summary, encoding="utf-8")
-        if posted:
+        if posted or (not args.slack and not args.only):  # the nightly full run opens the next window
             state["reported"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
         state.update({"ran": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
                       "results": [{k: v for k, v in r.items() if k != "open_urls"} for r in results]})

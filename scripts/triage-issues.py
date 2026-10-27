@@ -18,7 +18,9 @@ Each run:
 3. sets the `urgent` and `important` labels, which TickTick's Eisenhower map turns into quadrants.
    A label Sal set before the first triage, or changed since, is his and is never touched again;
 4. writes the brief: the top five decisions (urgent and important first) as one numbered list, what
-   only Sal can do, what agents could take, what looks finished, and what looks stale;
+   only Sal can do, what agents could take, what looks finished, and what looks stale. The state file
+   keeps each issue's outcome, reason and decision, and whether the classifier answered, for the
+   board planner (scripts/plan-board.py);
 5. on `sweep_day` (default Monday) closes issues the classifier calls done AND a merged pull request
    mentions, with a comment naming that pull request. Stale and duplicate issues are only proposed.
 A classifier failure changes no labels and says so in the brief. `--dry-run` writes nothing.
@@ -152,7 +154,7 @@ def render_brief(items: list[dict], size: int, today: str, closed: list[str], er
     judged = [i for i in items if i.get("verdict")]
     by = {o: sorted([i for i in judged if i["verdict"]["outcome"] == o], key=rank) for o in OUTCOMES}
     lines = [f"# Morning brief: {today}", "",
-             f"Reply in any Claude session with your picks, for example \"brief 1A 2B\". Labels, TickTick quadrants and closes follow your answers.", ""]
+             f"Reply in any Claude session with your picks, for example \"brief 1A 2B\". Labels, the board and closes follow your answers.", ""]
     decisions = []
     top = by["decide"][:size]
     if top:
@@ -256,7 +258,7 @@ def main(argv=None) -> int:
         if not v:
             continue
         want = {l: bool(v.get(l)) for l in MANAGED}
-        rec.update(outcome=v["outcome"], why=v.get("why", ""), judged=now.isoformat(timespec="seconds"))
+        rec.update(outcome=v["outcome"], why=v.get("why", ""), decision=v.get("decision") if v["outcome"] == "decide" else None, judged=now.isoformat(timespec="seconds"))
         for l in MANAGED:
             if l in rec["pinned"] or (l in it["labels"]) == want[l]:
                 continue
@@ -301,7 +303,7 @@ def main(argv=None) -> int:
     if not args.dry_run:
         for p in (state_path, args.brief.expanduser()):
             p.parent.mkdir(parents=True, exist_ok=True)
-        state.update(ran=now.isoformat(timespec="seconds"), decisions=decisions)
+        state.update(ran=now.isoformat(timespec="seconds"), decisions=decisions, classifier_ok=bool(verdicts) or not (items or errors))
         state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
         args.brief.expanduser().write_text(brief, encoding="utf-8")
     return 0

@@ -10,11 +10,16 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.3.4 on main; autonomous runs, triage and content freshness live (October 27, 2026)
+# Current Handoff — v4.3.4 on main; board and short morning brief in review (October 27, 2026)
 
 ## Status
 Main is at v4.3.4 plus the auto-cleanup change (PR #49, unreleased; the dispatcher runs from the main checkout, so it is
-live without a release). Nothing is in progress. Releases v4.3.1 to v4.3.4 were published October 26 and 27, 2026 (tags
+live without a release). In review: "A board and a short morning brief instead of TickTick" (draft PR #58, branch
+`how-i-do-work`, for Sal's issue "How I do work", #56). The existing GitHub Project becomes Sal's board with seven
+columns and an agent-suggested Priority. `scripts/plan-board.py` proposes Today and This week each night and leaves
+Sal's own moves alone. `scripts/morning-brief.py` posts one short Slack message. TickTick is retired, and the
+mirror's tasks are purged on request. Design and plan:
+`docs/superpowers/specs/2026-10-27-how-i-do-work-design.md`, `docs/superpowers/plans/2026-10-27-how-i-do-work.md`. Releases v4.3.1 to v4.3.4 were published October 26 and 27, 2026 (tags
 and GitHub Releases by Sal; receipts `.agent/RELEASE-4.3.1.md` to `.agent/RELEASE-4.3.4.md`). The marketplace entry is 4.3.4; the installed plugin and the Codex guard copy
 were refreshed from 4.3.4.
 
@@ -26,6 +31,20 @@ First full autonomous run: Trazomo "Claude Code content update" (worktree auto-2
 follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight.
 
 ## Unresolved work
+- Board and morning brief (draft PR #58, issue #56): Sal reviews and merges. Then comes the rollout, Task 9 of the plan,
+  each outward step confirmed with Sal:
+  1. `plan-board.py --setup` creates the fields; Sal fixes the Status options and adds a Board view in GitHub's UI.
+  2. Dry runs of both scripts; Sal reads the message.
+  3. An Aleph nightly-runner PR: add the planner after triage, drop TickTick, drop `--slack` from the issue sync, stop
+     posting the triage brief.
+  4. A morning launchd job at the time recorded privately.
+  5. `sync-issues-to-ticktick.py --purge`, then `--purge --yes` after Sal confirms the count.
+  6. Update the private runbook and TASKS rows.
+- Decided October 27, 2026 (Sal approved option A): dragging a card to "No Status" or clearing its Priority hands
+  it back to the agent. This is in PR #58, and Sal approved merging it.
+- Deferred minors from the PR #58 review are listed in its body: Sal's untriaged cards and the 10-card cap, merged
+  overnight PRs, the field-value limit, reopened issues in Done and GitHub's built-in board workflows, wording when
+  the board is unreadable, anchoring the TickTick marker, naming a blocked night, and the `--answered` race.
 - Customized installed projects still need their own reviewed migration (TASKS H-MIG01; Sal). Next: list them and
   review each. Live client compliance and semantic optimize apply remain UNCONFIRMED (carried from v4.2.1).
 - PossibNow Builder articles are not yet in the freshness watch list (TASKS H-FR02; Agent). Next: confirm the current
@@ -61,6 +80,9 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
   model/effort/global/permission/learning/Scale changes, disposable fixtures only.
 
 ## Evidence
+- Branch `how-i-do-work`: `uvx --with pytest pytest -q` gave 427 passed, and `scripts/verify-pack.sh` gave DONE.
+  Opus whole-branch review: 1 Critical and 6 Important findings, all fixed with failing-first tests, except the
+  hand-back decision. A live read-only check read 163 cards from the real board.
 - `uvx --with pytest pytest -q`: 371 passed on main ceb6e89; `scripts/verify-pack.sh`: DONE; CI `verify` passed on every PR.
 - Release receipts: `.agent/RELEASE-4.3.1.md`, `RELEASE-4.3.2.md`, `RELEASE-4.3.3.md`, `RELEASE-4.3.4.md` (public bootstrap
   smoke from each tag, preservation and no-churn checks).
@@ -69,6 +91,7 @@ follow-up Trazomo issue #866). auto-22 is the first auto-clean candidate tonight
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
+0. After PR #58 merges, run the rollout (Task 9) with Sal. Next: issue "Orca mobile: give Claude the worktree's linked issue at session start" (Sal approved building it).
 1. After the next nightly run: read its reports and log; confirm auto-22 was removed and that any new run's notice arrived.
 2. Sal answers the morning brief (H-TR02); apply with the answering-the-morning-brief skill.
 3. Add Builder articles to the freshness watch (H-FR02).
