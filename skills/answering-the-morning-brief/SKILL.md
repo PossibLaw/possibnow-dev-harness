@@ -7,9 +7,10 @@ metadata:
 
 # Answering the morning brief
 
-The nightly triage (`scripts/triage-issues.py`) posts a brief to Slack: Sal's top decisions as one
-numbered list, what only he can do, what agents could take, and what looks stale. He answers in a
-Claude session. This skill turns those answers into changes on GitHub, and reports back by name, not
+The nightly triage (`scripts/triage-issues.py`) writes a brief: Sal's top decisions as one numbered
+list, what only he can do, what agents could take, and what looks stale. The short morning Slack message
+(`scripts/morning-brief.py`) counts the decisions and stale issues; the decisions also sit in the board's
+"Needs your decision" column. He answers in a Claude session. This skill turns those answers into changes on GitHub, and reports back by name, not
 numbers.
 
 ## Read what was asked
@@ -25,6 +26,8 @@ numbers.
   "Sal decided on <date>: <option text>." Then act on what the option says:
   - Drop, close or won't do: close the issue as not planned.
   - Hand the work to an agent: treat it like "opt in" below.
+  - Every pick that leaves the issue open: move its card back to Backlog so the next nightly plan can
+    pick it up: `python3 ~/possibnow-dev-harness/scripts/plan-board.py --config ~/agent-tasks/board.json --answered <key>`.
   - Anything else: leave it open. If the issue came from a register row (its body carries the hidden
     `agent-task:` marker), the decision also belongs in that repository's `.agent/TASKS.md` row. The
     sync overwrites GitHub-side edits, so update the row through a small pull request and say so.
