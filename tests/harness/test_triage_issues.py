@@ -204,3 +204,20 @@ def test_a_classifier_failure_changes_no_labels_and_says_so(env):
     assert res.returncode == 0
     assert 'urgent' not in labels(env, 'Owner/aleph', 1)
     assert 'classifier' in env['brief'].read_text().lower()
+
+
+def test_state_keeps_each_decision_for_the_board(env):
+    assert run(env).returncode == 0
+    issues = json.loads(env['state'].read_text())['issues']
+    assert issues['Owner/aleph#1']['decision']['question'] == 'Which newsletter platform?'
+    assert issues['Owner/aleph#1']['decision']['recommend'] == 'A'
+    assert issues['Owner/aleph#2']['decision'] is None
+
+
+def test_state_says_when_the_classifier_failed(env):
+    w = world(env); w['classifier_fails'] = True; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is False
+    w['classifier_fails'] = False; env['world'].write_text(json.dumps(w))
+    run(env)
+    assert json.loads(env['state'].read_text())['classifier_ok'] is True
