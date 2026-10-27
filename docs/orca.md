@@ -122,7 +122,9 @@ Each run appears under its own repository in the sidebar (the dispatcher creates
 finishes its turn, a Stop hook posts to Slack at once: the issue and its pull request when one exists, or a note that the
 run stopped without a pull request, quoting the agent's last message.
 
-A worktree stops counting against the dispatcher's caps once its linked issue is closed.
+A worktree stops counting against the dispatcher's caps once its linked issue is closed. The nightly run then removes it
+when nothing would be lost: idle for six hours, nothing uncommitted, and its work on the default branch (or its pull request
+merged). The branch is kept and the report names each removal; anything else is listed as kept, with the reason.
 When you are done with it, archive it from the Orca sidebar, or remove it from a terminal
 with `orca worktree rm --worktree path:<worktree path>`. Removing deletes the checkout
 folder but keeps the branch, so push or merge first. Closing the terminal tab does neither.

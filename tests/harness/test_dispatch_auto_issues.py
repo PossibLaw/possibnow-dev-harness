@@ -41,7 +41,7 @@ elif "/issues/" in path and path.endswith("/comments") and method == "POST":
 elif path.count("/") == 4 and "/issues/" in path and method == "GET":
     repo = "/".join(path.split("/")[1:3]); num = int(path.rsplit("/", 1)[1])
     if num in world.get("closed", {}).get(repo, []):
-        out = {"number": num, "state": "closed"}
+        out = {"number": num, "state": "closed", "title": world.get("titles", {}).get(str(num), f"issue {num}")}
     elif any(i["number"] == num for i in world.get("issues", {}).get(repo, [])):
         out = {"number": num, "state": "open"}
     else:
@@ -75,6 +75,14 @@ elif args[:2] == ["worktree", "create"]:
         subprocess.run(["git", "init", "-q", "-b", name, wt_path], check=True)
     world.setdefault("worktrees", []).append({"displayName": name, "branch": "refs/heads/" + name, "linkedIssue": issue, "isArchived": False, "path": wt_path, "repoPath": repo})
     out = {"ok": True, "result": {"worktree": {"path": wt_path, "branch": name}} if not world.get("create_without_path") else {}}
+elif args[:2] == ["worktree", "rm"]:
+    sel = args[args.index("--worktree") + 1]; path = sel.split(":", 1)[1]
+    import shutil, subprocess
+    main = next(w["repoPath"] for w in world["worktrees"] if w["path"] == path)
+    subprocess.run(["git", "-C", main, "worktree", "remove", "--force", path], check=True, capture_output=True)
+    world["worktrees"] = [w for w in world["worktrees"] if w["path"] != path]
+    world.setdefault("removed", []).append(path)
+    out = {"ok": True, "result": {"removed": True}}
 else:
     print("fake orca: unhandled", args, file=sys.stderr); save(); sys.exit(1)
 save(); print(json.dumps(out))
@@ -350,3 +358,71 @@ def module():
     mod = importlib.util.module_from_spec(spec); sys.modules[spec.name] = mod; spec.loader.exec_module(mod)
     return mod
 
+
+
+
+# ---- auto-clean finished autonomous worktrees (Sal, October 27, 2026: option A) ----------------
+
+def _git(cwd, *args):
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.invalid", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.invalid"}
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True, env=env).stdout.strip()
+
+
+@pytest.fixture
+def finished(world, tmp_path):
+    import time
+    origin, main = tmp_path / "origin.git", tmp_path / "alpha"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    _git(tmp_path, "clone", "-q", str(origin), str(main))
+    _git(main, "commit", "-q", "--allow-empty", "-m", "init"); _git(main, "push", "-q", "origin", "main")
+    trees = {}
+    for n in (1, 6, 7, 8, 9):
+        wt = tmp_path / f"auto-{n}"
+        _git(main, "worktree", "add", "-q", "-b", f"auto-{n}", str(wt))
+        _git(wt, "commit", "-q", "--allow-empty", "-m", f"work for {n}")
+        trees[n] = wt
+    for n in (1, 7, 8):  # merged with a merge commit
+        _git(main, "merge", "-q", "--no-ff", "--no-edit", f"auto-{n}")
+    _git(main, "push", "-q", "origin", "main")
+    (trees[7] / "draft.md").write_text("not committed")
+    old = int((time.time() - 3 * 86400) * 1000); recent = int((time.time() - 600) * 1000)
+    w = read(world)
+    w["issues"]["Owner/alpha"] = [i for i in w["issues"]["Owner/alpha"] if i["number"] not in (1, 6, 7, 8, 9)]
+    w["closed"] = {"Owner/alpha": [1, 6, 7, 8, 9]}
+    w["titles"] = {"1": "Claude Code content update", "6": "Unmerged work", "7": "Uncommitted draft", "8": "Still in use", "9": "Squash merged"}
+    w["worktrees"] = [{"displayName": f"auto-{n}", "branch": f"refs/heads/auto-{n}", "linkedIssue": n, "isArchived": False, "path": str(trees[n]),
+                       "repoPath": str(main), "lastActivityAt": recent if n == 8 else old} for n in trees]
+    w["pulls"]["Owner/alpha"] = [{"number": 99, "title": "squash", "state": "closed", "merged_at": "2026-10-27T01:00:00Z", "head": {"ref": "auto-9"},
+                                  "body": "", "labels": [{"name": "agent-auto"}], "html_url": "https://github.com/Owner/alpha/pull/99"}]
+    world['path'].write_text(json.dumps(w))
+    cfg = json.loads(world['config'].read_text()); cfg['repos'][0]['path'] = str(main); world['config'].write_text(json.dumps(cfg))
+    return trees
+
+
+def test_finished_merged_clean_autonomous_worktrees_are_removed_and_named(world, finished):
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    removed = read(world).get("removed", [])
+    assert str(finished[1]) in removed and str(finished[9]) in removed, "merged (merge commit or squash PR), clean, idle: removed"
+    assert not finished[1].exists()
+    report = world['report'].read_text()
+    assert "Removed" in report and "Claude Code content update" in report and "auto-1" in report
+    assert "branch kept" in report.lower()
+
+
+def test_unfinished_work_is_never_removed_and_the_reason_is_given(world, finished):
+    run(world)
+    removed = read(world).get("removed", [])
+    for n in (6, 7, 8):
+        assert str(finished[n]) not in removed and finished[n].exists(), n
+    report = world['report'].read_text()
+    assert "Unmerged work" in report and "not merged" in report
+    assert "Uncommitted draft" in report and "uncommitted" in report
+    assert "Still in use" in report and "active" in report
+
+
+def test_dry_run_removes_nothing(world, finished):
+    res = run(world, '--dry-run')
+    assert res.returncode == 0, res.stderr
+    assert read(world).get("removed", []) == [] and finished[1].exists()
+    assert "would remove" in res.stdout.lower()

@@ -104,12 +104,50 @@ def orca_repo_paths() -> dict[str, str]:
     return {r["id"]: r["path"] for r in repos if r.get("id") and r.get("path")}
 
 
-def issue_is_closed(repo: dict, number: int) -> bool:
-    """True only when GitHub says closed; any error keeps the worktree counted (the safe side)."""
+def closed_issue(repo: dict, number: int) -> dict | None:
+    """The issue when GitHub says it is closed; None otherwise or on any error (the safe side)."""
     try:
-        return gh(f"repos/{repo['github']}/issues/{number}").get("state") == "closed"
+        issue = gh(f"repos/{repo['github']}/issues/{number}")
+        return issue if issue.get("state") == "closed" else None
     except RuntimeError:
-        return False
+        return None
+
+
+def _git(cwd: str, *args: str) -> tuple[int, str]:
+    res = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True, timeout=120)
+    return res.returncode, res.stdout.strip()
+
+
+def keep_reason(wt: dict, repo: dict, active_hours: float) -> str | None:
+    """Why a finished autonomous worktree must stay; None when it is safe to remove: idle for
+    `active_hours`, nothing uncommitted, and its commit on the default branch or its branch's pull
+    request merged (squash merges leave no ancestry)."""
+    path = wt.get("path") or (wt.get("git") or {}).get("path")
+    if not path or not Path(path).is_dir():
+        return "folder not found"
+    last = int(wt.get("lastActivityAt") or 0) / 1000
+    if dt.datetime.now().timestamp() - last < active_hours * 3600:
+        return f"active in the last {active_hours:g} hours"
+    rc, status = _git(path, "status", "--porcelain")
+    if rc != 0:
+        return "git status failed"
+    if status:
+        return "uncommitted changes"
+    main = str(Path(repo["path"]).expanduser())
+    _git(main, "fetch", "-q", "origin")
+    rc, default = _git(main, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    _, head = _git(path, "rev-parse", "HEAD")
+    if head and _git(main, "merge-base", "--is-ancestor", head, default if rc == 0 and default else "origin/main")[0] == 0:
+        return None
+    _, branch = _git(path, "branch", "--show-current")
+    owner = repo["github"].split("/")[0]
+    try:
+        pulls = gh_all(f"repos/{repo['github']}/pulls?state=closed&head={owner}:{branch}") if branch else []
+    except RuntimeError:
+        pulls = []
+    if any(p.get("merged_at") and (p.get("head") or {}).get("ref") == branch for p in pulls):
+        return None
+    return "not merged"
 
 
 def mark_autonomous(create_out: dict, name: str, repo: dict, issue: dict) -> str:
@@ -268,14 +306,30 @@ def main(argv=None) -> int:
 
     # An auto worktree counts as running until its linked issue closes; Orca keeps the worktree
     # afterwards (people keep working in the pane), and counting it would stall every later night.
-    running_auto, finished = [], []
+    # Finished ones (issue closed) are removed when nothing would be lost (Sal, October 27, 2026).
+    running_auto, finished, removed = [], [], []
+    cleanup = cfg.get("auto_cleanup", True)
+    active_hours = float(cfg.get("active_hours", 6))
     for w in running:
         name = auto_name(w)
         if not name:
             continue
         repo = repo_of(w)
-        if repo and w.get("linkedIssue") and issue_is_closed(repo, int(w["linkedIssue"])):
-            finished.append(f"{repo['name']} {name}: issue #{w['linkedIssue']} closed; archive the worktree in Orca when done with it")
+        issue = closed_issue(repo, int(w["linkedIssue"])) if repo and w.get("linkedIssue") else None
+        if issue:
+            label = f"{repo['name']} {name}: {issue.get('title') or 'issue #' + str(w['linkedIssue'])}"
+            reason = keep_reason(w, repo, active_hours) if cleanup else "auto-cleanup is off"
+            if reason:
+                finished.append(f"{label} (kept: {reason})")
+            elif args.dry_run:
+                removed.append(f"would remove {label}")
+            else:
+                path = w.get("path") or (w.get("git") or {}).get("path")
+                try:
+                    sh(["orca", "worktree", "rm", "--worktree", f"path:{path}", "--json"])
+                    removed.append(f"{label}; branch kept")
+                except RuntimeError as exc:
+                    finished.append(f"{label} (kept: remove failed, {exc})")
             continue
         running_auto.append((w, repo))
     running_issues = {((repo or {}).get("name"), w.get("linkedIssue")) for w, repo in running_auto if w.get("linkedIssue")}
@@ -345,7 +399,8 @@ def main(argv=None) -> int:
             per_repo[repo["name"]] = per_repo.get(repo["name"], 0) + 1
 
     lines.append(f"Running before this pass: {state['running_before']} auto worktree(s). Caps: {max_runs} total, {max_per_repo} per repo. {quiet_skips} issue(s) without auto-ok not listed.")
-    for head, items in (("Started", started), ("Skipped", skipped), ("Finished, still open in Orca", finished), ("Pull requests flagged", flagged_all), ("Errors", errors)):
+    for head, items in (("Started", started), ("Skipped", skipped), ("Removed (finished, merged, nothing uncommitted)", removed),
+                        ("Finished but kept", finished), ("Pull requests flagged", flagged_all), ("Errors", errors)):
         if items:
             lines.append(f"- {head}:")
             lines += [f"  - {x}" for x in items]
@@ -357,7 +412,7 @@ def main(argv=None) -> int:
         for p in (args.report, args.state):
             p.expanduser().parent.mkdir(parents=True, exist_ok=True)
         args.report.expanduser().write_text(out, encoding="utf-8")
-        state.update({"skipped": skipped, "finished": finished, "flagged": flagged_all, "errors": errors})
+        state.update({"skipped": skipped, "removed": removed, "finished": finished, "flagged": flagged_all, "errors": errors})
         args.state.expanduser().write_text(json.dumps(state, indent=1), encoding="utf-8")
     return 0
 

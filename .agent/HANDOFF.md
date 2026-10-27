@@ -13,6 +13,9 @@ memory:
 # Current Handoff — Program 1 rows ORC00, FD01, ORC01, ORC02 merged (unreleased)
 
 ## Status
+Branch `feat/auto-cleanup` (October 27, 2026): Sal chose option A, so the nightly dispatcher removes finished autonomous
+worktrees (issue closed, merged, clean, idle 6 hours; branch kept) and names them. First candidate tonight: auto-22.
+
 Branch `feat/auto-runs-own-repo-and-notify` (October 27, 2026): Sal found last night's run (auto-22, Trazomo PR #865) filed
 under Aleph and announced only a day later. Fixed: `--no-parent` on create (auto-22 moved by hand) and a Stop-hook Slack
 notice the moment a run finishes or stalls. Released as 4.3.4 (tag by Sal on e1ebb44 after the merge, versions match); smoke passed; receipt `.agent/RELEASE-4.3.4.md`.
