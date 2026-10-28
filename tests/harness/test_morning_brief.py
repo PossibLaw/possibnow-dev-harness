@@ -195,3 +195,16 @@ def test_triage_older_than_last_brief_is_flagged(env, slack):
                                          'classifier_ok': True, 'issues': {}}))
     run(env)
     assert 'Triage did not run cleanly last night' in slack['posts'][0]['text']
+
+
+def test_autonomous_queue_is_named(env, slack):
+    # Sal, October 28, 2026: nothing ran overnight because no open issue carried auto-ok; an empty queue must show.
+    run(env)
+    assert "Tonight's autonomous queue is empty; reply \"opt in &lt;names&gt;\" to add issues." in slack['posts'][-1]['text']
+    w = json.loads(env['world'].read_text())
+    w['project']['items'].append(issue_item('O/r', 20, title='Tidy the README', labels=('agent-task', 'auto-ok'), Status='Backlog'))
+    w['project']['items'].append(issue_item('O/r', 21, title='Closed run', labels=('agent-task', 'auto-ok'), state='CLOSED', Status='Done'))
+    env['world'].write_text(json.dumps(w))
+    run(env)
+    assert "Tonight's autonomous queue: 1 issue labelled auto-ok." in slack['posts'][-1]['text']
+

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- **The morning brief names tonight's autonomous queue** (Sal, October 28, 2026: nothing ran overnight because no open issue carried `auto-ok`, and nothing said so). A line counts open board cards labelled `auto-ok` (config `queue_label`); when there are none it says the queue is empty and how to add issues. One test, red first.
+
 ## 4.3.5 — 2026-10-27 — A board and a short morning brief; the linked issue at session start
 
 Bootstrap and pack pinned to v4.3.5.
