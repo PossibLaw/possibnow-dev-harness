@@ -50,8 +50,13 @@ The nightly chain an operator runs from these scripts:
 Each autonomous run's Stop hook posts its own notice, and a morning job posts the brief.
 
 ## Unresolved work
-- First live run: tonight's nightly run with the board planner, and tomorrow's first morning brief. Next: read both
-  logs and the posted message, then close issue "How I do work" (#56).
+- Live since October 28, 2026: the 22:00 planner made 219 changes with 0 failed, and the first morning brief posted
+  at 06:30. Issue "How I do work" (#56) is closed.
+- Autonomous queue (Sal, October 28): `auto-ok` was added to six issues the dispatcher accepts. Aleph #131 and Trazomo
+  #790 were started by hand at 06:52 (worktrees auto-131 and auto-790). Queued: Aleph #142 and #168, Trazomo #851 and
+  #866. The morning brief now names the queue. Next: when this batch merges cleanly, add file paths to the 36
+  agent-ready issues the dispatcher refuses for "no paths named" (Sal approved; through register PRs where the
+  issue comes from a register).
 - First mobile use of the linked-issue hook: the next session Sal opens from his phone should start with the link.
   Running sessions pick the hook up after a restart.
 - Deferred minors from the PR #58 review are listed in its body:
@@ -121,8 +126,8 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-1. After tonight's run and tomorrow's morning brief, read the nightly log and the posted message. Confirm auto-22 was
-   removed and that any new run's notice arrived. If the brief is right, close "How I do work" (#56).
+1. Watch auto-131 and auto-790: each Stop-hook notice should arrive, and Sal reviews their PRs. Then add paths to
+   the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.
    Apply them with the answering-the-morning-brief skill.
 3. Add Builder articles to the freshness watch (H-FR02).

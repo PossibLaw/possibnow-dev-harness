@@ -13,8 +13,10 @@ board. Each run:
    started since the last brief → Being worked on; each is recorded as the agent's in the board state;
 2. Overnight: one line per open pull request carrying `pr_label` opened since the last posted brief;
 3. at most 10 cards, Today first, then This week, each by priority then age, and "+N more on the board";
-4. a closing line counting cards in Needs your decision and open cards triage calls stale or duplicate,
-   and the board link; a triage that is missing, failed, or older than the last brief is named;
+4. a closing line counting cards in Needs your decision and open cards triage calls stale or duplicate, a line
+   naming tonight's autonomous queue (open cards labelled `queue_label`, default auto-ok; Sal, October 28, 2026:
+   an empty queue must show), and the board link; a triage that is missing, failed, or older than the last brief
+   is named;
 5. posts to $SLACK_WEBHOOK_URL; only a posted brief moves the `reported` mark that opens the next window.
 `--dry-run` prints the message and writes and posts nothing.
 
@@ -176,6 +178,9 @@ def main(argv=None) -> int:
     verdicts = {k.lower(): v for k, v in triage.get("issues", {}).items()}
     stale = sum(1 for c in open_cards if verdicts.get(c.key, {}).get("outcome") in ("stale", "duplicate"))
     lines.append(f"{decisions} decisions waiting · {stale} look stale. Reply in Claude to answer (\"brief 1A\", \"close stale\").")
+    queued = sum(1 for c in open_cards if cfg.get("queue_label", "auto-ok") in c.labels)
+    lines.append(f"Tonight's autonomous queue: {queued} issue{'' if queued == 1 else 's'} labelled {esc(cfg.get('queue_label', 'auto-ok'))}." if queued
+                 else "Tonight's autonomous queue is empty; reply \"opt in &lt;names&gt;\" to add issues.")
     lines.append(f"<{board_url}|Open the board>")
     text = "\n".join(lines)
     print(text)
