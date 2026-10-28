@@ -68,6 +68,12 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   - anchoring the TickTick marker;
   - naming a blocked night;
   - the `--answered` race.
+- Claude account per repo (decided by Sal, October 28, 2026: wait). Orca starts new Claude terminals and the
+  dispatcher's autonomous runs on its single active account, and `orca worktree create` cannot pick one (Orca issue
+  #8770, open). A per-account config-folder workaround was weighed and set aside as too much moving parts. Instead, a
+  private daily reminder asks Sal to switch Orca to the right account before the nightly run; details are in the
+  private runbook. Next: revisit when #8770 ships. The two runs started October 28 (auto-131, auto-790) most likely
+  ran on whichever account was active.
 - Codex has no linked-issue hook and no takeover hook. A Codex autonomous run would stay guarded until its marker is
   removed by hand (TASKS H-CDX01). Codex parity for the Pocock-derived skills is by installer copy only; Codex behavior
   is UNCONFIRMED.
