@@ -65,7 +65,7 @@ DEFAULT_DENY = [
     r"(?i)\b(iban|swift|bic|routing number|account number|acct(?:ount)? no\.?|cvv|cvc|card number|sort code)\b",
     r"(?i)\b(?:exp(?:iry|ires|\.)?|valid thru)\s*:?\s*\d{1,2}/\d{2,4}\b",
 ]
-STATE_COLUMNS = ("state", "status", "state / next step", "resulting state", "state / evidence")
+STATE_COLUMNS = ("state", "status", "state / next step", "resulting state", "state / evidence", "priority / state")
 # Upper-case tags in a row's state cell become labels (added, never removed by the sync).
 TAG_LABELS = {"AUTO-OK": "auto-ok", "MAINTENANCE": "maintenance", "URGENT": "urgent"}
 LABEL_COLORS = {"auto-ok": "0e8a16", "maintenance": "bfd4f2", "urgent": "d93f0b"}

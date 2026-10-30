@@ -175,6 +175,27 @@ def test_done_rows_are_detected_from_the_state_cell():
     assert rows['E1'].done is False  # no state column: open
 
 
+# Aleph's "Retained holds and backlog" table names its column "Priority / state"; a DONE row there
+# never closed its issue (issue #65, October 29, 2026).
+PRIORITY_STATE = "# Tasks\n\n## Open\n\n| ID | Priority / state | Item |\n|---|---|---|\n| X1 | DONE (merged) | ship it |\n| X2 | P3 / LOW AUTO-OK | tidy |\n"
+
+
+def test_done_row_in_a_priority_state_column_is_done():
+    rows = {r.id: r for r in module().parse_register(PRIORITY_STATE)}
+    assert rows['X1'].done is True
+
+
+def test_auto_ok_in_a_priority_state_column_is_an_open_tagged_row():
+    rows = {r.id: r for r in module().parse_register(PRIORITY_STATE)}
+    assert rows['X2'].done is False and rows['X2'].tags == ('auto-ok',)
+
+
+def test_state_column_parses_as_before():
+    text = PRIORITY_STATE.replace("Priority / state", "State")
+    rows = {r.id: r for r in module().parse_register(text)}
+    assert rows['X1'].done is True and rows['X2'].done is False and rows['X2'].tags == ('auto-ok',)
+
+
 def test_privacy_filter_blocks_card_numbers_but_allows_file_names():
     m = module()
     rows = {r.id: r for r in m.parse_register(REGISTER)}

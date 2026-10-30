@@ -59,8 +59,10 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   issue comes from a register).
 - Dispatcher duplicate runs (issue #65, October 29): auto-142 started beside a hand-made worktree and PR for the
   same Aleph issue. Fixed on branch `dispatcher-skip-linked-work`: any open PR naming the issue, or any Orca worktree
-  linked to it, now blocks a run. Next: Sal reviews and merges. Whether the nightly run
-  picks it up from main or only after a release is UNCONFIRMED.
+  linked to it, now blocks a run. Same branch: the issue sync now reads a `Priority / state` column, so a DONE
+  row there closes its issue (Aleph dry run: nothing changes today). Next: Sal reviews and merges. The private
+  runbook has the nightly run call these scripts from a main checkout; whether that checkout is pulled
+  automatically is UNCONFIRMED.
 - First mobile use of the linked-issue hook: the next session Sal opens from his phone should start with the link.
   Running sessions pick the hook up after a restart.
 - Deferred minors from the PR #58 review are listed in its body:
