@@ -426,3 +426,48 @@ def test_dry_run_removes_nothing(world, finished):
     assert res.returncode == 0, res.stderr
     assert read(world).get("removed", []) == [] and finished[1].exists()
     assert "would remove" in res.stdout.lower()
+
+
+# ---- work already under way outside an auto-* worktree or PR (issue #65) ----------------------
+# October 29, 2026: the dispatcher started auto-142 although a hand-named Orca worktree linked to
+# the issue and its draft PR were 20 minutes old; two agents did the same audit.
+
+def _pr(num, ref, body, title="hand-made"):
+    return {"number": num, "title": title, "state": "open", "head": {"ref": ref}, "body": body, "labels": [],
+            "html_url": f"https://github.com/Owner/alpha/pull/{num}"}
+
+
+def test_issue_with_no_pr_or_worktree_starts(world):
+    run(world)
+    assert 1 in [int(c[c.index('--issue') + 1]) for c in started(world)]
+
+
+def test_issue_linked_to_a_hand_named_worktree_is_skipped_and_the_worktree_is_not_capped(world):
+    w = read(world)
+    w['worktrees'] = [{"displayName": "feature-x", "branch": "refs/heads/feature-x", "linkedIssue": 1, "isArchived": False,
+                       "path": "/wt/feature-x", "repoId": "id-alpha"}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [6, 11], 'alpha #1 is being worked by hand; a hand worktree does not fill the per-repo cap'
+    assert '#1 [X1] safe chore: already running in a worktree' in world['report'].read_text()
+
+
+def test_issue_referenced_by_an_open_pr_on_any_branch_is_skipped(world):
+    w = read(world)
+    w['pulls']['Owner/alpha'] = [_pr(179, "feature-x", "Refs #1")]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [6, 11]
+    report = world['report'].read_text()
+    assert '#1 [X1] safe chore: open PR already exists (https://github.com/Owner/alpha/pull/179)' in report
+    assert next(p for p in read(world)['pulls']['Owner/alpha'] if p['number'] == 179)['title'] == 'hand-made', 'only auto PRs are flagged'
+
+
+def test_pr_mentioning_other_numbers_or_another_repo_does_not_block(world):
+    w = read(world)
+    w['pulls']['Owner/alpha'] = [_pr(180, "feature-y", "Refs #10 and #15, see Other/repo#1 and &#1;", title="about #12")]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    assert 1 in [int(c[c.index('--issue') + 1]) for c in started(world)]

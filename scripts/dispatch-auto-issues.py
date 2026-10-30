@@ -8,10 +8,10 @@ Policy (the autonomy page in the private repo is the source; this is the mechani
 - Eligible: open issue carrying every label in `labels.eligible` (default agent-task and
   auto-ok); owner is not a human (an "Owner:" line naming a person other than Agent makes
   it ineligible); the body names at least one path and every path is under the repo's
-  `allowed_paths`; no open PR already references the issue; no running worktree is linked
-  to it.
+  `allowed_paths`; no open PR on any branch references the issue (`#<n>` in its title or body,
+  or the issue's URL); no Orca worktree is linked to it, whatever its name.
 - Caps: `max_runs` across all repos, `max_per_repo` per repo; running `auto-*` worktrees
-  and open auto PRs count.
+  and open auto PRs count; hand-named worktrees and PRs block their issue but take no slot.
 - Start: `orca worktree create --repo path:<repo> --name auto-<n> --issue <n> --agent <id>
   --prompt <text>`; Orca names the branch auto-<n> (older designs assumed orca/auto-<n>; both
   count). Then the worktree is marked with `agent-auto.json` in its git directory, which the
@@ -45,6 +45,7 @@ PATH_RE = re.compile(r"`([^`\s]+/[^`\s]*)`")
 AUTO_BRANCH_RE = re.compile(r"^(orca/)?auto-(\d+)$")  # kept in step with scripts/guardrails/autonomy.py
 OWNER_RE = re.compile(r"\*\*Owner:\*\*\s*([^\n|]+)", re.I)
 HUMAN_OWNER_RE = re.compile(r"\b(sal|salvador|client|human)\b", re.I)
+ISSUE_REF_RE = re.compile(r"(?<![\w&/])(?:([\w.-]+/[\w.-]+))?#(\d+)(?!\d)|github\.com/([\w.-]+/[\w.-]+)/issues/(\d+)(?!\d)")
 
 
 def sh(cmd: list[str], payload: dict | None = None):
@@ -226,14 +227,27 @@ def reject_reason(issue: dict, repo: dict, eligible_labels: list[str]) -> str | 
     return None
 
 
+def referenced_issues(text: str, github: str) -> set[int]:
+    """Issue numbers of `github` (owner/repo) that the text names: #<n>, owner/repo#<n> or the issue URL."""
+    found = set()
+    for m in ISSUE_REF_RE.finditer(text or ""):
+        other, num = (m.group(1), m.group(2)) if m.group(2) else (m.group(3), m.group(4))
+        if not other or other.lower() == github.lower():
+            found.add(int(num))
+    return found
+
+
 def flag_auto_prs(repo: dict, pr_label: str, dry_run: bool) -> tuple[list[str], dict[int, str], list[str]]:
-    """Returns (flagged lines, {issue number: pr url} for open auto PRs, errors)."""
+    """Returns (flagged lines, {issue number: pr url} for every open PR naming the issue, errors).
+    An auto PR names its issue by branch; any PR names one by #<n> or URL in its title or body."""
     flagged, open_by_issue, errors = [], {}, []
     try:
         pulls = gh_all(f"repos/{repo['github']}/pulls?state=open")
     except RuntimeError as exc:
         return flagged, open_by_issue, [str(exc)]
     for pr in pulls:
+        for n in referenced_issues(f"{pr.get('title') or ''}\n{pr.get('body') or ''}", repo["github"]):
+            open_by_issue.setdefault(n, pr["html_url"])
         head = (pr.get("head") or {}).get("ref", "")
         m = AUTO_BRANCH_RE.match(head)
         if not m:
@@ -307,12 +321,17 @@ def main(argv=None) -> int:
     # An auto worktree counts as running until its linked issue closes; Orca keeps the worktree
     # afterwards (people keep working in the pane), and counting it would stall every later night.
     # Finished ones (issue closed) are removed when nothing would be lost (Sal, October 27, 2026).
+    # A hand-named worktree linked to an issue blocks that issue but takes no run slot (issue #65).
     running_auto, finished, removed = [], [], []
+    hand_linked: set[tuple[str, int]] = set()
     cleanup = cfg.get("auto_cleanup", True)
     active_hours = float(cfg.get("active_hours", 6))
     for w in running:
         name = auto_name(w)
         if not name:
+            repo = repo_of(w)
+            if repo and str(w.get("linkedIssue") or "").isdigit():
+                hand_linked.add((repo["name"], int(w["linkedIssue"])))
             continue
         repo = repo_of(w)
         issue = closed_issue(repo, int(w["linkedIssue"])) if repo and w.get("linkedIssue") else None
@@ -332,7 +351,7 @@ def main(argv=None) -> int:
                     finished.append(f"{label} (kept: remove failed, {exc})")
             continue
         running_auto.append((w, repo))
-    running_issues = {((repo or {}).get("name"), w.get("linkedIssue")) for w, repo in running_auto if w.get("linkedIssue")}
+    running_issues = {((repo or {}).get("name"), w.get("linkedIssue")) for w, repo in running_auto if w.get("linkedIssue")} | hand_linked
     total = len(running_auto)
     per_repo: dict[str, int] = {}
     for _, repo in running_auto:
