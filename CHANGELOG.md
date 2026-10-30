@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **The dispatcher skips issues already worked by hand** (issue "Dispatcher starts auto runs on issues already worked in a non-auto worktree or PR", October 29, 2026: it started auto-142 beside a hand-named Orca worktree and draft PR for the same issue, and the two PRs conflicted). Any open PR that names the issue in its title or body (`#<n>`, `owner/repo#<n>` or the issue URL, on any branch) now blocks a run, and so does any Orca worktree linked to the issue whatever its name. Only `auto-*` worktrees still count toward the caps. Four tests, two red first.
 - **The morning brief names tonight's autonomous queue** (Sal, October 28, 2026: nothing ran overnight because no open issue carried `auto-ok`, and nothing said so). A line counts open board cards labelled `auto-ok` (config `queue_label`); when there are none it says the queue is empty and how to add issues. One test, red first.
 
 ## 4.3.5 — 2026-10-27 — A board and a short morning brief; the linked issue at session start

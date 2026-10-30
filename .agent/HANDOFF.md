@@ -57,6 +57,10 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   #866. The morning brief now names the queue. Next: when this batch merges cleanly, add file paths to the 36
   agent-ready issues the dispatcher refuses for "no paths named" (Sal approved; through register PRs where the
   issue comes from a register).
+- Dispatcher duplicate runs (issue #65, October 29): auto-142 started beside a hand-made worktree and PR for the
+  same Aleph issue. Fixed on branch `dispatcher-skip-linked-work`: any open PR naming the issue, or any Orca worktree
+  linked to it, now blocks a run. Next: Sal reviews and merges. Whether the nightly run
+  picks it up from main or only after a release is UNCONFIRMED.
 - First mobile use of the linked-issue hook: the next session Sal opens from his phone should start with the link.
   Running sessions pick the hook up after a restart.
 - Deferred minors from the PR #58 review are listed in its body:
