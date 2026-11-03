@@ -85,8 +85,14 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   is UNCONFIRMED.
 - Customized installed projects still need their own reviewed migration (TASKS H-MIG01; Sal). Next: list them and
   review each. Live client compliance and semantic optimize apply remain UNCONFIRMED (carried from v4.2.1).
-- PossibNow Builder articles are not yet in the freshness watch list (TASKS H-FR02; Agent). Next: confirm the current
-  edition per article from Aleph's `reviews/2026-09-22-full-review/canonical-current-map.json`, then add the watch.
+- Builder articles in the freshness watch (TASKS H-FR02, November 3, 2026): a "PossibNow Builder" watch over the 54
+  September 22 drafts, `auto: false` for the first cycle, waits in the private watch list's draft PR. The engine now
+  reports a content pattern that matches no files. Next: Sal merges both PRs. The first live run records a baseline;
+  the earliest Builder findings come the following Monday.
+- The Library watch reads `library-current/` (the September 15 edition), not the September 22 drafts the map names as
+  current; the 12 tutorials are not watched. Detection is unaffected (same links), but its work order sends agents to
+  the older files. Next (Sal's yes needed; auto mode refused the GitHub writes): file the follow-up issue in Aleph and
+  remove `auto-ok` from the open Library work order until the watch is re-pointed.
 - Other Trazomo tool modules (Codex/GPT, Google Workspace, Microsoft 365, toolkit setup) are outside the Claude Code
   check and the freshness watch (TASKS H-FR03; Sal decides after reviewing a few Claude work-order PRs).
 - Sal's answers to the morning brief and the "close stale" proposal are pending (TASKS H-TR02; Sal). The skill
@@ -142,5 +148,5 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.
    Apply them with the answering-the-morning-brief skill.
-3. Add Builder articles to the freshness watch (H-FR02).
+3. Merge the Builder watch (H-FR02) and decide on the Library watch follow-up (see Unresolved work).
 4. Pick up the deferred PR #58 minors when the first week of the board shows which ones matter.

@@ -23,7 +23,7 @@ anywhere; the content-freshness engine and the nightly triage with the morning b
 acceptance evidence is in the PR bodies and the release receipts. The sections below are the per-change plans, kept as
 history; their acceptance cases all pass.
 
-Open work and next actions live in `.agent/TASKS.md` (rows H-MIG01, H-FR02, H-FR03, H-TR02, H-CDX01) and `.agent/HANDOFF.md`.
+Open work and next actions live in `.agent/TASKS.md` (rows H-MIG01, H-FR03, H-TR02, H-CDX01) and `.agent/HANDOFF.md`.
 
 # Unreleased: sticky autonomous-run marker with human takeover (GR01 follow-up)
 
