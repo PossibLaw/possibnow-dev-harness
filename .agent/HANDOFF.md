@@ -91,8 +91,8 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   the earliest Builder findings come the following Monday.
 - The Library watch reads `library-current/` (the September 15 edition), not the September 22 drafts the map names as
   current; the 12 tutorials are not watched. Detection is unaffected (same links), but its work order sends agents to
-  the older files. Next (Sal's yes needed; auto mode refused the GitHub writes): file the follow-up issue in Aleph and
-  remove `auto-ok` from the open Library work order until the watch is re-pointed.
+  the older files. Filed as Aleph issue "Content freshness: Library watch points at the September 15 edition" (#198,
+  November 3). Next: remove `auto-ok` from the open Library work order (#193) until the watch is re-pointed (Sal).
 - Other Trazomo tool modules (Codex/GPT, Google Workspace, Microsoft 365, toolkit setup) are outside the Claude Code
   check and the freshness watch (TASKS H-FR03; Sal decides after reviewing a few Claude work-order PRs).
 - Sal's answers to the morning brief and the "close stale" proposal are pending (TASKS H-TR02; Sal). The skill
