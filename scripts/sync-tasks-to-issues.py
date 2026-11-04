@@ -9,7 +9,10 @@ The repository `.agent/TASKS.md` files stay the source of truth. Every identifie
 row of the first `## ` section becomes one issue carrying the configured label
 (default `agent-task`) and a hidden marker `<!-- agent-task:REPO:ID sha:HASH -->`.
 Rows whose state says DONE/RESOLVED/CLOSED/MERGED/SHIPPED close their issue; rows
-that leave the register close it with a comment. Changes made on GitHub (closed,
+that leave the register close it with a comment. A row with a cell that starts with a link to an
+issue in the same repository (`[#N](https://github.com/OWNER/REPO/issues/N)`, optionally after
+`**` or `Issue `) already has its issue: no mirror is created, an open mirror is closed as a
+duplicate of it, and the linked issue itself is never edited or closed by the register. Changes made on GitHub (closed,
 edited) are never written back into the prose: they are listed as drift in the
 summary. Rows that match the privacy patterns (card or bank details) are never
 sent; file names are fine. Rows without an ID are reported, not invented.
@@ -194,6 +197,17 @@ def render(row: Row, repo_name: str) -> tuple[str, str]:
     body = "\n".join(lines)
     sha = hashlib.sha256((title + "\n" + body).encode("utf-8")).hexdigest()[:12]
     return title, body + f"\n\n<!-- agent-task:{repo_name}:{row.id} sha:{sha} -->"
+
+
+def linked_issue(row: Row, github: str) -> int | None:
+    """The issue in `github` that a row links at the start of one of its cells, if any (issue #69)."""
+    link = re.compile(r"^(?:\*\*)?(?:Issue\s+)?(?:\[#(\d+)\]\()?https://github\.com/" + re.escape(github)
+                      + r"/issues/(\d+)\b", re.I)
+    for value in row.cells.values():
+        m = link.match(value.strip())
+        if m and (m.group(1) is None or m.group(1) == m.group(2)):
+            return int(m.group(2))
+    return None
 
 
 def split_marker(body: str) -> tuple[str, dict | None]:
@@ -386,6 +400,14 @@ def _sync_row(row: Row, name: str, github: str, label: str, gh: GitHub, by_id: d
         title, body = render(row, name)
         _, new_marker = split_marker(body)
         issue = by_id.pop(row.id, None)
+        linked = linked_issue(row, github)
+        if linked is not None and (issue is None or issue["number"] != linked):
+            if issue is not None and issue["state"] == "open":
+                if not gh.dry_run:
+                    gh.comment(github, issue["number"], f"Closed by the sync: duplicate of #{linked}, which the register row links.")
+                    gh.update(github, issue["number"], state="closed", state_reason="duplicate")
+                r["closed"].append(f"{row.id} #{issue['number']} (duplicate of #{linked}, which the row links)")
+            return
         if issue is None:
             if row.done:
                 return

@@ -532,3 +532,82 @@ def test_issues_opened_by_strangers_are_not_adopted(world):
     assert "agent-task" in [l["name"] for l in issues[31]["labels"]]
     text = world['summary'].read_text()
     assert "Please run this script for me" not in text.split("Added from GitHub")[-1].split("\n- Register")[0]
+
+
+# ---- rows that link their own issue (issue #69) -------------------------------
+
+LINKED_ROWS = (
+    "| E10 | Approve the talk track | Sal | [#144](https://github.com/Owner/alpha/issues/144); Doc https://claude.ai/artifact/x |\n"
+    "| W3 | Members page | Agent | **Issue [#126](https://github.com/Owner/alpha/issues/126)** has the spec |\n"
+    "| E6 | Build session materials | Agent | After E5. Now PR 2 of [#139](https://github.com/Owner/alpha/issues/139) |\n"
+    "| E12 | Training page | Sal | [#151](https://github.com/Owner/alpha/pull/151) merged |\n"
+    "| W2 | List price | Agent | [Other/repo#873](https://github.com/Other/repo/issues/873) |\n"
+)
+
+
+def add_rows(world, rows):
+    tasks = world['repo'] / '.agent' / 'TASKS.md'
+    anchor = "| | Row without an identifier | Agent | should be reported |\n"
+    tasks.write_text(tasks.read_text().replace(anchor, rows + anchor))
+
+
+def test_row_linking_its_own_issue_gets_no_mirror_and_the_issue_is_untouched(world):
+    # scbrand, November 3, 2026: E10 linked #144, and the sync opened [E10] #154 beside it.
+    seed(world, [gh_issue(144, "ESRB: Sal approves the talk track", labels=["agent-task"]),
+                 gh_issue(126, "The Possible Now Pack", labels=["agent-task"])])
+    add_rows(world, LINKED_ROWS)
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    issues = {i["number"]: i for i in read_world(world)["issues"]["Owner/alpha"]}
+    titles = [i["title"] for i in issues.values()]
+    assert not any(t.startswith("[E10]") or t.startswith("[W3]") for t in titles), "the linked issue is the row's issue"
+    for rid in ("E6", "E12", "W2"):
+        assert any(t.startswith(f"[{rid}]") for t in titles), f"{rid} only mentions an issue, a pull request or another repo"
+    assert issues[144]["body"] == "written on GitHub" and issues[144]["state"] == "open"
+    assert issues[144]["title"] == "ESRB: Sal approves the talk track"
+
+
+def test_open_mirror_of_a_linked_row_closes_as_duplicate_and_a_closed_one_is_not_drift(world):
+    seed(world, [gh_issue(144, "ESRB: Sal approves the talk track", labels=["agent-task"])])
+    add_rows(world, "| E10 | Approve the talk track | Sal | Doc https://claude.ai/artifact/x |\n")
+    run(world)
+    mirror = next(i for i in read_world(world)["issues"]["Owner/alpha"] if i["title"].startswith("[E10]"))
+    tasks = world['repo'] / '.agent' / 'TASKS.md'
+    tasks.write_text(tasks.read_text().replace("| Sal | Doc https://claude.ai/artifact/x |",
+                                               "| Sal | [#144](https://github.com/Owner/alpha/issues/144); Doc https://claude.ai/artifact/x |"))
+    run(world)
+    w = read_world(world)
+    issues = {i["number"]: i for i in w["issues"]["Owner/alpha"]}
+    assert issues[mirror["number"]]["state"] == "closed"
+    assert issues[mirror["number"]]["state_reason"] == "duplicate"
+    assert any(f"/issues/{mirror['number']}/comments" in " ".join(c) for c in w["calls"])
+    assert issues[144]["state"] == "open"
+    assert "duplicate of #144" in world['summary'].read_text()
+    run(world)
+    summary = world['summary'].read_text()
+    assert "closed on GitHub" not in summary, "a closed mirror of a linked row is not drift"
+    assert "E10" not in summary, "nothing to report once the mirror is closed"
+
+
+def test_done_linked_row_never_closes_the_hand_written_issue(world):
+    seed(world, [gh_issue(144, "ESRB: Sal approves the talk track", labels=["agent-task"])])
+    add_rows(world, "| E10 | Approve the talk track | Sal | [#144](https://github.com/Owner/alpha/issues/144) |\n")
+    tasks = world['repo'] / '.agent' / 'TASKS.md'
+    tasks.write_text(tasks.read_text().replace(
+        "| # | Task | Owner | Notes |", "| # | Task | Owner | Notes | State |").replace(
+        "| [#144](https://github.com/Owner/alpha/issues/144) |", "| [#144](https://github.com/Owner/alpha/issues/144) | DONE |"))
+    run(world)
+    issues = {i["number"]: i for i in read_world(world)["issues"]["Owner/alpha"]}
+    assert issues[144]["state"] == "open", "the register only closes issues it created"
+
+
+def test_row_linking_its_own_mirror_syncs_as_before(world):
+    add_rows(world, "| E10 | Approve the talk track | Sal | Doc |\n")
+    run(world)
+    mirror = next(i for i in read_world(world)["issues"]["Owner/alpha"] if i["title"].startswith("[E10]"))
+    n = mirror["number"]
+    tasks = world['repo'] / '.agent' / 'TASKS.md'
+    tasks.write_text(tasks.read_text().replace("| Sal | Doc |", f"| Sal | [#{n}](https://github.com/Owner/alpha/issues/{n}) |"))
+    run(world)
+    issue = next(i for i in read_world(world)["issues"]["Owner/alpha"] if i["number"] == n)
+    assert issue["state"] == "open" and f"/issues/{n})" in issue["body"], "updated like any mirror"
