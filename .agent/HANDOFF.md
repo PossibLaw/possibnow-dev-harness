@@ -86,14 +86,16 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Customized installed projects still need their own reviewed migration (TASKS H-MIG01; Sal). Next: list them and
   review each. Live client compliance and semantic optimize apply remain UNCONFIRMED (carried from v4.2.1).
 - Builder articles in the freshness watch (TASKS H-FR02, November 3, 2026): a "PossibNow Builder" watch over the 54
-  September 22 drafts, `auto: false` for the first cycle, waits in the private watch list's draft PR. The engine now
-  reports a content pattern that matches no files. Next: Sal merges both PRs. The first live run records a baseline;
-  the earliest Builder findings come the following Monday.
-- The Library watch reads `library-current/` (the September 15 edition), not the September 22 drafts the map names as
-  current; the 12 tutorials are not watched. Detection is unaffected (same links), but its work order sends agents to
-  the older files. Filed as Aleph issue "Content freshness: Library watch points at the September 15 edition" (#198,
-  November 3); Sal removed `auto-ok` from the open Library work order (#193) the same day. Next: re-point the
-  Library watch (#198), then put `auto-ok` back on #193.
+  September 22 drafts, `auto: false` for the first cycle, is merged in the private watch list. The engine reports a
+  content pattern that matches no files. The first live run (Monday, November 9) records a baseline; the earliest
+  Builder findings come November 16. Next: when the first Builder work order arrives, Sal decides whether to add
+  `auto-ok`.
+- The Library watch now reads the September 22 edition (Aleph issue "Content freshness: Library watch points at the
+  September 15 edition", #198, closed November 3). It used to read `library-current/` (September 15) and missed the
+  12 tutorials. It now lists the 111 mapped `currentSource` files by exact path: 56 files and 151 sources (was 44 and
+  127). A Library-only run rewrote the open work order (#193) to the current files, and `auto-ok` is back on it.
+  Pending decision (Sal): keep `library-current/` as the September 15 archive (the work order says not to edit it)
+  or refresh it to the September 22 text.
 - Other Trazomo tool modules (Codex/GPT, Google Workspace, Microsoft 365, toolkit setup) are outside the Claude Code
   check and the freshness watch (TASKS H-FR03; Sal decides after reviewing a few Claude work-order PRs).
 - Sal's answers to the morning brief and the "close stale" proposal are pending (TASKS H-TR02; Sal). The skill
@@ -149,5 +151,5 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.
    Apply them with the answering-the-morning-brief skill.
-3. Merge the Builder watch (H-FR02) and decide on the Library watch follow-up (see Unresolved work).
+3. Sal decides whether `library-current/` stays the September 15 archive (see Unresolved work).
 4. Pick up the deferred PR #58 minors when the first week of the board shows which ones matter.
