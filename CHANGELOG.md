@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **The issue sync stops mirroring a row that links its own issue** (#69, November 4, 2026: in scbrand, rows E10, E11, E14 and E15 linked hand-written issues and the sync opened a second issue for each). A row with a cell that starts with a link to an issue in the same repository (`[#N](https://github.com/OWNER/REPO/issues/N)`, optionally after `**` or `Issue `) gets no mirror; an existing open mirror closes as a duplicate with a comment, and a closed one is no longer reported as drift. The linked issue is never edited or closed by the register. Mentions mid-cell, pull request links and other repositories' issues are unchanged. Four tests, two red first.
+
 - **Content freshness reports a pattern that matches no files** (H-FR02, November 3, 2026: watching the PossibNow Builder articles means a dated edition pattern, and a renamed or new edition would otherwise make the watch go quiet and look healthy). Each `content` pattern that matches nothing is listed under the watch's errors in the report. One test, red first.
 
 - **The dispatcher skips issues already worked by hand** (issue "Dispatcher starts auto runs on issues already worked in a non-auto worktree or PR", October 29, 2026: it started auto-142 beside a hand-named Orca worktree and draft PR for the same issue, and the two PRs conflicted). Any open PR that names the issue in its title or body (`#<n>`, `owner/repo#<n>` or the issue URL, on any branch) now blocks a run, and so does any Orca worktree linked to the issue whatever its name. Only `auto-*` worktrees still count toward the caps. Four tests, two red first.
