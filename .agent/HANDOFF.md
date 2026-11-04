@@ -51,9 +51,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 
 ## Unresolved work
 - Issue sync duplicates (TASKS H-ORC03, issue #69, November 4, 2026): a register row whose cell starts with a link to
-  its own issue no longer gets a mirror; an open mirror closes as a duplicate. Draft PR on
-  `fix/69-linked-row-no-mirror`. Next: Sal merges, then `git -C ~/possibnow-dev-harness pull` so the 22:00 Aleph
-  runner uses it. Until then each night reports scbrand E8 to E15 as drift.
+  its own issue no longer gets a mirror; an open mirror closes as a duplicate. Merged as PR #70; the harness main
+  checkout is pulled, so tonight's 22:00 Aleph run uses it. Next: confirm the summary no longer lists scbrand E8 to
+  E15 as drift. The `state_reason: duplicate` PATCH is UNCONFIRMED until a mirror is closed live.
 - Live since October 28, 2026: the 22:00 planner made 219 changes with 0 failed, and the first morning brief posted
   at 06:30. Issue "How I do work" (#56) is closed.
 - Autonomous queue (Sal, October 28): `auto-ok` was added to six issues the dispatcher accepts. Aleph #131 and Trazomo
@@ -156,5 +156,5 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.
    Apply them with the answering-the-morning-brief skill.
 3. Sal decides whether `library-current/` stays the September 15 archive (see Unresolved work).
-4. Merge the issue-sync duplicate fix (H-ORC03, #69) and pull the harness main checkout.
+4. Check tonight's sync summary: no scbrand E8 to E15 drift (H-ORC03, #69).
 5. Pick up the deferred PR #58 minors when the first week of the board shows which ones matter.
