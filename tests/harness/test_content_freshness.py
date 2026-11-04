@@ -210,3 +210,14 @@ def test_bad_config_is_reported_not_fatal_to_the_nightly_job(env):
     env['config'].write_text('{not json')
     res = run(env)
     assert res.returncode == 2 and 'BLOCKED' in res.stderr
+
+
+def test_a_content_pattern_that_matches_nothing_is_reported(env):
+    """A watch whose article folders were renamed would otherwise go quiet and look healthy (H-FR02)."""
+    cfg = json.loads(env['config'].read_text())
+    cfg['watches'][0]['content'].append('content/renamed-edition/*/draft.md')
+    env['config'].write_text(json.dumps(cfg))
+    res = run(env)
+    assert res.returncode == 0, res.stderr
+    assert 'matches no files' in res.stdout and 'content/renamed-edition/*/draft.md' in res.stdout
+    assert 'content/library-current/*/article.md' not in res.stdout.split('Errors:')[-1], 'a pattern with files is not flagged'

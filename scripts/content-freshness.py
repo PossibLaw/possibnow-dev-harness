@@ -243,6 +243,9 @@ def main(argv=None) -> int:
         if issue is None and not errors and (pending["sources"] or pending["pages"]) and pending.get("filed"):
             pending = {"sources": {}, "pages": {}}  # the work order was closed: its findings were handled
         citations = cited(Path(repo["path"]).expanduser(), watch.get("content") or [], watch.get("ignore_hosts") or [])
+        for pattern in watch.get("content") or []:
+            if not glob.glob(str(Path(repo["path"]).expanduser() / pattern), recursive=True):
+                errors.append(f"content pattern matches no files: {pattern} (renamed or new edition? update the watch)")
         by_url: dict[str, list[str]] = {}
         for file, urls in citations.items():
             for url in urls:
