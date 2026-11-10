@@ -40,6 +40,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "guardrails"))
 from autonomy import write_marker  # noqa: E402  (the guard reads the same marker)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from repo_paths import expand_path, resolve_repos, same_path  # noqa: E402
 
 PATH_RE = re.compile(r"`([^`\s]+/[^`\s]*)`")
 AUTO_BRANCH_RE = re.compile(r"^(orca/)?auto-(\d+)$")  # kept in step with scripts/guardrails/autonomy.py
@@ -134,7 +136,7 @@ def keep_reason(wt: dict, repo: dict, active_hours: float) -> str | None:
         return "git status failed"
     if status:
         return "uncommitted changes"
-    main = str(Path(repo["path"]).expanduser())
+    main = repo["path"]
     _git(main, "fetch", "-q", "origin")
     rc, default = _git(main, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
     _, head = _git(path, "rev-parse", "HEAD")
@@ -157,10 +159,9 @@ def mark_autonomous(create_out: dict, name: str, repo: dict, issue: dict) -> str
     result = create_out.get("result", create_out) if isinstance(create_out, dict) else {}
     path = ((result or {}).get("worktree") or {}).get("path")
     if not path:
-        repo_root = str(Path(repo["path"]).expanduser()).rstrip("/")
-        repo_ids = {rid for rid, rpath in orca_repo_paths().items() if rpath.rstrip("/") == repo_root}
+        repo_ids = {rid for rid, rpath in orca_repo_paths().items() if same_path(rpath, repo["path"])}
         for wt in orca_worktrees():
-            same_repo = wt.get("repoId") in repo_ids or (wt.get("repoPath") or "").rstrip("/") in (repo_root, f"path:{repo['path']}")
+            same_repo = wt.get("repoId") in repo_ids or (bool(wt.get("repoPath")) and same_path(wt["repoPath"], repo["path"]))
             if wt.get("displayName") == name and same_repo:
                 path = wt.get("path") or (wt.get("git") or {}).get("path")
                 break
@@ -281,7 +282,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     try:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
-        repos = cfg["repos"]
+        repos = resolve_repos(cfg["repos"])
     except (OSError, ValueError, KeyError) as exc:
         print(f"BLOCKED: bad config {args.config}: {exc}", file=sys.stderr)
         return 2
@@ -314,7 +315,7 @@ def main(argv=None) -> int:
     def repo_of(wt: dict) -> dict | None:
         key = wt.get("repoPath") or repo_paths.get(wt.get("repoId") or "", "")
         for repo in repos:
-            if key and (key.rstrip("/") == str(Path(repo["path"]).expanduser()).rstrip("/") or key == f"path:{repo['path']}"):
+            if key and same_path(key, repo["path"]):
                 return repo
         return None
 
@@ -393,7 +394,9 @@ def main(argv=None) -> int:
                 skipped.append(f"{tag}: cap reached ({max_per_repo} per repo)")
                 continue
             prompt = prompt_tpl.replace("{issue_url}", issue["html_url"]).replace("{issue_number}", str(n)).replace("{repo}", repo["github"])
-            repo_selector = f"path:{Path(repo['path']).expanduser()}"  # Orca does not expand ~ itself
+            # Orca does not expand ~ itself and matches its registered path exactly, so send its spelling.
+            registered = next((p for p in orca_repo_paths().values() if same_path(p, repo["path"])), repo["path"])
+            repo_selector = f"path:{registered}"
             cmd = ["orca", "worktree", "create", "--repo", repo_selector, "--name", f"auto-{n}", "--issue", str(n),
                    "--agent", cfg.get("agent", "claude"), "--prompt", prompt, "--no-parent", "--json"]
             # --no-parent: the runner works from ~/Aleph, and Orca would otherwise file every run under Aleph.

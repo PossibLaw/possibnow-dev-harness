@@ -611,3 +611,25 @@ def test_row_linking_its_own_mirror_syncs_as_before(world):
     run(world)
     issue = next(i for i in read_world(world)["issues"]["Owner/alpha"] if i["number"] == n)
     assert issue["state"] == "open" and f"/issues/{n})" in issue["body"], "updated like any mirror"
+
+
+def _use_repos_var(world, monkeypatch, value):
+    cfg = json.loads(world['config'].read_text())
+    cfg['repos'][0]['path'] = value
+    world['config'].write_text(json.dumps(cfg))
+
+
+def test_repo_path_may_use_the_repos_variable(world, monkeypatch):
+    monkeypatch.setenv('REPOS', str(world['repo'].parent))
+    _use_repos_var(world, monkeypatch, f"$REPOS/{world['repo'].name}")
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    assert 'no register at' not in res.stdout + res.stderr
+
+
+def test_unknown_variable_in_a_repo_path_stops_the_run_naming_the_key(world, monkeypatch):
+    monkeypatch.delenv('NO_SUCH_ROOT', raising=False)
+    _use_repos_var(world, monkeypatch, '$NO_SUCH_ROOT/alpha')
+    res = run(world)
+    assert res.returncode == 2
+    assert 'repos[0].path' in res.stderr and 'NO_SUCH_ROOT' in res.stderr

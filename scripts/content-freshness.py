@@ -44,6 +44,9 @@ import urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from repo_paths import expand_path  # noqa: E402
+
 LABEL = "content-freshness"
 MD_LINK = re.compile(r"\]\((https?://[^)\s]+)\)")
 BARE = re.compile(r"(?:href=[\"']|<)(https?://[^\"'>\s]+)")
@@ -215,7 +218,10 @@ def main(argv=None) -> int:
     try:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
         watches = cfg["watches"]
-    except (OSError, ValueError, KeyError) as exc:
+        for i, watch in enumerate(watches):
+            if isinstance(watch.get("repo"), dict) and watch["repo"].get("path"):
+                watch["repo"] = {**watch["repo"], "path": expand_path(str(watch["repo"]["path"]), f"watches[{i}].repo.path")}
+    except (OSError, ValueError, KeyError, AttributeError) as exc:
         print(f"BLOCKED: bad config {args.config}: {exc}", file=sys.stderr)
         return 2
     threshold = float(cfg.get("change_threshold", 0.03))
@@ -242,9 +248,9 @@ def main(argv=None) -> int:
             errors.append(str(exc))
         if issue is None and not errors and (pending["sources"] or pending["pages"]) and pending.get("filed"):
             pending = {"sources": {}, "pages": {}}  # the work order was closed: its findings were handled
-        citations = cited(Path(repo["path"]).expanduser(), watch.get("content") or [], watch.get("ignore_hosts") or [])
+        citations = cited(Path(repo["path"]), watch.get("content") or [], watch.get("ignore_hosts") or [])
         for pattern in watch.get("content") or []:
-            if not glob.glob(str(Path(repo["path"]).expanduser() / pattern), recursive=True):
+            if not glob.glob(str(Path(repo["path"]) / pattern), recursive=True):
                 errors.append(f"content pattern matches no files: {pattern} (renamed or new edition? update the watch)")
         by_url: dict[str, list[str]] = {}
         for file, urls in citations.items():

@@ -63,7 +63,9 @@ elif args[:2] == ["repo", "list"]:
 elif args[:2] == ["worktree", "create"]:
     name = args[args.index("--name") + 1]
     repo = args[args.index("--repo") + 1]
-    if "~" in repo or world.get("orca_create_error"):
+    registered = [r["path"] for r in world.get("repos", [{"path": "/repos/alpha"}, {"path": "/repos/beta"}])]
+    if (repo.startswith("path:") and repo[5:] not in registered) or "~" in repo or world.get("orca_create_error"):
+        # Real Orca matches the registered path exactly, letter case included.
         # Real Orca: no tilde expansion, and with --json the error goes to stdout, nothing to stderr, exit 1.
         save(); print(json.dumps({"ok": False, "error": {"code": world.get("orca_create_error", "repo_not_found"), "message": "repo_not_found"}})); sys.exit(1)
     issue = int(args[args.index("--issue") + 1])
@@ -202,6 +204,8 @@ def test_tilde_repo_paths_are_expanded_before_orca_sees_them(world, tmp_path, mo
     cfg = json.loads(world['config'].read_text())
     cfg['repos'][0]['path'] = '~/alpha'
     world['config'].write_text(json.dumps(cfg))
+    w = read(world); w['repos'] = [{"id": "id-alpha", "path": f"{tmp_path}/alpha"}, {"id": "id-beta", "path": "/repos/beta"}]
+    world['path'].write_text(json.dumps(w))
     res = run(world)
     assert res.returncode == 0, res.stderr
     alpha = [c for c in started(world) if c[c.index('--issue') + 1] == '1']
@@ -471,3 +475,51 @@ def test_pr_mentioning_other_numbers_or_another_repo_does_not_block(world):
     world['path'].write_text(json.dumps(w))
     run(world)
     assert 1 in [int(c[c.index('--issue') + 1]) for c in started(world)]
+
+
+def _set_repo_path(world, name, value):
+    cfg = json.loads(world['config'].read_text())
+    next(r for r in cfg['repos'] if r['name'] == name)['path'] = value
+    world['config'].write_text(json.dumps(cfg))
+
+
+def test_repo_path_may_use_the_repos_variable(world, monkeypatch):
+    monkeypatch.setenv('REPOS', '/repos')
+    _set_repo_path(world, 'alpha', '$REPOS/alpha')
+    _set_repo_path(world, 'beta', '${REPOS}/beta')
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    selectors = sorted(c[c.index('--repo') + 1] for c in started(world))
+    assert selectors == ['path:/repos/alpha', 'path:/repos/beta'], 'Orca gets the expanded path'
+
+
+def test_unknown_variable_in_a_repo_path_stops_the_run_naming_the_key(world, monkeypatch):
+    monkeypatch.delenv('NO_SUCH_ROOT', raising=False)
+    _set_repo_path(world, 'beta', '$NO_SUCH_ROOT/beta')
+    res = run(world)
+    assert res.returncode == 2
+    assert 'repos[1].path' in res.stderr and not started(world)
+
+
+@pytest.mark.skipif(sys.platform != 'darwin', reason='macOS volumes are case-insensitive')
+def test_running_worktree_is_matched_to_its_repo_despite_letter_case(world, monkeypatch):
+    # Config says $REPOS/Alpha, Orca registered /repos/alpha: still the same repository.
+    monkeypatch.setenv('REPOS', '/repos')
+    _set_repo_path(world, 'alpha', '$REPOS/Alpha')
+    w = read(world)
+    w['worktrees'] = [{"displayName": "auto-1", "branch": "refs/heads/auto-1", "linkedIssue": 1, "isArchived": False,
+                       "path": "/wt/auto-1", "repoId": "id-alpha"}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [11], 'alpha is at its cap, so only beta may start'
+
+
+@pytest.mark.skipif(sys.platform != 'darwin', reason='macOS volumes are case-insensitive')
+def test_create_sends_the_path_orca_registered_when_case_differs(world, monkeypatch):
+    monkeypatch.setenv('REPOS', '/repos')
+    _set_repo_path(world, 'alpha', '$REPOS/Alpha')
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    selectors = sorted(c[c.index('--repo') + 1] for c in started(world))
+    assert selectors == ['path:/repos/alpha', 'path:/repos/beta']

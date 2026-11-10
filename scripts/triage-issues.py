@@ -41,6 +41,9 @@ import sys
 import urllib.parse
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from repo_paths import expand_path  # noqa: E402
+
 MANAGED = ("urgent", "important")
 OUTCOMES = ("decide", "do", "agent", "done", "stale", "duplicate")
 
@@ -203,7 +206,11 @@ def main(argv=None) -> int:
     try:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
         repos, command = cfg["repos"], cfg["classifier"]["command"]
-    except (OSError, ValueError, KeyError) as exc:
+        # Script paths may use $REPOS; other arguments (model names, flags) are left alone.
+        if not all(isinstance(c, str) for c in command):
+            raise TypeError("classifier.command must be a list of strings")
+        command = [expand_path(c, f"classifier.command[{i}]") if isinstance(c, str) and re.match(r"(~|\$\{?REPOS\}?)(/|$)", c) else c for i, c in enumerate(command)]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f"BLOCKED: bad config {args.config}: {exc}", file=sys.stderr)
         return 2
     label = cfg.get("label", "agent-task")

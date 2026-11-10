@@ -58,6 +58,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from repo_paths import resolve_repos  # noqa: E402
+
 ID_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*$")
 DONE_RE = re.compile(r"^\W*(DONE|RESOLVED|CLOSED|MERGED|SHIPPED)\b", re.I)
 MARKER_RE = re.compile(r"<!-- agent-task:(?P<repo>[^:]+):(?P<id>[^ ]+) sha:(?P<sha>[0-9a-f]+) -->")
@@ -290,7 +293,7 @@ def sync_repo(cfg: dict, repo: dict, gh: GitHub, deny: list[str], since: str | N
     r = {"repo": name, "github": github, "created": [], "updated": [], "closed": [], "drift": [],
          "private": [], "no_id": [], "errors": [], "would_create": 0, "open_urls": [],
          "adopted": [], "opened": [], "completed": [], "open_count": None}
-    tasks = Path(repo["path"]).expanduser() / ".agent" / "TASKS.md"
+    tasks = Path(repo["path"]) / ".agent" / "TASKS.md"
     if not tasks.is_file():
         r["errors"].append(f"no register at {tasks}")
         return r
@@ -376,7 +379,7 @@ def removable_worktrees(repo_path: str) -> list[str]:
     def git(cwd, *args):
         res = subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True)
         return res.stdout.strip() if res.returncode == 0 else None
-    main = str(Path(repo_path).expanduser())
+    main = repo_path
     listing = git(main, "worktree", "list", "--porcelain")
     if listing is None:
         return []
@@ -535,7 +538,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     try:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
-        repos = cfg["repos"]
+        repos = resolve_repos(cfg["repos"])
     except (OSError, ValueError, KeyError) as exc:
         print(f"BLOCKED: bad config {args.config}: {exc}", file=sys.stderr)
         return 2
