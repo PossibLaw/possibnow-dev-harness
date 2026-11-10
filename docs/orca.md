@@ -163,6 +163,9 @@ stops the run with a message naming the config key (for example `repos[1].path`)
 When the dispatcher matches a config path to the repositories and worktrees Orca reports, it compares real
 paths and, on macOS, ignores letter case (`$REPOS/Project` matches Orca's `/path/project`).
 
+Rollout order: update the harness checkout the scheduled job uses before switching any config to `$REPOS`,
+because older scripts treat `$REPOS` literally.
+
 ## 6. What not to run in a worktree
 
 A worktree holds a snapshot of any `--clone`d data directory. Jobs that write to that

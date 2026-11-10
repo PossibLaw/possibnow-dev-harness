@@ -207,8 +207,10 @@ def main(argv=None) -> int:
         cfg = json.loads(args.config.expanduser().read_text(encoding="utf-8"))
         repos, command = cfg["repos"], cfg["classifier"]["command"]
         # Script paths may use $REPOS; other arguments (model names, flags) are left alone.
-        command = [expand_path(c, f"classifier.command[{i}]") if re.match(r"[~$]\S*$", c) else c for i, c in enumerate(command)]
-    except (OSError, ValueError, KeyError) as exc:
+        if not all(isinstance(c, str) for c in command):
+            raise TypeError("classifier.command must be a list of strings")
+        command = [expand_path(c, f"classifier.command[{i}]") if isinstance(c, str) and re.match(r"(~|\$\{?REPOS\}?)(/|$)", c) else c for i, c in enumerate(command)]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f"BLOCKED: bad config {args.config}: {exc}", file=sys.stderr)
         return 2
     label = cfg.get("label", "agent-task")

@@ -1,7 +1,7 @@
 """Config paths that follow the machine's repository root.
 
 A config path may start with `$REPOS` (or `${REPOS}`); `REPOS` is set per machine in the scheduled job's
-environment and defaults to the home directory, so `~/Aleph` and `$REPOS/Aleph` agree when it is unset.
+environment and defaults to the home directory, so `~/my-repo` and `$REPOS/my-repo` agree when it is unset.
 Expansion is `os.path.expandvars` then `os.path.expanduser`. A `$NAME` that is not set is an error
 that names the config key, never a silently wrong path.
 """
@@ -17,11 +17,13 @@ _VAR = re.compile(r"\$(?:\{(\w+)\}|(\w+))")
 def expand_path(value: str, key: str) -> str:
     env = dict(os.environ)
     env.setdefault("REPOS", os.path.expanduser("~"))
-    env["REPOS"] = os.path.expanduser(env["REPOS"])
+    env["REPOS"] = os.path.expanduser(env.get("REPOS") or "~")  # empty counts as unset
     for m in _VAR.finditer(value):
         name = m.group(1) or m.group(2)
         if name not in env:
             raise ValueError(f"{key}: ${name} is not set in the environment (value {value!r})")
+    if "${" in _VAR.sub("", value):
+        raise ValueError(f"{key}: unsupported variable syntax in {value!r} (use $NAME or ${{NAME}})")
     expanded = _VAR.sub(lambda m: env[m.group(1) or m.group(2)], value)
     return os.path.expanduser(expanded)
 
@@ -43,6 +45,7 @@ def normalize(path: str) -> str:
     if path.startswith("path:"):
         path = path[5:]
     path = os.path.realpath(path).rstrip("/") or "/"
+    # casefold assumes the default case-insensitive APFS volume; a case-sensitive macOS volume would over-match.
     return path.casefold() if sys.platform == "darwin" else path
 
 

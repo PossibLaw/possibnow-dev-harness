@@ -394,7 +394,9 @@ def main(argv=None) -> int:
                 skipped.append(f"{tag}: cap reached ({max_per_repo} per repo)")
                 continue
             prompt = prompt_tpl.replace("{issue_url}", issue["html_url"]).replace("{issue_number}", str(n)).replace("{repo}", repo["github"])
-            repo_selector = f"path:{repo['path']}"  # Orca does not expand ~ itself
+            # Orca does not expand ~ itself and matches its registered path exactly, so send its spelling.
+            registered = next((p for p in orca_repo_paths().values() if same_path(p, repo["path"])), repo["path"])
+            repo_selector = f"path:{registered}"
             cmd = ["orca", "worktree", "create", "--repo", repo_selector, "--name", f"auto-{n}", "--issue", str(n),
                    "--agent", cfg.get("agent", "claude"), "--prompt", prompt, "--no-parent", "--json"]
             # --no-parent: the runner works from ~/Aleph, and Orca would otherwise file every run under Aleph.
