@@ -221,3 +221,23 @@ def test_a_content_pattern_that_matches_nothing_is_reported(env):
     assert res.returncode == 0, res.stderr
     assert 'matches no files' in res.stdout and 'content/renamed-edition/*/draft.md' in res.stdout
     assert 'content/library-current/*/article.md' not in res.stdout.split('Errors:')[-1], 'a pattern with files is not flagged'
+
+
+def test_repo_path_may_use_the_repos_variable(env, monkeypatch):
+    cfg = json.loads(env['config'].read_text())
+    cfg['watches'][0]['repo']['path'] = f"$REPOS/{env['repo'].name}"
+    env['config'].write_text(json.dumps(cfg))
+    monkeypatch.setenv('REPOS', str(env['repo'].parent))
+    res = run(env)
+    assert res.returncode == 0, res.stderr
+    assert 'matches no files' not in env['report'].read_text()
+
+
+def test_unknown_variable_in_a_watch_repo_path_stops_the_run_naming_the_key(env, monkeypatch):
+    cfg = json.loads(env['config'].read_text())
+    cfg['watches'][0]['repo']['path'] = '$NO_SUCH_ROOT/x'
+    env['config'].write_text(json.dumps(cfg))
+    monkeypatch.delenv('NO_SUCH_ROOT', raising=False)
+    res = run(env)
+    assert res.returncode == 2
+    assert 'watches[0].repo.path' in res.stderr

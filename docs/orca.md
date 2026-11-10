@@ -151,6 +151,18 @@ right: Backlog, Needs your decision, This week, Today, Being worked on, Needs yo
 - First time: `scripts/plan-board.py --config <private config> --setup` creates the fields and prints the steps only
   you can do in GitHub (the Status options, and a Board view sorted by Priority).
 
+### Repository paths in the nightly configs
+
+The nightly scripts' private JSON configs (issue sync, dispatcher, content freshness, triage) name repository
+paths and script paths. A path may start with `~` or `$REPOS` (also `${REPOS}`), for example
+`$REPOS/my-repo` or `$REPOS/my-repo/scripts/classify.py`. `REPOS` defaults to the home directory when unset, so
+`~/my-repo` and `$REPOS/my-repo` agree. On a machine whose repositories live under a different root, set
+`REPOS` in the scheduled job's environment and keep one config for every machine. A `$NAME` that is not set
+stops the run with a message naming the config key (for example `repos[1].path`) instead of using a wrong path.
+
+When the dispatcher matches a config path to the repositories and worktrees Orca reports, it compares real
+paths and, on macOS, ignores letter case (`$REPOS/Project` matches Orca's `/path/project`).
+
 ## 6. What not to run in a worktree
 
 A worktree holds a snapshot of any `--clone`d data directory. Jobs that write to that

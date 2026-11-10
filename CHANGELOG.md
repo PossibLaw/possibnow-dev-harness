@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Config paths may use `$REPOS`** (per-machine repository root: one private config is read on two machines whose repositories live under different roots). `repos[].path` in the issue sync and the dispatcher, `watches[].repo.path` in content freshness and script paths in the triage `classifier.command` expand `$REPOS` (default: the home directory, so `~` configs behave as before), then `~`. An unset `$NAME` stops the run with an error naming the config key. The dispatcher compares config paths with Orca's repository and worktree paths by real path, ignoring letter case on macOS. Shared helper `scripts/repo_paths.py`; documented in `docs/orca.md`. Fifteen tests, red first.
+
 - **The issue sync stops mirroring a row that links its own issue** (#69, November 4, 2026: in scbrand, rows E10, E11, E14 and E15 linked hand-written issues and the sync opened a second issue for each). A row with a cell that starts with a link to an issue in the same repository (`[#N](https://github.com/OWNER/REPO/issues/N)`, optionally after `**` or `Issue `) gets no mirror; an existing open mirror closes as a duplicate with a comment, and a closed one is no longer reported as drift. The linked issue is never edited or closed by the register. Mentions mid-cell, pull request links and other repositories' issues are unchanged. Four tests, two red first.
 
 - **Content freshness reports a pattern that matches no files** (H-FR02, November 3, 2026: watching the PossibNow Builder articles means a dated edition pattern, and a renamed or new edition would otherwise make the watch go quiet and look healthy). Each `content` pattern that matches nothing is listed under the watch's errors in the report. One test, red first.

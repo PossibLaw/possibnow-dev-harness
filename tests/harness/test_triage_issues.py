@@ -229,3 +229,23 @@ def test_all_repos_failing_is_not_ok(env):
     w = world(env); w['fail_all'] = True; env['world'].write_text(json.dumps(w))
     run(env)
     assert json.loads(env['state'].read_text())['classifier_ok'] is False
+
+
+def test_classifier_script_path_may_use_the_repos_variable(env, monkeypatch):
+    cfg = json.loads(env['config'].read_text())
+    cfg['classifier']['command'] = ['$REPOS/bin/fake-claude']
+    env['config'].write_text(json.dumps(cfg))
+    monkeypatch.setenv('REPOS', str(env['config'].parent))
+    res = run(env)
+    assert res.returncode == 0, res.stderr
+    assert env['state'].exists() and json.loads(env['state'].read_text())
+
+
+def test_unknown_variable_in_the_classifier_command_stops_the_run_naming_the_key(env, monkeypatch):
+    cfg = json.loads(env['config'].read_text())
+    cfg['classifier']['command'] = ['$NO_SUCH_ROOT/x.py', '--flag']
+    env['config'].write_text(json.dumps(cfg))
+    monkeypatch.delenv('NO_SUCH_ROOT', raising=False)
+    res = run(env)
+    assert res.returncode == 2
+    assert 'classifier.command[0]' in res.stderr

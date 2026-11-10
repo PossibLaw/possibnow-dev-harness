@@ -471,3 +471,41 @@ def test_pr_mentioning_other_numbers_or_another_repo_does_not_block(world):
     world['path'].write_text(json.dumps(w))
     run(world)
     assert 1 in [int(c[c.index('--issue') + 1]) for c in started(world)]
+
+
+def _set_repo_path(world, name, value):
+    cfg = json.loads(world['config'].read_text())
+    next(r for r in cfg['repos'] if r['name'] == name)['path'] = value
+    world['config'].write_text(json.dumps(cfg))
+
+
+def test_repo_path_may_use_the_repos_variable(world, monkeypatch):
+    monkeypatch.setenv('REPOS', '/repos')
+    _set_repo_path(world, 'alpha', '$REPOS/alpha')
+    _set_repo_path(world, 'beta', '${REPOS}/beta')
+    res = run(world)
+    assert res.returncode == 0, res.stderr
+    selectors = sorted(c[c.index('--repo') + 1] for c in started(world))
+    assert selectors == ['path:/repos/alpha', 'path:/repos/beta'], 'Orca gets the expanded path'
+
+
+def test_unknown_variable_in_a_repo_path_stops_the_run_naming_the_key(world, monkeypatch):
+    monkeypatch.delenv('NO_SUCH_ROOT', raising=False)
+    _set_repo_path(world, 'beta', '$NO_SUCH_ROOT/beta')
+    res = run(world)
+    assert res.returncode == 2
+    assert 'repos[1].path' in res.stderr and not started(world)
+
+
+@pytest.mark.skipif(sys.platform != 'darwin', reason='macOS volumes are case-insensitive')
+def test_running_worktree_is_matched_to_its_repo_despite_letter_case(world, monkeypatch):
+    # Config says $REPOS/Alpha, Orca registered /repos/alpha: still the same repository.
+    monkeypatch.setenv('REPOS', '/repos')
+    _set_repo_path(world, 'alpha', '$REPOS/Alpha')
+    w = read(world)
+    w['worktrees'] = [{"displayName": "auto-1", "branch": "refs/heads/auto-1", "linkedIssue": 1, "isArchived": False,
+                       "path": "/wt/auto-1", "repoId": "id-alpha"}]
+    world['path'].write_text(json.dumps(w))
+    run(world)
+    issues = sorted(int(c[c.index('--issue') + 1]) for c in started(world))
+    assert issues == [11], 'alpha is at its cap, so only beta may start'
