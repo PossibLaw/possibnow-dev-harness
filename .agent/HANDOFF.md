@@ -120,7 +120,7 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   November 10, 2026 (Orca 1.4.252): every project has the recommended setup line and wait-for-setup; one project
   that was removed by accident was re-entered from Orca's own state backup. The second machine's Orca matches on
   every setting that affects runs; details in the private runbook.
-- Release: PR #72 is unreleased. Next version carries it; follow the release order below (Sal tags).
+- Release: 4.3.6 version-and-pins PR is in review (carries PRs #66, #70, #72, #74); follow the release order below (Sal tags).
 - Three SCBrand worktrees (onboarding coupons, onboarding security, executive AI brief) are locked by a Claude session
   running since October 7. They become removable when that session closes (Sal).
 
