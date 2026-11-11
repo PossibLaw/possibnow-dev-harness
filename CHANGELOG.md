@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## Unreleased
+## 4.3.6 — 2026-11-10 — Dispatcher skips linked work; issue-sync duplicate fix; $REPOS config paths; skill paths
+
+Bootstrap and pack pinned to v4.3.6.
+
 
 - **Skill commands use the configurable roots** (follow-up to `$REPOS`: on a machine whose repositories live under another root, the commands in the skills pointed at the wrong place). The `answering-the-morning-brief` skill now runs `"${REPOS:-$HOME}/possibnow-dev-harness/scripts/..."` with configs under `"${AGENT_TASKS_DIR:-$HOME/agent-tasks}/..."`, and `routing-work-to-a-repo` reads `"${AGENT_TASKS_DIR:-$HOME/agent-tasks}/routing.md"`; both skills 1.0.1. A new test scans `skills/`, `commands/` and `agents/` for the hardcoded `~/possibnow-dev-harness/` and `~/agent-tasks` forms. Two tests, red first.
 
