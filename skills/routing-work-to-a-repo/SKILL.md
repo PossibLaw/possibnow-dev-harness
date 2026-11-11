@@ -2,7 +2,7 @@
 name: routing-work-to-a-repo
 description: Turn one sentence of work ("I'm working on the ESRB session design") into a GitHub issue in the right repository, with the flywheel line, and offer an Orca worktree on it. Use when the user names work without naming a repo, says "file this", "route this", "add a task for", or "where does this go".
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Routing work to a repository
@@ -13,7 +13,7 @@ reads it.
 
 ## 1. Find the routing table
 
-Read `~/agent-tasks/routing.md` (or the path in `$AGENT_TASKS_ROUTING`). If the file is
+Read `"${AGENT_TASKS_DIR:-$HOME/agent-tasks}/routing.md"` (or the path in `$AGENT_TASKS_ROUTING`). If the file is
 missing, stop and say so; do not route from memory. The table has: topic, match words,
 repository (`owner/repo`), register path, owner, issue labels. First matching row wins,
 top to bottom.

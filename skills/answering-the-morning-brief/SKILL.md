@@ -2,7 +2,7 @@
 name: answering-the-morning-brief
 description: Apply Sal's answers to the nightly triage brief. Use when he replies with picks like "brief 1A 2B", "1A 3B" right after the brief, "opt in <names>", or "close stale", or asks to act on the morning brief.
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Answering the morning brief
@@ -27,13 +27,13 @@ numbers.
   - Drop, close or won't do: close the issue as not planned.
   - Hand the work to an agent: treat it like "opt in" below.
   - Every pick that leaves the issue open: move its card back to Backlog so the next nightly plan can
-    pick it up: `python3 ~/possibnow-dev-harness/scripts/plan-board.py --config ~/agent-tasks/board.json --answered <key>`.
+    pick it up: `python3 "${REPOS:-$HOME}/possibnow-dev-harness/scripts/plan-board.py" --config "${AGENT_TASKS_DIR:-$HOME/agent-tasks}/board.json" --answered <key>`.
   - Anything else: leave it open. If the issue came from a register row (its body carries the hidden
     `agent-task:` marker), the decision also belongs in that repository's `.agent/TASKS.md` row. The
     sync overwrites GitHub-side edits, so update the row through a small pull request and say so.
 - **`opt in <names>`:** match each name to an issue in the brief's agent section. Add `auto-ok` only
   when the nightly dispatcher would accept the issue. Check it with
-  `python3 ~/possibnow-dev-harness/scripts/dispatch-auto-issues.py --config ~/agent-tasks/policy/dispatch.json --dry-run`.
+  `python3 "${REPOS:-$HOME}/possibnow-dev-harness/scripts/dispatch-auto-issues.py" --config "${AGENT_TASKS_DIR:-$HOME/agent-tasks}/policy/dispatch.json" --dry-run`.
   For any it would reject, report the reason (for example "no files named") and the edit that fixes it.
 - **`close stale`:** close every issue in the brief's stale section with a comment quoting the triage's
   reason, as not planned. Close nothing else.
