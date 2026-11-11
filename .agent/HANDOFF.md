@@ -10,10 +10,22 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.3.5 published; board and morning brief live from tonight (October 27, 2026)
+# Current Handoff — config paths may use $REPOS; the operator's jobs are moving to an always-on machine (November 10, 2026)
 
 ## Status
-Main is at v4.3.5. Sal created the tag and the GitHub Release on October 27, 2026; the receipt is
+November 10, 2026: PR #72 ("Config paths may use $REPOS (per-machine repository root)") is merged on main (15af2b0).
+The nightly scripts (issue sync, dispatcher, content freshness, triage) expand `$REPOS` in config paths, defaulting to
+the home folder when it is unset, so one private config serves two machines whose repositories live under different
+roots. An unknown or leftover variable stops the run with the config key named. The dispatcher matches Orca repo and
+worktree paths case-insensitively on macOS and sends Orca the path Orca registered. `docs/orca.md` documents it,
+including the rollout order: update the harness checkout the scheduled job uses before switching configs to `$REPOS`.
+Opus review: 2 Important and 5 Minor findings, all fixed. Not released yet: it ships in the next version.
+
+The operator is moving every scheduled job to a second, always-on machine so the daily-driver laptop can be closed
+or away. That move is tracked privately (the operator's Aleph issue and private runbook); this repo holds only the
+generic mechanics above.
+
+Earlier: main is at v4.3.5. Sal created the tag and the GitHub Release on October 27, 2026; the receipt is
 `.agent/RELEASE-4.3.5.md`. The marketplace entry is 4.3.5. The user-scope and Trazomo local-scope plugins were
 updated to 4.3.5. The Codex guard copy needed no refresh: its files are unchanged since 4.3.4.
 
@@ -61,12 +73,10 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   #866. The morning brief now names the queue. Next: when this batch merges cleanly, add file paths to the 36
   agent-ready issues the dispatcher refuses for "no paths named" (Sal approved; through register PRs where the
   issue comes from a register).
-- Dispatcher duplicate runs (issue #65, October 29): auto-142 started beside a hand-made worktree and PR for the
-  same Aleph issue. Fixed on branch `dispatcher-skip-linked-work`: any open PR naming the issue, or any Orca worktree
-  linked to it, now blocks a run. Same branch: the issue sync now reads a `Priority / state` column, so a DONE
-  row there closes its issue (Aleph dry run: nothing changes today). Next: Sal reviews and merges. The private
-  runbook has the nightly run call these scripts from a main checkout; whether that checkout is pulled
-  automatically is UNCONFIRMED.
+- Dispatcher duplicate runs (issue #65, closed): merged as PR #66. Any open PR naming the issue, or any Orca worktree
+  linked to it, blocks a run; the issue sync reads a `Priority / state` column, so a DONE row there closes its issue.
+  Whether the operator's harness main checkout is pulled automatically before the nightly run is UNCONFIRMED; on
+  November 10 it was pulled by hand to PR #72.
 - First mobile use of the linked-issue hook: the next session Sal opens from his phone should start with the link.
   Running sessions pick the hook up after a restart.
 - Deferred minors from the PR #58 review are listed in its body:
@@ -106,8 +116,11 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   `answering-the-morning-brief` applies them, and it now moves an answered decision card back to Backlog.
 - UNCONFIRMED until tonight's run: the Stop-hook notice in a fresh nightly run (it was proven by hand on auto-22) and
   the first live auto-clean removal (auto-22).
-- Sal's per-repository Orca settings are recorded in the private `AtticusDundee/agent-tasks` repo. On October 23, 2026
-  Orca's live settings differed from the recorded recommendation; reconciling them is Sal's call (recorded there).
+- Sal's per-repository Orca settings are recorded in the private `AtticusDundee/agent-tasks` repo. Checked again
+  November 10, 2026 (Orca 1.4.252): every project has the recommended setup line and wait-for-setup; one project
+  that was removed by accident was re-entered from Orca's own state backup. The second machine's Orca matches on
+  every setting that affects runs; details in the private runbook.
+- Release: PR #72 is unreleased. Next version carries it; follow the release order below (Sal tags).
 - Three SCBrand worktrees (onboarding coupons, onboarding security, executive AI brief) are locked by a Claude session
   running since October 7. They become removable when that session closes (Sal).
 
@@ -140,6 +153,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   - disposable fixtures only.
 
 ## Evidence
+- PR #72 (November 10, 2026): `uvx --with pytest pytest -q` gave 468 passed on the merged head (re-run by the lead);
+  `scripts/verify-pack.sh` DONE; CI `verify` passed. Dry runs of the issue sync and dispatcher with a `$REPOS`
+  config and `REPOS` unset changed nothing.
 - v4.3.5: `uvx --with pytest pytest -q` gave 434 passed; `scripts/verify-pack.sh` gave DONE; CI `verify` passed on #58,
   #60 and #61.
 - Public bootstrap smoke from the tag: 108 files; customized files preserved; no churn on rerun.
@@ -151,6 +167,7 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
+0. Next release: include PR #72 (`$REPOS` config paths). Merge the version-and-pins PR first; Sal tags.
 1. Watch auto-131 and auto-790: each Stop-hook notice should arrive, and Sal reviews their PRs. Then add paths to
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.

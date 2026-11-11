@@ -10,7 +10,14 @@ memory:
   tags: [plan]
 ---
 
-# Current (October 27, 2026): v4.3.5 published; board and short morning brief live
+# Current (November 10, 2026): config paths may use $REPOS (PR #72, merged; unreleased)
+
+One private config serves two machines whose repositories live under different roots: config paths may say
+`$REPOS/<repo>`, and `REPOS` defaults to the home folder. Acceptance: unset `REPOS` behaves exactly as before; an
+unknown variable stops the run naming the key; the dispatcher sends Orca its registered path when only letter case
+differs. All pass (468 tests). Next: ship it in the next release (TASKS H-REPO01).
+
+# Earlier (October 27, 2026): v4.3.5 published; board and short morning brief live
 
 Shipped in v4.3.5: PR #58 for Sal's issue "How I do work" (#56), PR #60 for Orca mobile (#59); rollout (Task 9) done October 27. Design `docs/superpowers/specs/2026-10-27-how-i-do-work-design.md`;
 plan with tasks, tests and the rollout (Task 9) `docs/superpowers/plans/2026-10-27-how-i-do-work.md`. Tasks 1 to 9 are done,
