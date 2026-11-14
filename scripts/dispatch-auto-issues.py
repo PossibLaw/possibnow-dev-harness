@@ -184,7 +184,7 @@ def auto_name(wt: dict) -> str | None:
 
 def issue_paths(body: str, repo_path: str | Path | None = None) -> list[str]:
     """Paths the issue names in backticks: a token counts only when it exists in the repo checkout,
-    or its parent folder does (a new file in an existing folder). Model names, keychain items and
+    or its parent folder does (a new file in an existing folder) and that parent is not the repo root. Model names, keychain items and
     branch names therefore do not count. The sync's own Source line and register files are ignored."""
     lines = [l for l in (body or "").splitlines() if not l.lstrip().startswith("**Source:**")]
     found = {m.group(1).lstrip("./") for m in PATH_RE.finditer("\n".join(lines))}
@@ -197,7 +197,9 @@ def issue_paths(body: str, repo_path: str | Path | None = None) -> list[str]:
     kept = []
     for p in candidates:
         full = root / p
-        if full.exists() or full.parent.is_dir():
+        # A bare folder name (`name/`) has the root as its parent, which always exists: count it only
+        # when that folder exists at the root, so a folder mentioned by name elsewhere is not a root path.
+        if full.exists() or (full.parent != root and full.parent.is_dir()):
             kept.append(p)
     return kept
 

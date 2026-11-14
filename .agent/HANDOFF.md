@@ -62,6 +62,12 @@ The nightly chain an operator runs from these scripts:
 Each autonomous run's Stop hook posts its own notice, and a morning job posts the brief.
 
 ## Unresolved work
+- Dispatcher: a bare folder name in an issue body (for example `` `library-current/` ``) counted as a root-level
+  path, because the root is always its parent, so an issue that only mentions such a folder was refused as "outside
+  the allowed list". Found November 13, 2026 in the issue review (Aleph #193). Fixed on branch
+  `Issues-Cleanup-and-Auto-Marking` with a failing-first test: a bare `name/` counts only when that folder exists at
+  the root. Next: merge, then pull the harness checkout the nightly job uses. Same night, the operator's #193 body and
+  private watch-list sentence were changed to the full path, so #193 does not wait on this fix.
 - Issue sync duplicates (TASKS H-ORC03, issue #69, November 4, 2026): a register row whose cell starts with a link to
   its own issue no longer gets a mirror; an open mirror closes as a duplicate. Merged as PR #70; the harness main
   checkout is pulled, so tonight's 22:00 Aleph run uses it. Next: confirm the summary no longer lists scbrand E8 to
