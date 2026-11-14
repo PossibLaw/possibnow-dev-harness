@@ -120,7 +120,7 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   November 10, 2026 (Orca 1.4.252): every project has the recommended setup line and wait-for-setup; one project
   that was removed by accident was re-entered from Orca's own state backup. The second machine's Orca matches on
   every setting that affects runs; details in the private runbook.
-- Release: 4.3.6 version-and-pins PR is in review (carries PRs #66, #70, #72, #74); follow the release order below (Sal tags).
+- Release: v4.3.6 published November 13, 2026 (tag by Sal on the #75 merge, a32f9fa); carries PRs #66, #70, #72, #74. Smoke, marketplace (PossibLaw-Plugins #15) and plugin updates done; receipt `.agent/RELEASE-4.3.6.md`.
 - Three SCBrand worktrees (onboarding coupons, onboarding security, executive AI brief) are locked by a Claude session
   running since October 7. They become removable when that session closes (Sal).
 
@@ -167,7 +167,6 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-0. Next release: include PR #72 (`$REPOS` config paths). Merge the version-and-pins PR first; Sal tags.
 1. Watch auto-131 and auto-790: each Stop-hook notice should arrive, and Sal reviews their PRs. Then add paths to
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.
