@@ -523,3 +523,16 @@ def test_create_sends_the_path_orca_registered_when_case_differs(world, monkeypa
     assert res.returncode == 0, res.stderr
     selectors = sorted(c[c.index('--repo') + 1] for c in started(world))
     assert selectors == ['path:/repos/alpha', 'path:/repos/beta']
+
+
+def test_a_bare_folder_name_counts_only_when_that_folder_exists_at_the_root(tmp_path):
+    # November 13, 2026: Aleph #193 said "`library-current/` ... is not edited". That folder lives under
+    # content/, not at the root, but the root always exists, so the bare name counted as a root-level path
+    # outside the allowed list and the dispatcher refused the issue every night.
+    m = module()
+    repo = tmp_path / 'r'; (repo / 'content' / 'library-current').mkdir(parents=True); (repo / 'docs').mkdir()
+    body = "edit `content/a.md`; `library-current/` is not edited; see `docs/` and new folder `content/new-dir/`"
+    assert m.issue_paths(body, repo) == ['content/a.md', 'content/new-dir/', 'docs/']
+    repo_cfg = {'name': 'r', 'path': str(repo), 'allowed_paths': ['content/', 'docs/']}
+    issue = {'labels': [{'name': 'agent-task'}, {'name': 'auto-ok'}], 'body': body}
+    assert m.reject_reason(issue, repo_cfg, ['agent-task', 'auto-ok']) is None
