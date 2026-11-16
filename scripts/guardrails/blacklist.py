@@ -24,9 +24,9 @@ BLOCKED_PATTERNS = [
 ]
 
 # Commands that require user confirmation (permissionDecision: "ask")
+# `git rebase` and plain `git reset` are routine and recoverable, so they pass without a question
+# (Sal, November 16, 2026, issue #78); `git reset --hard` stays blocked above and force-pushes ask below.
 ESCALATE_PATTERNS = [
-    r"git\s+reset(?!\s+--hard)",
-    r"git\s+rebase",
     r"git\s+push\s+--force(?!\s+origin\s+(main|master))",
     # Other force-push spellings, branch force-delete, and discarding all working-tree changes.
     r"git\s+push\b[^;&|\n]*\s(-[a-zA-Z]*f[a-zA-Z]*|--force\S*)(\s|$)",

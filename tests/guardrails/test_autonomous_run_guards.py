@@ -99,3 +99,34 @@ def test_mcp_draft_tools_pass_in_autonomous_runs():
     for tool in ("mcp__substack__post_draft_from_markdown", "mcp__substack__put_draft", "mcp__substack__add_tags"):
         res = mcp(tool, env=clean_env(AGENT_AUTO="1"))
         assert res.returncode == 0 and "deny" not in res.stdout, tool
+
+
+# --- Ask-first commands in an autonomous run (issue #78) ---
+# Nobody is there to answer a question, so "ask" would stall the run. Refuse with a reason instead.
+
+ASK_FIRST = ["rm -r ./build", "git branch -D old-branch", "git restore .", "git push --force origin feature", "chmod -R 755 ."]
+
+
+def test_ask_first_commands_still_ask_in_a_normal_session():
+    for cmd in ASK_FIRST:
+        assert asks(bash(cmd)), cmd
+
+
+def test_ask_first_commands_are_refused_in_an_autonomous_run_by_env():
+    for cmd in ASK_FIRST:
+        res = bash(cmd, env=clean_env(AGENT_AUTO="1"))
+        assert res.returncode == 2, cmd
+        assert "permissionDecision" not in res.stdout, cmd
+        assert "autonomous" in res.stderr.lower() and "ask" in res.stderr.lower(), res.stderr
+
+
+def test_ask_first_commands_are_refused_on_an_auto_branch(tmp_path):
+    res = bash("rm -r ./build", cwd=auto_branch_repo(tmp_path))
+    assert res.returncode == 2
+    assert "permissionDecision" not in res.stdout
+
+
+def test_routine_git_history_commands_pass_in_an_autonomous_run():
+    for cmd in ["git rebase main", "git reset --soft HEAD~1"]:
+        res = bash(cmd, env=clean_env(AGENT_AUTO="1"))
+        assert res.returncode == 0 and "permissionDecision" not in res.stdout, cmd

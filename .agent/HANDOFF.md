@@ -62,6 +62,15 @@ The nightly chain an operator runs from these scripts:
 Each autonomous run's Stop hook posts its own notice, and a morning job posts the brief.
 
 ## Unresolved work
+- Plugin hooks under a path with a space (#78): `hooks/hooks.json` called `${CLAUDE_PLUGIN_ROOT}/scripts/...` unquoted.
+  Orca runs Claude Code from a profile under "Application Support", so the shell split the path and all seven hooks
+  failed as non-blocking errors: no bash validation, file protection, publish guard, completion notice or linked
+  issue in any Orca session. Found and reproduced November 16, 2026. Fixed on branch `hooks-path-quoting-78`, tests
+  first: the seven commands are quoted (as `hooks/tier2-hooks.json` already was), and every hook command is now run
+  through `/bin/sh` with a plugin root that contains a space. Two changes Sal approved the same day ride along: `git
+  rebase` and plain `git reset` no longer ask first, and in an autonomous run an ask-first command is refused with a
+  reason instead of asking, because nobody is there to answer. Next: merge, release, then update the plugin in every
+  Orca profile on both machines and restart sessions; expect Orca sessions to enforce the guardrails from then on.
 - Dispatcher: a bare folder name in an issue body (for example `` `library-current/` ``) counted as a root-level
   path, because the root is always its parent, so an issue that only mentions such a folder was refused as "outside
   the allowed list". Found November 13, 2026 in the issue review (Aleph #193). Fixed on branch

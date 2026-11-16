@@ -51,7 +51,7 @@ def test_codex_blocked_command_exits_2():
     assert "BLOCKED" in result.stderr
 
 
-@pytest.mark.parametrize("command", ["git rebase main", "git branch -D old", "git restore ."])
+@pytest.mark.parametrize("command", ["rm -r ./build", "git branch -D old", "git restore ."])
 def test_codex_ask_first_becomes_block_with_instruction(command):
     result = run("validate-bash.py", bash(command), "--host", "codex")
     assert result.returncode == 2, "Codex ignores 'ask', so ask-first must block"
@@ -67,7 +67,7 @@ def test_codex_safe_command_passes():
 
 
 def test_claude_host_still_asks():
-    result = run("validate-bash.py", bash("git rebase main"))
+    result = run("validate-bash.py", bash("git branch -D old"))
     assert result.returncode == 0
     assert json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
 
