@@ -298,8 +298,18 @@ def main():
 
     # Check escalation patterns
     codex = sys.argv[1:3] == ["--host", "codex"]
+    autonomous = is_autonomous(data.get("cwd"))
     for pattern in ESCALATE_PATTERNS:
         if re.search(pattern, command):
+            if autonomous:
+                # Nobody is there to answer, so a question would stall the run.
+                print(
+                    f"BLOCKED: this is an autonomous agent run and this command is ask-first "
+                    f"(matched pattern '{pattern}'). There is no one to ask, so it is refused: "
+                    f"take another route, or leave it in the draft PR for the human.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
             if codex:
                 # Codex parses but ignores permissionDecision "ask", so ask-first must block.
                 print(

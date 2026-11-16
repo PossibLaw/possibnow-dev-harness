@@ -84,10 +84,6 @@ def test_blocked_commands(command):
 @pytest.mark.parametrize(
     "command",
     [
-        "git reset HEAD~1",
-        "git reset --soft HEAD~1",
-        "git rebase main",
-        "git rebase -i feature",
         "git push --force origin feature-branch",
         "git push -f origin feature-branch",
         "git push origin feature-branch --force",
@@ -149,6 +145,13 @@ def test_escalated_commands(command):
         "git restore --staged .",
         "git restore src/app.py",
         "git clean -n",
+        # Routine and recoverable: no question (Sal, November 16, 2026, issue #78).
+        "git reset HEAD~1",
+        "git reset --soft HEAD~1",
+        "git reset",
+        "git rebase main",
+        "git rebase -i feature",
+        "git rebase --continue",
         "git push origin feature && cd main",
         "pip install requests",
     ],
