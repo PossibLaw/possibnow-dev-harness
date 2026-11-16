@@ -69,8 +69,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   first: the seven commands are quoted (as `hooks/tier2-hooks.json` already was), and every hook command is now run
   through `/bin/sh` with a plugin root that contains a space. Two changes Sal approved the same day ride along: `git
   rebase` and plain `git reset` no longer ask first, and in an autonomous run an ask-first command is refused with a
-  reason instead of asking, because nobody is there to answer. Next: merge, release, then update the plugin in every
-  Orca profile on both machines and restart sessions; expect Orca sessions to enforce the guardrails from then on.
+  reason instead of asking, because nobody is there to answer. Merged November 16, 2026 as PR #79. Next: release
+  4.3.7, then update the plugin in every Orca profile on both machines and restart sessions; expect Orca sessions to
+  enforce the guardrails from then on.
 - Dispatcher: a bare folder name in an issue body (for example `` `library-current/` ``) counted as a root-level
   path, because the root is always its parent, so an issue that only mentions such a folder was refused as "outside
   the allowed list". Found November 13, 2026 in the issue review (Aleph #193). Fixed on branch
@@ -135,6 +136,7 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   November 10, 2026 (Orca 1.4.252): every project has the recommended setup line and wait-for-setup; one project
   that was removed by accident was re-entered from Orca's own state backup. The second machine's Orca matches on
   every setting that affects runs; details in the private runbook.
+- Release: 4.3.7 version-and-pins PR is in review (carries PRs #77 and #79); follow the release order below (Sal tags). After it is published, update the plugin in every Orca profile on both machines and restart sessions, so the hooks fixed in #79 start running there.
 - Release: v4.3.6 published November 13, 2026 (tag by Sal on the #75 merge, a32f9fa); carries PRs #66, #70, #72, #74. Smoke, marketplace (PossibLaw-Plugins #15) and plugin updates done; receipt `.agent/RELEASE-4.3.6.md`.
 - Three SCBrand worktrees (onboarding coupons, onboarding security, executive AI brief) are locked by a Claude session
   running since October 7. They become removable when that session closes (Sal).
