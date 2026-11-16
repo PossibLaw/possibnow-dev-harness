@@ -1,4 +1,4 @@
-# Rule ownership — 4.3.6
+# Rule ownership — 4.3.7
 
 Policy: Sal selected a maximum of 150 physical lines for each root entry.
 This is a project policy, not a scientific optimum or a savings measurement.

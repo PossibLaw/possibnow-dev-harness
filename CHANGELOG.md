@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 4.3.7 — 2026-11-16 — Hooks run under a path with a space; a quieter ask-first list; dispatcher bare-folder fix
+
+Bootstrap and pack pinned to v4.3.7.
+
+- **Plugin hooks run when the plugin path contains a space** (#78, November 16, 2026: Orca runs Claude Code from a profile under "Application Support", and `hooks/hooks.json` called `${CLAUDE_PLUGIN_ROOT}/scripts/...` unquoted, so the shell split the path and all seven hooks failed as non-blocking errors; no Orca session had bash validation, file protection, the publish guard, the completion notice or the linked issue). The seven commands are quoted, as `hooks/tier2-hooks.json` already was. A new test runs every hook command in both files through `/bin/sh` with a plugin root that contains a space, as an environment variable and as substituted text. Twenty-one tests, red first. After updating, sessions started from such a path enforce the guardrails they had been skipping.
+- **`git rebase` and plain `git reset` no longer ask first** (Sal, November 16, 2026: ask only for what matters, like deletion). `git reset --hard` stays blocked; force-pushes, `rm -r`, branch force-delete, discarding all changes, risky `chmod` and pull request merges still ask. Six tests, red first.
+- **An autonomous run refuses an ask-first command instead of asking** (same day: nobody is there to answer, so a question stalls the run). The refusal names the pattern and says to take another route or leave it in the draft pull request. Three tests, red first.
+- **The dispatcher counts a bare folder name as a path only when that folder exists at the root** (PR #77, November 13, 2026: an issue body that mentioned `` `library-current/` `` was refused as "outside the allowed list", because the root is always its parent). One test, red first.
+
 ## 4.3.6 — 2026-11-10 — Dispatcher skips linked work; issue-sync duplicate fix; $REPOS config paths; skill paths
 
 Bootstrap and pack pinned to v4.3.6.
