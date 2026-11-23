@@ -84,3 +84,13 @@ and best-effort shell parsing are unchanged; this is not a shell sandbox.
 The fallback retains the block and offers a diagnostic command if verbose rule
 lookup fails. Live client migration and installed-plugin rollout remain separate,
 unverified work (H-MIG01 / H-GR82). See TEST for actual validation receipts.
+
+
+## v4.3.8 release review (November 23, 2026)
+
+Version/pin-only release of reviewed PR #83. Active README, bootstrap, manifests,
+workflow routes and installer fixtures agree on 4.3.8; old changelog/receipts retained.
+No new runtime dependency, network permission, auth/API behavior or secret handling.
+Public tag smoke must precede installation claims. Installed copies must match tag
+bytes; preserve settings outside the managed Codex block and private project files.
+Sal authorized tag/release publication and installed updates in this session.
