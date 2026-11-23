@@ -10,7 +10,20 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 23, 2026): shared-continuity diagnostics (#82)
+# Current (November 23, 2026): publish v4.3.8 and refresh installations
+
+Sal authorized publication and installation updates. Release the #82/#83 diagnostic
+change as 4.3.8; update active version pins, validate, merge, annotate the new tag,
+publish the GitHub Release, smoke the public bootstrap, update the marketplace and
+refresh existing plugin/Codex guard installations. Existing release tags are immutable.
+Keep private inventory and client repository content out of this public repository.
+
+Evals: R438-1 pins select the tagged commit and report version 4.3.8; R438-2 customized
+project files survive install and repeat unchanged; R438-3 existing guard tests retain
+blocking/private-file behavior; R438-4 actual published bootstrap and installed scripts
+match tag bytes. Receipt: [RELEASE-4.3.8](RELEASE-4.3.8.md). All prior backlog remains.
+
+# Earlier (November 23, 2026): shared-continuity diagnostics (#82)
 
 Sal confirmed that sanitized continuity belongs in Git, including REVIEW, TEST,
 WIKI and LEARNINGS. Preserve the ignored-file block; supersede the issue's earlier

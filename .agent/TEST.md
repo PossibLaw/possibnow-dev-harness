@@ -99,3 +99,14 @@ tracked here; check-ignore reports no matching ignore for REVIEW/TEST/WIKI/LEARN
 No harness ignore-rule migration was needed. Live installed plugins, client
 repository migrations and host enforcement are UNCONFIRMED by these tests.
 Security applicability and review are recorded in REVIEW.md.
+
+
+## v4.3.8 release validation (November 23, 2026)
+
+R438-1/R438-2 failing before pin changes: installer tests 8 failed / 7 passed.
+After updating active pins: 15 passed. `./scripts/verify-pack.sh`: 518 passed,
+4 skipped (Python 3.9 lacks tomllib), DONE. The four skipped Codex installer cases
+were rerun on Python 3.14: 4 passed. `claude plugin validate .`: passed with the
+existing optional-icon warning. `git diff --check`: passed. No runtime code changes
+beyond the already merged #83 payload. Public-tag smoke and installed-byte checks
+are release-stage gates recorded in RELEASE-4.3.8.md after publication.

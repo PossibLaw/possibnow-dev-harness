@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.3.8 — 2026-11-23 — Explain ignored shared-continuity commit blocks
+
+Bootstrap and pack pinned to v4.3.8.
+
+- Keep sanitized project continuity shared, including REVIEW, TEST, WIKI and LEARNINGS. The commit guard now reports the matching ignore rule's source, line and pattern, explains the shared policy and provides safe review, narrowing and staging steps (#82, PR #83).
+- Preserve explicit ignore exceptions and unrelated private files; verbose Git diagnostics do not change the blocking decision. Twelve regression cases cover ignored files alongside unrelated staged work, successful migration and no file/index mutation or private-content disclosure.
+- Document migration from obsolete local-only rules. Updating the plugin does not rewrite project ignore rules or publish private content; review and stage sanitized continuity in each affected repository.
+
 ## 4.3.7 — 2026-11-16 — Hooks run under a path with a space; a quieter ask-first list; dispatcher bare-folder fix
 
 Bootstrap and pack pinned to v4.3.7.

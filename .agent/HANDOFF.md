@@ -10,9 +10,15 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — shared continuity remains required (November 23, 2026)
+# Current Handoff — v4.3.8 release and installation updates (November 23, 2026)
 
 ## Status
+Sal authorized publishing v4.3.8 and updating existing installations. The release
+carries merged PR #83, preserves shared-continuity enforcement, and improves ignore
+rule diagnostics. Version/pins are prepared; [RELEASE-4.3.8](RELEASE-4.3.8.md) records
+publication and rollout evidence as it becomes available. Prior backlog is retained.
+
+Earlier checkpoint context:
 Issue [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82): Sal confirmed
 that sanitized REVIEW, TEST, WIKI and LEARNINGS belong in Git. The guard still blocks
 ignored shared continuity and now reports the matching ignore source, line and
@@ -173,8 +179,7 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   stops the planner.
 - Release order:
   1. Merge the version-and-pins PR.
-  2. Sal creates the annotated tag on that merge commit, and the GitHub Release. Auto mode refuses tag and release
-     creation.
+  2. Create the annotated tag and GitHub Release only with Sal's authorization (explicitly supplied for v4.3.8). Auto mode refuses tag and release creation.
   3. Then: smoke, receipt, marketplace entry, `claude plugin update` for the user scope and Trazomo's local scope, and
      the Codex guard refresh.
 
