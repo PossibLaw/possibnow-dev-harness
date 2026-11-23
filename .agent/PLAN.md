@@ -10,7 +10,30 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 10, 2026): config paths may use $REPOS (PR #72, merged; unreleased)
+# Current (November 23, 2026): shared-continuity diagnostics (#82)
+
+Sal confirmed that sanitized continuity belongs in Git, including REVIEW, TEST,
+WIKI and LEARNINGS. Preserve the ignored-file block; supersede the issue's earlier
+local-only exemption proposal. Improve the diagnostic and migration guidance.
+Scope: harness source, regression tests, troubleshooting, issue #82 and continuity.
+Other repositories, installed plugins, release versions and global settings are
+outside this patch; customized client migration remains H-MIG01.
+
+Acceptance / evals:
+- C82-1 (failure): ignored REVIEW/TEST/WIKI/LEARNINGS plus unrelated staged work
+  still exits 2; report exact ignore source, line and pattern and safe next steps.
+  Cover .gitignore and .git/info/exclude; add tests before changing the message.
+- C82-2 (happy/edge): a narrow ignore exception plus explicit staging allows the
+  commit and records sanitized continuity. Negated rules must not cause a block.
+- C82-3 (security): unrelated private notes stay ignored and untracked; the guard
+  does not change files or the index and does not print continuity-file contents.
+- C82-4 (regression): Bash-guard tests, full verify-pack and diff whitespace check.
+
+Implementation complete; receipts: [TEST](TEST.md#issue-82-shared-continuity-diagnostics-november-23-2026),
+[REVIEW](REVIEW.md#issue-82-review-november-23-2026). Delivery is recorded by the PR
+linked to [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82).
+
+# Earlier (November 10, 2026): config paths may use $REPOS (PR #72, merged; unreleased)
 
 One private config serves two machines whose repositories live under different roots: config paths may say
 `$REPOS/<repo>`, and `REPOS` defaults to the home folder. Acceptance: unset `REPOS` behaves exactly as before; an

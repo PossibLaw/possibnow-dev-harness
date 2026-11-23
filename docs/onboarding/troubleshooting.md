@@ -8,9 +8,17 @@
   it to <=150 physical lines. Do not delete or truncate it just to pass the cap.
 - Conflicting release snapshot or partial install: preserve local work; inspect its
   INSTALL.json and reconcile or use the guarded rollback command in the README.
-- Ignored continuity: use git check-ignore -v on the named files; narrow only the
-  relevant rules after a secret review. All related sanitized continuity is shared.
-  The installer preserves .gitignore byte-for-byte.
+- Ignored continuity: the commit guard reports the matching ignore rule's source,
+  line number, pattern and affected path. All sanitized continuity is shared,
+  including REVIEW.md, TEST.md, WIKI.md and LEARNINGS.md; older instructions saying
+  these stay local unless promoted are obsolete. An ignored file on disk blocks
+  even an unrelated commit. A fresh worktree may pass because that file is absent.
+  Review the file for secrets and private runtime data first, keeping those private.
+  Use `git check-ignore -v -- .agent/REVIEW.md` (substitute the reported path), then
+  narrow only the relevant rule in its reported source. Stage the sanitized file
+  with `git add -- .agent/REVIEW.md` and any reviewed `.gitignore` edits, then retry.
+  Keep unrelated private files ignored; do not force-add ignored directories.
+  The guard makes no edits, and the installer preserves .gitignore byte-for-byte.
 - Checkpoint hash rejection: another edit intervened. Review the new state and
   regenerate the candidate; do not merely recalculate the hash to force it through.
 - Corrupt/conflicting archive: retain HANDOFF, repair/verify archival from evidence,
