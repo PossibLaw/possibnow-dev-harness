@@ -69,3 +69,33 @@ Final published v4.2.1 smoke remains the release gate.
 Patch validation: ./scripts/verify-pack.sh passed with 212 tests.
 
 E10 final: public v4.2.1 bootstrap/pack/rollback smoke passed; GitHub Release published with its receipt.
+
+
+## Issue 82 shared-continuity diagnostics (November 23, 2026)
+
+PLAN C82-1/C82-3, failing before implementation:
+`/usr/bin/python3 -m pytest tests/guardrails/test_validate_bash.py -q -k 'reports_rule_without or narrow_ignore_exception'`
+reported 8 failed, 4 passed. Failures were the missing ignore source/line/pattern
+in the existing diagnostic. Four migration cases already passed and preserve policy.
+
+After implementation, C82-1 through C82-3:
+`/usr/bin/python3 -m pytest tests/guardrails/test_validate_bash.py -q`
+reported **140 passed**. Eight cases cover four continuity files and two ignore
+sources with unrelated staged work; four cases remove the obstruction using a
+narrow exception, stage sanitized continuity and verify the resulting commit.
+Checks also prove no file/index mutations, no private-content output and continued
+exclusion of unrelated private notes. No real client files were used as fixtures.
+
+C82-4: `./scripts/verify-pack.sh` reported **518 passed, 4 skipped**, DONE.
+The four skips require Python 3.11+ tomllib; the script found pytest on system
+Python 3.9. Re-ran exactly the four installer cases with Python 3.14:
+`UV_TOOL_DIR=/tmp/possibnow-82-uv-tools uv --cache-dir /tmp/possibnow-82-uv-cache tool run --python /opt/homebrew/bin/python3 --with pytest pytest tests/guardrails/test_codex_host.py -q -k installer`
+reported **4 passed, 12 deselected**. Together all 522 collected cases passed.
+The default Homebrew python3 initially lacked pytest; the system interpreter was
+used without changing global packages. Test-tool installation stayed under /tmp.
+
+`git diff --check` passed. Ignore audit: existing .agent/REVIEW.md and TEST.md are
+tracked here; check-ignore reports no matching ignore for REVIEW/TEST/WIKI/LEARNINGS.
+No harness ignore-rule migration was needed. Live installed plugins, client
+repository migrations and host enforcement are UNCONFIRMED by these tests.
+Security applicability and review are recorded in REVIEW.md.

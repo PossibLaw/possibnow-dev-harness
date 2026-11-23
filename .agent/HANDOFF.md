@@ -10,9 +10,23 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — config paths may use $REPOS; the operator's jobs are moving to an always-on machine (November 10, 2026)
+# Current Handoff — shared continuity remains required (November 23, 2026)
 
 ## Status
+Issue [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82): Sal confirmed
+that sanitized REVIEW, TEST, WIKI and LEARNINGS belong in Git. The guard still blocks
+ignored shared continuity and now reports the matching ignore source, line and
+pattern plus safe review, narrowing and staging steps. The issue's earlier local-only
+exemption proposal is superseded. Twelve regression cases cover diagnostics, migration
+and private-content protection. Source changes and this checkpoint ship together;
+the associated PR supplies the remote delivery record. Installed copies require the
+next release/update; no client repository or global settings were migrated here.
+Current evidence: [PLAN](PLAN.md), [TEST](TEST.md#issue-82-shared-continuity-diagnostics-november-23-2026),
+[REVIEW](REVIEW.md#issue-82-review-november-23-2026), [TASKS](TASKS.md).
+All earlier unresolved work and constraints below are retained; their live status
+has not been re-audited as part of this scoped guard change.
+
+Earlier checkpoint context:
 November 10, 2026: PR #72 ("Config paths may use $REPOS (per-machine repository root)") is merged on main (15af2b0).
 The nightly scripts (issue sync, dispatcher, content freshness, triage) expand `$REPOS` in config paths, defaulting to
 the home folder when it is unset, so one private config serves two machines whose repositories live under different
@@ -62,6 +76,11 @@ The nightly chain an operator runs from these scripts:
 Each autonomous run's Stop hook posts its own notice, and a morning job posts the brief.
 
 ## Unresolved work
+- H-GR82: include the diagnostic change in the next release and refresh installed
+  guards; see [TASKS](TASKS.md) and [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82).
+  Client ignore-rule migration remains H-MIG01: review contents and narrow obsolete
+  rules in each affected repository. This harness checkout already tracks its existing
+  REVIEW/TEST files; no obsolete matching ignore rule was found here.
 - Plugin hooks under a path with a space (#78): `hooks/hooks.json` called `${CLAUDE_PLUGIN_ROOT}/scripts/...` unquoted.
   Orca runs Claude Code from a profile under "Application Support", so the shell split the path and all seven hooks
   failed as non-blocking errors: no bash validation, file protection, publish guard, completion notice or linked
@@ -169,6 +188,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
   - disposable fixtures only.
 
 ## Evidence
+- Issue #82: eight new diagnostic cases failed before implementation; all 140 Bash
+  guard tests pass afterward. Full-pack and Python-version follow-up receipts are
+  in [TEST](TEST.md#issue-82-shared-continuity-diagnostics-november-23-2026).
 - PR #72 (November 10, 2026): `uvx --with pytest pytest -q` gave 468 passed on the merged head (re-run by the lead);
   `scripts/verify-pack.sh` DONE; CI `verify` passed. Dry runs of the issue sync and dispatcher with a `$REPOS`
   config and `REPOS` unset changed nothing.
@@ -183,6 +205,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
+Issue #82 rollout: deliver the associated PR, then include it in the next release
+and update installed guards (H-GR82). Client migrations remain separately reviewed
+under H-MIG01. Existing backlog and pending decisions follow unchanged:
 1. Watch auto-131 and auto-790: each Stop-hook notice should arrive, and Sal reviews their PRs. Then add paths to
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.

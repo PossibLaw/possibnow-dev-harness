@@ -237,8 +237,21 @@ def check_handoff_commit(command, cwd):
                 continue
             root = root.strip()
             for rel in _continuity_paths(root):
-                if _run_git(root, "check-ignore", rel):
-                    return f"BLOCKED: {rel} is ignored. Review sensitive content and narrow its obsolete ignore rule before committing continuity."
+                if _run_git(root, "check-ignore", "--", rel):
+                    # Keep the non-verbose check as the gate: -v also reports
+                    # negated rules for paths that are NOT ignored.
+                    rule = _run_git(root, "check-ignore", "-v", "--", rel)
+                    path = shlex.quote(rel)
+                    detail = rule.strip() if rule else f"unavailable; run git check-ignore -v -- {path}"
+                    return (
+                        f"BLOCKED: {rel} is ignored; sanitized continuity must be committed with the work.\n"
+                        f"Matching ignore rule (source:line:pattern, then path): {detail}\n"
+                        "This conflicts with the shared-continuity policy and may be an outdated local-only configuration. "
+                        "Review the file for secrets and private runtime data; keep those private. "
+                        "Narrow only the matching ignore rule to share the sanitized continuity, then run "
+                        f"git add -- {path} and stage any reviewed .gitignore changes before retrying the commit. "
+                        "Do not force-add ignored directories."
+                    )
                 status = _run_git(root, "status", "--porcelain", "-z", "--untracked-files=all", "--", rel)
                 if not status:
                     continue

@@ -445,6 +445,54 @@ def test_ignored_named_continuity_requires_ignore_fix(repo):
     assert 'ignored' in result.stderr
 
 
+@pytest.mark.parametrize('name', ['REVIEW.md', 'TEST.md', 'WIKI.md', 'LEARNINGS.md'])
+@pytest.mark.parametrize('ignore_source', ['.gitignore', '.git/info/exclude'])
+def test_ignored_continuity_reports_rule_without_exposing_or_staging_content(repo, name, ignore_source):
+    rel = f'.agent/{name}'
+    ignore = repo / ignore_source
+    ignore.write_text(f'# Old local-only setup\n{rel}\n')
+    private_content = 'PRIVATE-CONTINUITY-SENTINEL\n'
+    (repo / rel).write_text(private_content)
+    (repo / 'app.py').write_text("print('updated')\n")
+    _git(repo, 'add', 'app.py')
+    staged_before = _git(repo, 'diff', '--cached')
+
+    result = run_hook("git commit -m 'unrelated work'", cwd=str(repo))
+
+    assert result.returncode == 2
+    assert f'{ignore_source}:2:{rel}' in result.stderr
+    assert 'outdated local-only configuration' in result.stderr
+    assert 'sanitized continuity must be committed' in result.stderr
+    assert f'git add -- {rel}' in result.stderr
+    assert private_content.strip() not in result.stderr + result.stdout
+    assert (repo / rel).read_text() == private_content
+    assert ignore.read_text() == f'# Old local-only setup\n{rel}\n'
+    assert _git(repo, 'diff', '--cached') == staged_before
+    assert _git(repo, 'ls-files', '--', rel) == ''
+
+
+@pytest.mark.parametrize('name', ['REVIEW.md', 'TEST.md', 'WIKI.md', 'LEARNINGS.md'])
+def test_reviewed_continuity_passes_after_narrow_ignore_exception_and_staging(repo, name):
+    rel = f'.agent/{name}'
+    (repo / '.gitignore').write_text('.agent/*\n')
+    (repo / rel).write_text('Reviewed continuity\n')
+    private = repo / '.agent/private-notes.md'
+    private.write_text('PRIVATE-NOTES-SENTINEL\n')
+    assert run_hook("git commit -m 'work'", cwd=str(repo)).returncode == 2
+
+    (repo / '.gitignore').write_text(f'.agent/*\n!{rel}\n')
+    # A verbose check-ignore can report a negated rule; it must not cause a block.
+    unstaged = run_hook("git commit -m 'work'", cwd=str(repo))
+    assert unstaged.returncode == 2
+    assert 'untracked' in unstaged.stderr
+    _git(repo, 'add', '--', '.gitignore', rel)
+    assert_allowed(run_hook("git commit -m 'work'", cwd=str(repo)))
+    _git(repo, 'commit', '-qm', 'share reviewed continuity')
+    assert _git(repo, 'show', f'HEAD:{rel}') == 'Reviewed continuity\n'
+    assert _git(repo, 'check-ignore', '--', '.agent/private-notes.md').strip() == '.agent/private-notes.md'
+    assert _git(repo, 'ls-files', '--', '.agent/private-notes.md') == ''
+
+
 def test_explicit_commit_path_cannot_omit_staged_history(repo):
     (repo / '.agent/HISTORY.md').write_text('old state\n')
     _git(repo, 'add', '.agent/HISTORY.md')

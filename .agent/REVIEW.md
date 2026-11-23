@@ -60,3 +60,27 @@ and hide an internal symlink. Candidate tag v4.2.0 remains immutable; v4.2.1 mus
 pass the public smoke before release publication.
 
 Publication review complete: the actual v4.2.1 public-tag smoke passed and the release is published. See RELEASE-4.2.1.md.
+
+
+## Issue 82 review (November 23, 2026)
+
+Reviewed the guard diagnostic, 12 added regression cases, troubleshooting and
+confirmed shared-continuity policy against PLAN C82-1 through C82-4. No blocking
+finding in the scoped diff. The filename set and block semantics remain intact.
+Keep the non-verbose check-ignore gate: verbose output also reports negated rules,
+so using that output as the gate would incorrectly block explicit exceptions.
+
+Security Review Mode: the diagnostic runs read-only Git commands using argv lists,
+never a shell; the suggested staging path is shell-quoted and follows `--`.
+No force-add, ignore edits, index mutation or file-content reads are introduced.
+Tests verify an unchanged index and files and absence of private-content sentinels
+from output. Only Git's matching ignore-rule metadata is displayed. Unrelated
+private notes stay ignored and untracked after the migration fixture commits.
+
+Auth/session/CSRF, tenant isolation and API/deployment changes: N/A (local hook
+message only; no service endpoints, permission or runtime configuration changes).
+Dependencies: no new runtime dependency. Existing fail-open Git-error behavior
+and best-effort shell parsing are unchanged; this is not a shell sandbox.
+The fallback retains the block and offers a diagnostic command if verbose rule
+lookup fails. Live client migration and installed-plugin rollout remain separate,
+unverified work (H-MIG01 / H-GR82). See TEST for actual validation receipts.
