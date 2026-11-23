@@ -94,3 +94,12 @@ No new runtime dependency, network permission, auth/API behavior or secret handl
 Public tag smoke must precede installation claims. Installed copies must match tag
 bytes; preserve settings outside the managed Codex block and private project files.
 Sal authorized tag/release publication and installed updates in this session.
+
+
+## v4.3.8 rollout review
+
+Published release and marketplace match the reviewed version. Tagged bootstrap
+and installed runtime bytes were verified; no secrets or private inventory copied
+into this repository. Scoped stale registration repair preserved unrelated fields
+and a private backup. Codex changes are script refresh plus TOML formatting only;
+settings and trust records compare equal. Session restarts were left to the operator.

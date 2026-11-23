@@ -10,13 +10,18 @@ memory:
   tags: [handoff]
 ---
 
-# Current Handoff — v4.3.8 release and installation updates (November 23, 2026)
+# Current Handoff — v4.3.8 published and installed (November 23, 2026)
 
 ## Status
-Sal authorized publishing v4.3.8 and updating existing installations. The release
-carries merged PR #83, preserves shared-continuity enforcement, and improves ignore
-rule diagnostics. Version/pins are prepared; [RELEASE-4.3.8](RELEASE-4.3.8.md) records
-publication and rollout evidence as it becomes available. Prior backlog is retained.
+v4.3.8 is published from the verified PR #84 merge; marketplace PR #17 is merged.
+The public bootstrap and live installed guards passed tag-byte and behavior checks.
+Existing plugin installations on both known machines and the existing Codex guard
+copy are updated. The affected client continuity migration is merged and delivered
+to both primary checkouts. Receipt: [RELEASE-4.3.8](RELEASE-4.3.8.md).
+Running Claude sessions still need a restart; no sessions were interrupted.
+Broader customized project-pack migration remains H-MIG01. The second machine's
+private Git login is unavailable; its requested checkout update was delivered by
+verified Git bundle without changing credentials. Other prior backlog is retained.
 
 Earlier checkpoint context:
 Issue [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82): Sal confirmed
@@ -82,11 +87,9 @@ The nightly chain an operator runs from these scripts:
 Each autonomous run's Stop hook posts its own notice, and a morning job posts the brief.
 
 ## Unresolved work
-- H-GR82: include the diagnostic change in the next release and refresh installed
-  guards; see [TASKS](TASKS.md) and [#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82).
-  Client ignore-rule migration remains H-MIG01: review contents and narrow obsolete
-  rules in each affected repository. This harness checkout already tracks its existing
-  REVIEW/TEST files; no obsolete matching ignore rule was found here.
+- H-GR82 delivery is complete in v4.3.8; restart existing Claude sessions to load it.
+  See [release receipt](RELEASE-4.3.8.md). Broader customized project-pack migrations
+  remain H-MIG01. Existing unrelated backlog below has not been re-audited.
 - Plugin hooks under a path with a space (#78): `hooks/hooks.json` called `${CLAUDE_PLUGIN_ROOT}/scripts/...` unquoted.
   Orca runs Claude Code from a profile under "Application Support", so the shell split the path and all seven hooks
   failed as non-blocking errors: no bash validation, file protection, publish guard, completion notice or linked
@@ -210,9 +213,9 @@ Each autonomous run's Stop hook posts its own notice, and a morning job posts th
 - Previous checkpoint archived byte for byte in HISTORY by the checkpoint helper.
 
 ## Next actions
-Issue #82 rollout: deliver the associated PR, then include it in the next release
-and update installed guards (H-GR82). Client migrations remain separately reviewed
-under H-MIG01. Existing backlog and pending decisions follow unchanged:
+Issue #82 rollout is delivered. Restart existing Claude sessions; follow up on
+remote private Git authentication and broader customized project-pack migration
+(H-MIG01) as recorded in the release receipt. Existing backlog and pending decisions follow unchanged:
 1. Watch auto-131 and auto-790: each Stop-hook notice should arrive, and Sal reviews their PRs. Then add paths to
    the near-miss issues (see Unresolved work).
 2. Sal answers the morning brief decisions (H-TR02), now also shown in the board's "Needs your decision" column.

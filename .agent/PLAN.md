@@ -18,6 +18,11 @@ publish the GitHub Release, smoke the public bootstrap, update the marketplace a
 refresh existing plugin/Codex guard installations. Existing release tags are immutable.
 Keep private inventory and client repository content out of this public repository.
 
+Completed: v4.3.8 published, marketplace updated, live plugins refreshed on both
+machines, existing Codex guards refreshed, affected client migration delivered.
+Running-session reload and broader customized project-pack migrations remain
+operator/follow-up work; see the release receipt.
+
 Evals: R438-1 pins select the tagged commit and report version 4.3.8; R438-2 customized
 project files survive install and repeat unchanged; R438-3 existing guard tests retain
 blocking/private-file behavior; R438-4 actual published bootstrap and installed scripts

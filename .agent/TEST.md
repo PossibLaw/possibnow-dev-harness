@@ -110,3 +110,12 @@ were rerun on Python 3.14: 4 passed. `claude plugin validate .`: passed with the
 existing optional-icon warning. `git diff --check`: passed. No runtime code changes
 beyond the already merged #83 payload. Public-tag smoke and installed-byte checks
 are release-stage gates recorded in RELEASE-4.3.8.md after publication.
+
+
+## v4.3.8 published verification
+
+Public bootstrap hash/version/commit, customized-file preservation and repeat
+byte/mtime stability passed. Five live registrations across two machines verify
+as 4.3.8; installed Bash-hook block/allow/private-note smokes and tag-byte checks
+passed on both. Four Codex scripts match the tag; configuration/trust records are
+semantically unchanged. Full publication receipts: RELEASE-4.3.8.md.
