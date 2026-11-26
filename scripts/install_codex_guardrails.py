@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GUARDS = ROOT / "scripts" / "guardrails"
 FILES = ("validate-bash.py", "protect-files.py", "blacklist.py", "autonomy.py")
+SIZE_CHECK = ROOT / "packs" / "project" / ".agent" / "integrations" / "handoff_size.py"
 BEGIN = "# >>> possibnow-dev-harness codex guardrails >>>"
 END = "# <<< possibnow-dev-harness codex guardrails <<<"
 
@@ -51,6 +52,8 @@ def main():
     dest.mkdir(parents=True, exist_ok=True)
     for name in FILES:
         shutil.copy2(GUARDS / name, dest / name)
+    # validate-bash.py finds the HANDOFF size check beside itself in a Codex install.
+    shutil.copy2(SIZE_CHECK, dest / SIZE_CHECK.name)
 
     new = outside.rstrip("\n") + ("\n\n" if outside.strip() else "") + block(dest)
     if new != text:

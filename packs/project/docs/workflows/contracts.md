@@ -35,6 +35,25 @@ requested disposable tests are allowed. If the root/worktree is ambiguous, resol
 it with the user; do not guess or create state in another project. Honor existing
 authorization to initialize missing state. Report the destination when checkpointing.
 
+HANDOFF is a pointer, not a log:
+
+- A HANDOFF entry is one line: date, what, and a link to the PR, issue, plan or
+  runbook that holds the detail. Narrative belongs in the PR or issue body.
+- A close replaces the current checkpoint through `checkpoint.py`; it never prepends.
+  Keep `## Status` to a few lines and `## Recent work` to about ten one-line entries.
+- Open work, owed items, pending decisions, UNCONFIRMED facts and active constraints
+  carry forward regardless of age. Drop an item only with evidence that it is resolved
+  (merged PR, closed issue, register row, or a later entry saying so); if its state
+  cannot be confirmed, keep it and mark it UNCONFIRMED.
+- The archive keeps every prior byte, so compacting loses nothing.
+
+`.agent/integrations/handoff_size.py` enforces the shape: at most 24,000 bytes,
+`## Status` at most 30 lines and 4,000 bytes, no line over 1,500 characters, and any
+`required_headings` the repository's own tooling needs. Override the limits in
+`.agent/handoff-limits.json` and review changes to it like policy. The check only
+reports; `checkpoint.py` refuses an over-limit candidate and the Claude/Codex commit
+guard refuses a commit that changes an over-limit HANDOFF.
+
 Before replacing HANDOFF:
 
 1. Read the entire current file, including older sections in a legacy combined file.
@@ -43,6 +62,9 @@ Before replacing HANDOFF:
 2. Carry every still-active constraint and unresolved task forward regardless of
    its age. Only mark a task resolved with evidence. Move completed narratives and
    superseded statuses to history, retaining concise evidence references as needed.
+   Write the carry-forward list (item, old location, KEPT / POINTS TO issue /
+   RESOLVED with evidence) where a reviewer can check it against the archived file,
+   such as the PR body. The helper cannot detect a dropped item; the list can.
 3. Review the old and proposed state for secrets/private data before archival.
    If old bytes contain sensitive data, stop shared archival and agree a private
    preservation/sanitization plan; do not silently destroy or publish the source.

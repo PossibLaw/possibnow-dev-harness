@@ -119,3 +119,13 @@ byte/mtime stability passed. Five live registrations across two machines verify
 as 4.3.8; installed Bash-hook block/allow/private-note smokes and tag-byte checks
 passed on both. Four Codex scripts match the tag; configuration/trust records are
 semantically unchanged. Full publication receipts: RELEASE-4.3.8.md.
+
+## HANDOFF pointer rule and size check (November 25, 2026, branch Fix-Handoff-Size)
+
+Evals HS-1 to HS-12 from [PLAN](PLAN.md).
+- Red first: 35 of the new tests failed before implementation (`uvx --with pytest pytest -q` on the five touched test files: 35 failed, 165 passed); existing tests unchanged and passing.
+- One test changed during implementation: a missing `## Status` no longer fails by default (it would block every commit in legacy handoffs and broke 11 existing guard fixtures); it is bounded by `max_bytes` and can be required through `required_headings`.
+- HS-12: `handoff_size.py .` on the old HANDOFF: BLOCKED, Status 72 lines / 4,620 bytes. After `checkpoint.py`: OK, 8,351 bytes; archive `49727121…f3b424` byte-identical to `HEAD:.agent/HANDOFF.md` (`cmp`).
+- Full suite: `uvx --with pytest pytest -q` 559 passed (baseline 522). `scripts/verify-pack.sh`: DONE (554 passed, 5 skipped in its interpreter).
+- Sonnet review (read-only): no blocking defects. Fixed with failing-first tests: variant `## Status` headings now measured (4 cases red, then green); guard sets `dont_write_bytecode` (red, then green); a notice when the size module is missing. The staged-versus-disk case was already covered by the unstaged-HANDOFF guard (regression test added). Not changed: limits can be loosened in the same commit (documented as review-required).
+- After review: `uvx --with pytest pytest -q` 566 passed; `scripts/verify-pack.sh` DONE (561 passed, 5 skipped).

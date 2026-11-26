@@ -90,9 +90,10 @@ echo "Repo root: $REPO_ROOT"
 echo "Required updates (make these yourself; this helper does not write state):"
 echo "  1. Update $PLAN_FILE (milestone/sprint status, assumptions, task checklist)"
 echo "  2. Update $HANDOFF_FILE:"
-echo "       - refresh the Current Baton at the top (decisions, open questions, next actions)"
-echo "       - first archive the exact old handoff in .agent/HISTORY.md and verify its hash"
-echo "       - keep all historical checkpoints out of the current HANDOFF"
+echo "       - replace the checkpoint through checkpoint.py; one line per entry with a link"
+echo "       - never prepend a narrative; the detail belongs in the PR or issue body"
+echo "       - carry forward open work, owed items, pending decisions, UNCONFIRMED facts and constraints"
+echo "       - check the size: python3 .agent/integrations/handoff_size.py ."
 echo "  Commit all sanitized changed continuity with the work; verify delivery on remote main."
 
 if [[ "$LEARNING_MODE" == "CAPTURE" || "$LEARNING_MODE" == "APPLY" ]]; then

@@ -201,6 +201,7 @@ def render(watch: dict, pending: dict, checked: str) -> str:
         "3. Edit only inside the files in scope.",
         *[f"{i}. {step}" for i, step in enumerate(watch.get("finish") or [], start=4)],
         f"{4 + len(watch.get('finish') or [])}. Open a draft pull request titled `[auto] {watch.get('title') or watch['name'] + ' update'}` with three sections: **What changed** (article by article, in plain language), **Skipped and why**, and **To republish**: \"{watch.get('republish', 'Merge this pull request.')}\" End the body with `Closes #` and this issue's number. Post the same summary as a comment on this issue.",
+        f"{5 + len(watch.get('finish') or [])}. If you update `.agent/HANDOFF.md`, add one line under `## Recent work` (date, what, link to the pull request); the detail stays in the pull request body, never a narrative in HANDOFF.",
         "", marker(watch["name"]),
     ]
     return "\n".join(lines) + "\n"

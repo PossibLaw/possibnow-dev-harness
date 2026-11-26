@@ -114,7 +114,7 @@ def test_installer_copies_guards_and_registers_hooks(tmp_path):
     result = install(tmp_path)
     assert result.returncode == 0, result.stderr
     dest = tmp_path / "hooks" / "possibnow"
-    for name in ("validate-bash.py", "protect-files.py", "blacklist.py", "autonomy.py"):
+    for name in ("validate-bash.py", "protect-files.py", "blacklist.py", "autonomy.py", "handoff_size.py"):
         assert (dest / name).is_file()
     import tomllib
     config = tomllib.loads((tmp_path / "config.toml").read_text())
@@ -152,3 +152,22 @@ def test_installer_refuses_existing_unmanaged_hooks_table(tmp_path):
     result = install(tmp_path)
     assert result.returncode != 0
     assert "hooks" in result.stderr
+
+
+def test_installed_codex_guard_refuses_oversized_handoff(tmp_path):
+    # HS-11: the copied guard finds the size check next to itself.
+    home = tmp_path / "codex"
+    home.mkdir()
+    assert install(home).returncode == 0
+    repo = tmp_path / "repo"
+    (repo / ".agent").mkdir(parents=True)
+    git = lambda *a: subprocess.run(["git", "-C", str(repo), *a], check=True, capture_output=True)
+    git("init", "-q")
+    status = "\n".join(f"- narrative {i}" for i in range(40))
+    (repo / ".agent/HANDOFF.md").write_text(f"# HANDOFF\n## Status\n{status}\n")
+    payload = bash("git add -A && git commit -m work")
+    payload["cwd"] = str(repo)
+    result = subprocess.run([sys.executable, str(home / "hooks/possibnow/validate-bash.py"), "--host", "codex"],
+                            input=json.dumps(payload), capture_output=True, text=True, cwd=repo, env=_env())
+    assert result.returncode == 2
+    assert "## Status is 40 lines" in result.stderr

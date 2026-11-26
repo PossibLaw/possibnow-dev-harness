@@ -301,7 +301,7 @@ def main(argv=None) -> int:
     max_per_repo = int(cfg.get("max_per_repo", 1))
     eligible_labels = (cfg.get("labels") or {}).get("eligible", ["agent-task", "auto-ok"])
     pr_label = (cfg.get("labels") or {}).get("pr", "agent-auto")
-    prompt_tpl = cfg.get("prompt") or "Autonomous run. Complete {issue_url}. Open a DRAFT PR titled '[auto] ...' labelled agent-auto. Never merge, never publish."
+    prompt_tpl = cfg.get("prompt") or "Autonomous run. Complete {issue_url}. Open a DRAFT PR titled '[auto] ...' labelled agent-auto. Never merge, never publish. If you update .agent/HANDOFF.md, add one line under `## Recent work` (date, what, link to the PR or issue); the detail goes in the PR body, never a narrative in HANDOFF."
 
     try:
         running = orca_worktrees()
