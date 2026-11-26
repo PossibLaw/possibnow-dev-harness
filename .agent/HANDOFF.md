@@ -19,10 +19,10 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 ## Status
 - 2026-11-25: branch `Fix-Handoff-Size` makes HANDOFF a pointer, not a log: size check, commit guard, rule text. Plan: [PLAN](PLAN.md). Unreleased; ships as 4.4.0 in a separate release PR.
 - main is v4.3.8, published and installed on both machines ([RELEASE-4.3.8](RELEASE-4.3.8.md)).
-- This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in this branch's PR body.
+- This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
-- 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction (branch `Fix-Handoff-Size`; [PLAN](PLAN.md))
+- 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86); [PLAN](PLAN.md))
 - 2026-11-23 v4.3.8 published, marketplace and installs updated ([RELEASE-4.3.8](RELEASE-4.3.8.md), [PR #84](https://github.com/PossibLaw/possibnow-dev-harness/pull/84))
 - 2026-11-23 Shared-continuity commit diagnostics ([#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82), [PR #83](https://github.com/PossibLaw/possibnow-dev-harness/pull/83))
 - 2026-11-16 v4.3.7: plugin hooks under a path with a space ([#78](https://github.com/PossibLaw/possibnow-dev-harness/issues/78), [PR #79](https://github.com/PossibLaw/possibnow-dev-harness/pull/79); [RELEASE-4.3.7](RELEASE-4.3.7.md))
@@ -71,7 +71,7 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - Previous checkpoint archived byte for byte by `checkpoint.py`; locator in [HISTORY](HISTORY.md).
 
 ## Next actions
-1. Review and merge the `Fix-Handoff-Size` PR; then a release PR for 4.4.0 with the migration note.
+1. Review and merge [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86) (draft); then a release PR for 4.4.0 with the migration note.
 2. After release: compact Trazomo-style installs once with a carry-forward list; set `required_headings` where tooling needs a heading (Trazomo: `## Session Timeline`).
 3. Sal answers the morning brief decisions (H-TR02, #54).
 4. Sal decides on `library-current/` (see Unresolved work).
@@ -79,4 +79,4 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `Fix-Handoff-Size` off main ee6ddda; draft PR after checks pass.
+- Branch `Fix-Handoff-Size` off main ee6ddda; draft [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86).
