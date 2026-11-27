@@ -12,6 +12,7 @@ sys.dont_write_bytecode = True
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from harness_io import create_file, read_optional, replace_checked, safe_path, sha
+import handoff_size
 
 
 def archive_bytes(path, data):
@@ -29,6 +30,10 @@ def checkpoint(root, candidate, expected_sha):
     for heading in (b'## Status', b'## Unresolved work', b'## Active constraints', b'## Evidence', b'## Next actions'):
         if heading not in new.splitlines():
             raise ValueError(f'candidate missing section: {heading.decode()}')
+    # A close replaces the checkpoint with a short pointer; refuse a log before archiving.
+    problems = handoff_size.check_text(new, handoff_size.load_limits(root)[0])
+    if problems:
+        raise ValueError(handoff_size.message(problems))
     lock = safe_path(root, '.agent/.checkpoint.lock')
     create_file(lock, b'checkpoint in progress\n')
     try:

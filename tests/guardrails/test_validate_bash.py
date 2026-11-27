@@ -509,3 +509,80 @@ def test_unrelated_private_notes_not_continuity(repo):
 def test_nonstaging_forms_do_not_satisfy_guard(repo, command):
     _edit_handoff(repo)
     assert run_hook(command, cwd=str(repo)).returncode == 2
+
+
+# --- HANDOFF size guard (HS-3, HS-6) ---
+#
+# A commit that changes .agent/HANDOFF.md is refused while the file breaks the size
+# limits (packs/project/.agent/integrations/handoff_size.py). The guard only reports:
+# it never archives or rewrites continuity.
+
+def _oversized_status(lines=40):
+    status = "\n".join(f"- narrative {i}" for i in range(lines))
+    return f"# HANDOFF\n\n## Status\n{status}\n\n## Next actions\n1. x\n"
+
+
+def _agent_hashes(repo):
+    import hashlib
+    return {str(p): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in (repo / ".agent").rglob("*") if p.is_file()}
+
+
+def test_commit_refused_when_changed_handoff_breaks_size_limits(repo):
+    (repo / HANDOFF_REL).write_text(_oversized_status())
+    before = _agent_hashes(repo)
+    result = run_hook("git add .agent/HANDOFF.md && git commit -m 'work'", cwd=str(repo))
+    assert_blocked(result)
+    assert "## Status is 40 lines" in result.stderr
+    assert "checkpoint.py" in result.stderr and "one line" in result.stderr
+    assert _agent_hashes(repo) == before
+    assert not (repo / ".agent/archives").exists()
+
+
+def test_commit_allowed_when_changed_handoff_is_within_limits(repo):
+    (repo / HANDOFF_REL).write_text("# HANDOFF\n\n## Status\n- short\n")
+    _git(repo, "add", HANDOFF_REL)
+    assert_allowed(run_hook("git commit -m 'work'", cwd=str(repo)))
+
+
+def test_size_guard_silent_when_commit_does_not_change_handoff(repo):
+    # Already oversized in HEAD, but this commit does not touch it (decision 1A).
+    (repo / HANDOFF_REL).write_text(_oversized_status())
+    _git(repo, "add", HANDOFF_REL)
+    _git(repo, "commit", "-q", "-m", "legacy")
+    (repo / "app.py").write_text("print('bye')\n")
+    assert_allowed(run_hook("git commit -am 'work'", cwd=str(repo)))
+
+
+def test_size_guard_uses_repository_limits(repo):
+    (repo / ".agent/handoff-limits.json").write_text('{"status_max_lines": 50}')
+    (repo / HANDOFF_REL).write_text(_oversized_status())
+    _git(repo, "add", "-A")
+    assert_allowed(run_hook("git commit -m 'work'", cwd=str(repo)))
+
+
+def test_size_guard_enforces_required_headings(repo):
+    (repo / ".agent/handoff-limits.json").write_text('{"required_headings": ["## Session Timeline"]}')
+    (repo / HANDOFF_REL).write_text("# HANDOFF\n\n## Status\n- short\n")
+    _git(repo, "add", "-A")
+    result = run_hook("git commit -m 'work'", cwd=str(repo))
+    assert_blocked(result)
+    assert "## Session Timeline" in result.stderr
+
+
+def test_size_guard_checks_the_staged_copy_too(repo):
+    # Review finding: an oversized staged HANDOFF trimmed only on disk must not be committed.
+    (repo / HANDOFF_REL).write_text(_oversized_status())
+    _git(repo, "add", HANDOFF_REL)
+    (repo / HANDOFF_REL).write_text("# HANDOFF\n\n## Status\n- short\n")
+    result = run_hook("git commit -m 'work'", cwd=str(repo))
+    assert_blocked(result)
+
+
+def test_guard_writes_no_bytecode_beside_the_size_check(repo):
+    import shutil
+    cache = Path(SCRIPT).resolve().parents[2] / "packs/project/.agent/integrations/__pycache__"
+    shutil.rmtree(cache, ignore_errors=True)
+    (repo / HANDOFF_REL).write_text(_oversized_status())
+    run_hook("git add -A && git commit -m 'work'", cwd=str(repo))
+    assert not cache.exists() or not list(cache.glob("handoff_size*.pyc"))

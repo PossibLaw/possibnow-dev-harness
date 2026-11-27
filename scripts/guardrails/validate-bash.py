@@ -9,9 +9,22 @@ import subprocess
 import sys
 import os
 
+# Imported helpers must not leave bytecode in the plugin or Codex hooks folder.
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from blacklist import BLOCKED_PATTERNS, ESCALATE_PATTERNS, AUTONOMOUS_BLOCKED_PATTERNS
 from autonomy import is_autonomous
+
+# The size check ships in the project pack; a Codex install copies it next to this file.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+for _dir in (_HERE, os.path.join(_HERE, "..", "..", "packs", "project", ".agent", "integrations")):
+    if os.path.isfile(os.path.join(_dir, "handoff_size.py")):
+        sys.path.insert(0, os.path.normpath(_dir))
+        break
+try:
+    import handoff_size
+except ImportError:  # pragma: no cover - an incomplete copy skips only the size check
+    handoff_size = None
 
 # Shared continuity file that must ship with every commit that changes it.
 HANDOFF_REL = ".agent/HANDOFF.md"
@@ -272,6 +285,38 @@ def check_handoff_commit(command, cwd):
         return None
 
 
+def check_handoff_size(command, cwd):
+    """Refuse a commit that changes HANDOFF while it breaks the size limits.
+
+    Reads only; never archives or rewrites. Commits that leave HANDOFF unchanged
+    are not checked, so an older oversized file does not block unrelated work.
+    """
+    try:
+        base_dir = cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+        for segment in _segments(_tokenize(command)):
+            parsed = _parse_git_segment(segment)
+            if not parsed or parsed[0] != "commit":
+                continue
+            if handoff_size is None:
+                print("NOTICE: handoff_size.py not found beside the guard; HANDOFF size not checked. "
+                      "Re-run the guard installer.", file=sys.stderr)
+                return None
+            chdir = parsed[2]
+            repo_dir = os.path.normpath(os.path.join(base_dir, chdir)) if chdir else base_dir
+            root = _run_git(repo_dir, "rev-parse", "--show-toplevel")
+            if not root:
+                continue
+            root = root.strip()
+            if not _run_git(root, "status", "--porcelain", "--untracked-files=all", "--", HANDOFF_REL):
+                continue
+            problems, _ = handoff_size.check_repo(root)
+            if problems:
+                return handoff_size.message(problems)
+        return None
+    except Exception:
+        return None
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -307,6 +352,10 @@ def main():
     handoff_block = check_handoff_commit(command, data.get("cwd"))
     if handoff_block:
         print(handoff_block, file=sys.stderr)
+        sys.exit(2)
+    size_block = check_handoff_size(command, data.get("cwd"))
+    if size_block:
+        print(size_block, file=sys.stderr)
         sys.exit(2)
 
     # Check escalation patterns

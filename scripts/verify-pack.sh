@@ -94,6 +94,7 @@ REQUIRED_FILES=(
   "packs/project/.agent/LEARNINGS.md"
   "packs/project/.agent/integrations/README.md"
   "packs/project/.agent/integrations/run-checkpoint.sh"
+  "packs/project/.agent/integrations/handoff_size.py"
   "packs/global/codex/.codex/AGENTS.md"
   "packs/global/claude/.claude/CLAUDE.md"
 )
@@ -157,6 +158,8 @@ done
 # Installer behavior is covered with disposable fixtures in tests/installer.
 python3 "$REPO_ROOT/scripts/render_entries.py" --check
 python3 "$REPO_ROOT/scripts/entry_policy.py" "$REPO_ROOT/packs/project/AGENTS.md" "$REPO_ROOT/packs/project/CLAUDE.md" "$REPO_ROOT/packs/global/codex/.codex/AGENTS.md" "$REPO_ROOT/packs/global/claude/.claude/CLAUDE.md"
+# HANDOFF stays a pointer, not a log: size limits on this repository's own checkpoint.
+python3 "$REPO_ROOT/packs/project/.agent/integrations/handoff_size.py" "$REPO_ROOT"
 
 has_rg=0
 if command -v rg >/dev/null 2>&1; then

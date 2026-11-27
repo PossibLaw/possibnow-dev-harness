@@ -10,7 +10,36 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 23, 2026): publish v4.3.8 and refresh installations
+# Current (November 25, 2026): keep HANDOFF a pointer, not a log (branch Fix-Handoff-Size)
+
+Rule: a HANDOFF entry is one line (date, what, link); a close replaces the checkpoint
+through checkpoint.py; open work, owed items, pending decisions, UNCONFIRMED facts and
+active constraints carry forward until resolved with evidence. Reference: Trazomo PR #929.
+Sal's decisions (Nov 25): guard only commits that change HANDOFF (1A); optional
+`.agent/handoff-limits.json` (2A); checkpoint.py refuses an oversized candidate (4A);
+CHANGELOG here, 4.4.0 bump in a separate release PR (6A); Sonnet reviewer (8A); edit the
+global context-guard hook with a backup (9A); private dispatch prompt: ask before a PR.
+
+Evals (failing first):
+- HS-1 HANDOFF under every limit: `handoff_size.py` exits 0; commit allowed.
+- HS-2 boundaries: 24,000 bytes pass / 24,001 fail; Status 30 lines / 4,000 bytes pass,
+  31 / 4,001 fail; line 1,500 chars pass / 1,501 fail; missing `## Status` fails.
+- HS-3 over any limit: check exits 1 naming the limit plus the checkpoint.py fix; the
+  commit guard refuses; HANDOFF, HISTORY and archives are byte-identical afterwards.
+- HS-4 `.agent/handoff-limits.json` overrides limits; malformed config falls back to
+  defaults with a notice, never disables the check.
+- HS-5 `required_headings` (e.g. `## Session Timeline`): missing heading fails, named.
+- HS-6 no HANDOFF, or a commit that does not change it: guard silent.
+- HS-7 checkpoint.py refuses an over-limit candidate; nothing archived or replaced.
+- HS-8 closing skill: "replace, do not prepend", one line with a link, carry-forward list
+  (item, old location, KEPT / POINTS TO issue / RESOLVED with evidence) before install.
+- HS-9 contract, template (Recent work, short Status), run-checkpoint.sh checklist,
+  dispatcher default prompt and freshness work order ask for one line with a link.
+- HS-10 template plus one appended Recent-work line stays under the limits.
+- HS-11 Codex installer copies the check; verify-pack runs it on this repo's HANDOFF.
+- HS-12 this repo's HANDOFF fails before compaction, passes after; old bytes archived.
+
+# Earlier (November 23, 2026): publish v4.3.8 and refresh installations
 
 Sal authorized publication and installation updates. Release the #82/#83 diagnostic
 change as 4.3.8; update active version pins, validate, merge, annotate the new tag,

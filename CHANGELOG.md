@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## Unreleased (planned 4.4.0) — 2026-11-25 — HANDOFF is a pointer, not a log
+
+Version bump and pins follow in a separate release PR.
+
+- **HANDOFF stays one short checkpoint** (November 25, 2026: every close and autonomous run prepended a narrative entry, so the current file only grew; Trazomo's reached 95 KB, its second regrowth, and this repository's Status held 72 lines of stacked context). A HANDOFF entry is now one line: date, what, and a link to the PR, issue, plan or runbook holding the detail. A close replaces the checkpoint through `checkpoint.py` and never prepends. Open work, owed items, pending decisions, UNCONFIRMED facts and active constraints carry forward until resolved with evidence; an item whose state cannot be confirmed is kept and marked UNCONFIRMED.
+- **Size check** `packs/project/.agent/integrations/handoff_size.py` (standard library; the limits of Trazomo PR #929): at most 24,000 bytes, `## Status` at most 30 lines and 4,000 bytes, no line over 1,500 characters, and any `required_headings` the repository's tooling needs. Per-repository limits in an optional `.agent/handoff-limits.json`; an invalid value keeps its default and says so. It only reports: it never archives, rewrites or prints HANDOFF content. A missing `## Status` is bounded by the file-size cap unless the repository requires the heading; variant Status headings (`## status (Nov 25)`) are still measured.
+- **Enforced at close and commit.** `checkpoint.py` refuses an over-limit candidate before archiving. The Claude/Codex Bash guard refuses a `git commit` that changes an over-limit HANDOFF (commits that leave HANDOFF unchanged are not checked); the Codex installer copies the check. `scripts/verify-pack.sh` runs it on this repository's own HANDOFF.
+- **The text that invited prepending is replaced.** The continuity contract, the HANDOFF template (one-line rule under the title, a short Status, a new `## Recent work` of about ten one-line entries), the generated `AGENTS.md`/`CLAUDE.md` rule line, `run-checkpoint.sh` ("replace the checkpoint through checkpoint.py; one line per entry with a link" instead of "refresh the Current Baton at the top"), the closing skill (2.2.0: replace, do not prepend, and a carry-forward list of item, old location and KEPT / POINTS TO issue / RESOLVED with evidence, in the PR body), the dispatcher's default prompt and the content-freshness work order.
+- **This repository's HANDOFF compacted** as the first use: 17,049 bytes to 8,351, Status 72 lines to 3; the prior file is archived byte for byte.
+- Forty-four new tests, written failing first (35 red before implementation, then 5 more from the review; 566 pass in total).
+
+**Migration for existing installs:** run one compaction with a carry-forward list, then the check keeps it small. Until then, a commit that changes an over-limit HANDOFF is refused with the fix. Repositories whose tooling needs a heading list it in `.agent/handoff-limits.json` (for example `{"required_headings": ["## Session Timeline"]}`). Locally edited copies of `run-checkpoint.sh` or the closing skill are not overwritten; the installer proposes the new text for review.
+
 ## 4.3.8 — 2026-11-23 — Explain ignored shared-continuity commit blocks
 
 Bootstrap and pack pinned to v4.3.8.

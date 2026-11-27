@@ -108,3 +108,28 @@ def test_missing_current_sections_is_refused(tmp_path):
     with pytest.raises(ValueError, match='missing section'):
         m.checkpoint(tmp_path, candidate, hashlib.sha256(old).hexdigest())
     assert (state / 'HANDOFF.md').read_bytes() == old
+
+
+def test_oversized_candidate_is_refused_before_archival(tmp_path):
+    # HS-7: a close that would install a log instead of a pointer stops before writing.
+    m = module()
+    state, old, candidate = fixture(tmp_path)
+    narrative = '\n'.join(f'- prepended narrative {i}' for i in range(40))
+    candidate.write_text(f'# Current\n## Status\n{narrative}\n## Unresolved work\n- Finish auth checks\n'
+                         '## Active constraints\n- Never publish drafts\n## Evidence\nTEST.md\n## Next actions\nFinish checks\n')
+    history = (state / 'HISTORY.md').read_bytes()
+    with pytest.raises(ValueError, match='## Status is 40 lines'):
+        m.checkpoint(tmp_path, candidate, hashlib.sha256(old).hexdigest())
+    assert (state / 'HANDOFF.md').read_bytes() == old
+    assert (state / 'HISTORY.md').read_bytes() == history
+    assert not (state / 'archives').exists()
+    assert not (state / '.checkpoint.lock').exists()
+
+
+def test_candidate_missing_a_required_heading_is_refused(tmp_path):
+    m = module()
+    state, old, candidate = fixture(tmp_path)
+    (state / 'handoff-limits.json').write_text('{"required_headings": ["## Session Timeline"]}')
+    with pytest.raises(ValueError, match='## Session Timeline'):
+        m.checkpoint(tmp_path, candidate, hashlib.sha256(old).hexdigest())
+    assert (state / 'HANDOFF.md').read_bytes() == old

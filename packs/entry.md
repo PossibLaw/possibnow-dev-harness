@@ -49,7 +49,8 @@ These are installer suggestions; verify them against project scripts and CI.
 
 ## State ownership
 
-PLAN/TASKS holds active implementation detail. HANDOFF is one current checkpoint.
+PLAN/TASKS holds active implementation detail. HANDOFF is one current checkpoint;
+each entry is one line with a link, and a close replaces it, never prepends.
 HISTORY preserves previous checkpoints; LEARNINGS holds gated reusable lessons.
 Follow the continuity contract before replacing a handoff or delivering work.
 Learning defaults to OFF. Scale and wiki activation require an explicit request.
