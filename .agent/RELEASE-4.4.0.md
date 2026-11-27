@@ -42,4 +42,6 @@ fixture. A repeat installation changed no bytes or mtimes (114 files).
   wording edit remain owed (Sal). UNCONFIRMED until done.
 - Restart running Claude sessions to load 4.4.0; Codex: run `/hooks` once if it asks
   to re-trust.
-- Trazomo: add `.agent/handoff-limits.json` with `required_headings: ["## Session Timeline"]`.
+- Trazomo needs no `.agent/handoff-limits.json`: its own `tests/config/handoff-size.test.ts`
+  (PR #929), run by the required `gates` CI job, enforces the limits and the
+  `## Session Timeline` heading; its HANDOFF (14,156 bytes) passes the 4.4.0 check.
