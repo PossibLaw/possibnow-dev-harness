@@ -21,6 +21,7 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
+- 2026-11-26 H-GR86: Bash guard follows `cd`, ignores heredocs and redirections (branch `fix/guard-cd-heredoc-h-gr86`; unreleased; [TEST](TEST.md))
 - 2026-11-26 v4.4.0 published; marketplace, plugins and Codex guards updated on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md), [PR #87](https://github.com/PossibLaw/possibnow-dev-harness/pull/87))
 - 2026-11-26 Private dispatch prompt asks for one HANDOFF line ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7), merged)
 - 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86), merged)
@@ -30,11 +31,9 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - 2026-11-13 Dispatcher counts a bare folder only when it exists ([PR #77](https://github.com/PossibLaw/possibnow-dev-harness/pull/77))
 - 2026-11-13 v4.3.6 published: PRs #66, #70, #72, #74 ([RELEASE-4.3.6](RELEASE-4.3.6.md))
 - 2026-11-10 Config paths may use `$REPOS` ([PR #72](https://github.com/PossibLaw/possibnow-dev-harness/pull/72); `docs/orca.md`)
-- 2026-11-04 Issue sync: no duplicate mirror for a row that links its issue ([#69](https://github.com/PossibLaw/possibnow-dev-harness/issues/69), [PR #70](https://github.com/PossibLaw/possibnow-dev-harness/pull/70))
 
 ## Unresolved work
 - Second machine (unreachable 2026-11-26): update the plugin to 4.4.0, refresh Codex guards if installed, apply the `~/.claude/hooks/context-guard.py` one-line wording edit (logged in `~/.claude/CHANGELOG.md`, 2026-11-25). UNCONFIRMED until done (Sal; [RELEASE-4.4.0](RELEASE-4.4.0.md)).
-- Guard false positive (found 2026-11-25): `validate-bash.py` checks the payload cwd, not a `cd` target in the command, and reads a heredoc marker after `git commit -F -` as a pathspec ("path-limited commit"). Workaround: `git -C <repo> commit -F <file>`. Needs an issue and a failing test.
 - Customized installed projects need their own reviewed migration (H-MIG01, [#51](https://github.com/PossibLaw/possibnow-dev-harness/issues/51); Sal). Live client compliance and semantic optimize apply: UNCONFIRMED since v4.2.1.
 - Codex: no linked-issue or takeover hook; a Codex autonomous run stays guarded until its marker is removed by hand (H-CDX01, [#55](https://github.com/PossibLaw/possibnow-dev-harness/issues/55)). Codex parity of the Pocock-derived skills: UNCONFIRMED.
 - Morning brief answers and the "close stale" proposal (H-TR02, [#54](https://github.com/PossibLaw/possibnow-dev-harness/issues/54); Sal). Apply with `answering-the-morning-brief`.
@@ -78,4 +77,4 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `docs/release-4.4.0-receipt` off main 9aa3fa7 (PR #87 merge, tagged v4.4.0).
+- Branch `fix/guard-cd-heredoc-h-gr86` off main 11cb106; PR after checks pass.

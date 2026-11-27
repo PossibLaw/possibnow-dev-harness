@@ -586,3 +586,97 @@ def test_guard_writes_no_bytecode_beside_the_size_check(repo):
     (repo / HANDOFF_REL).write_text(_oversized_status())
     run_hook("git add -A && git commit -m 'work'", cwd=str(repo))
     assert not cache.exists() or not list(cache.glob("handoff_size*.pyc"))
+
+
+# --- H-GR86: the guard follows `cd` and ignores heredocs and redirections ---
+#
+# Found November 25, 2026: `cd <other repo> && git commit -F - <<'EOF' ...` was judged
+# against the session's repository, and the heredoc marker and body words were read as
+# pathspecs ("path-limited commit").
+
+def _clean_repo(path: Path) -> Path:
+    path.mkdir()
+    _git(path, "init", "-q")
+    _git(path, "config", "user.email", "test@example.com")
+    _git(path, "config", "user.name", "Test")
+    (path / HANDOFF_REL).parent.mkdir(parents=True)
+    (path / HANDOFF_REL).write_text("# HANDOFF\n")
+    _git(path, "add", "-A")
+    _git(path, "commit", "-q", "-m", "init")
+    return path
+
+
+def test_cd_target_repo_is_checked_not_the_session_repo(tmp_path):
+    session = _clean_repo(tmp_path / "session")
+    other = _clean_repo(tmp_path / "other")
+    (session / HANDOFF_REL).write_text("# HANDOFF\n- session edit, unstaged\n")
+    (other / "app.py").write_text("x = 1\n")
+    result = run_hook(f"cd {other} && git add app.py && git commit -m work", cwd=str(session))
+    assert_allowed(result)
+
+
+def test_cd_target_repo_with_unstaged_handoff_is_blocked(tmp_path):
+    session = _clean_repo(tmp_path / "session")
+    other = _clean_repo(tmp_path / "other")
+    (other / HANDOFF_REL).write_text("# HANDOFF\n- other edit, unstaged\n")
+    result = run_hook(f'cd "{other}" && git commit -am work', cwd=str(session))
+    assert result.returncode == 0  # -a stages the tracked edit
+    result = run_hook(f"cd {other} && git commit -m work", cwd=str(session))
+    assert_blocked(result)
+
+
+def test_relative_cd_is_resolved_against_the_session_dir(tmp_path):
+    session = _clean_repo(tmp_path / "session")
+    other = _clean_repo(tmp_path / "other")
+    (other / HANDOFF_REL).write_text("# HANDOFF\n- other edit, unstaged\n")
+    assert_blocked(run_hook("cd ../other && git commit -m work", cwd=str(session)))
+
+
+def test_size_guard_follows_cd(tmp_path):
+    session = _clean_repo(tmp_path / "session")
+    other = _clean_repo(tmp_path / "other")
+    (other / HANDOFF_REL).write_text(_oversized_status())
+    result = run_hook(f"cd {other} && git add -A && git commit -m work", cwd=str(session))
+    assert_blocked(result)
+    assert "## Status is 40 lines" in result.stderr
+
+
+@pytest.mark.parametrize("command", [
+    "git commit -F - <<'EOF'\nSubject line\n\nBody words app.py here\n\nCo-Authored-By: X <x@example.com>\nEOF",
+    'git commit -F - <<EOF\nSubject\nEOF\ngit log --oneline -1',
+    "git commit -F - <<-'MSG'\n\tSubject\n\tMSG",
+    "git commit -m work > /dev/null 2>&1",
+    "git commit -m work 2>/dev/null",
+    "git commit -m work\ngit push",
+    "git commit -m \"$(cat <<'EOF'\nSubject app.py\n\nBody\nEOF\n)\" && git push",
+])
+def test_heredocs_redirections_and_newlines_are_not_pathspecs(repo, command):
+    _edit_handoff(repo)
+    _git(repo, "add", HANDOFF_REL)
+    assert_allowed(run_hook(command, cwd=str(repo)))
+
+
+def test_real_pathspec_after_heredoc_cleanup_is_still_path_limited(repo):
+    _edit_handoff(repo)
+    _git(repo, "add", HANDOFF_REL)
+    result = run_hook("git commit app.py -F - <<'EOF'\nmsg\nEOF", cwd=str(repo))
+    assert result.returncode == 2
+    assert "path-limited" in result.stderr
+
+
+def test_newline_separated_cd_is_followed(tmp_path):
+    session = _clean_repo(tmp_path / "session")
+    other = _clean_repo(tmp_path / "other")
+    (other / HANDOFF_REL).write_text("# HANDOFF\n- other edit, unstaged\n")
+    assert_blocked(run_hook(f"cd {other}\ngit commit -m work", cwd=str(session)))
+
+
+def test_unresolvable_cd_skips_rather_than_judging_the_wrong_repo(tmp_path):
+    # The hook cannot see the shell's variables; it must not check the session repo instead.
+    session = _clean_repo(tmp_path / "session")
+    (session / HANDOFF_REL).write_text("# HANDOFF\n- session edit, unstaged\n")
+    env = _clean_env()
+    env.pop("UNSET_TARGET_FOR_TEST", None)
+    assert_allowed(run_hook('cd "$UNSET_TARGET_FOR_TEST/x" && git commit -m work', cwd=str(session), env=env))
+    # Without the cd, the session repo is still checked.
+    assert_blocked(run_hook("git commit -m work", cwd=str(session)))

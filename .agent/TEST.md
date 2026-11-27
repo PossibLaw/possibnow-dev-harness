@@ -140,3 +140,8 @@ Tag object 8cabfb3, peeled 9aa3fa7 (PR #87 merge). Public bootstrap byte-identic
 the tag; customized files preserved; repeat install unchanged; installed plugin files
 and Codex guards match the tag; installed hook blocks an over-limit HANDOFF commit and
 allows a short one. Full receipts: RELEASE-4.4.0.md.
+
+## H-GR86 guard: cd, heredocs, redirections (November 26, 2026)
+- Red first: 11 new guard tests failed on main 11cb106 (cd target ignored; heredoc, redirection and newline tokens read as pathspecs). One real-pathspec case already blocked and kept as a regression.
+- After the fix: `tests/guardrails` 314 passed; two more pins (quoted `$(cat <<EOF)` message, unresolvable `cd` skips) passed on first run.
+- Full suite `uvx --with pytest pytest -q` 580 passed; `scripts/verify-pack.sh` DONE; `git diff --check` clean.
