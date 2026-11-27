@@ -134,3 +134,9 @@ Evals HS-1 to HS-12 from [PLAN](PLAN.md).
 - R440-1: installer tests repointed to 4.4.0 failed first (8 failed, 12 passed); after the pin bump, 20 passed.
 - R440-2: `uvx --with pytest pytest -q` 566 passed; `scripts/verify-pack.sh` DONE (561 passed, 5 Python-version skips); `claude plugin validate .` passed; `git diff --check` clean.
 - R440-3 (public bootstrap from the tag) runs after Sal tags; recorded in RELEASE-4.4.0.md.
+
+## v4.4.0 published verification (November 26, 2026)
+Tag object 8cabfb3, peeled 9aa3fa7 (PR #87 merge). Public bootstrap byte-identical to
+the tag; customized files preserved; repeat install unchanged; installed plugin files
+and Codex guards match the tag; installed hook blocks an over-limit HANDOFF commit and
+allows a short one. Full receipts: RELEASE-4.4.0.md.

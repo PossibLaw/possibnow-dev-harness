@@ -20,6 +20,9 @@ the tag matches tag bytes, customized files preserved, repeat install changes no
 Release order: merge this PR, Sal tags and publishes, then smoke, receipt, marketplace,
 plugin updates, Codex guard refresh ([RELEASE-4.4.0](RELEASE-4.4.0.md)).
 
+Completed 2026-11-26: tagged and published by Sal; R440-3 smoke passed; marketplace PR #18
+merged; first-machine plugins and Codex guards at 4.4.0. Second machine owed (Sal).
+
 # Earlier (November 25, 2026): keep HANDOFF a pointer, not a log (PR #86, merged)
 
 Rule: a HANDOFF entry is one line (date, what, link); a close replaces the checkpoint
