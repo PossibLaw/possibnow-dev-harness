@@ -17,12 +17,11 @@ holding the detail. A close replaces this file through `checkpoint.py`; it never
 Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 
 ## Status
-- main is v4.4.0, published 2026-11-26 and installed on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md)). Second machine owed (Sal).
-- 2026-11-26: v4.4.1 (H-GR86 guard fix, PR #91) version and pins prepared on branch `release/4.4.1` ([RELEASE-4.4.1](RELEASE-4.4.1.md)); waits on Sal's tag.
+- main is v4.4.1, published 2026-11-26 and installed on the first machine ([RELEASE-4.4.1](RELEASE-4.4.1.md); 4.4.0: [RELEASE-4.4.0](RELEASE-4.4.0.md)). Second machine owed (Sal).
 - This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
-- 2026-11-26 v4.4.1 version and pins (branch `release/4.4.1`; [RELEASE-4.4.1](RELEASE-4.4.1.md))
+- 2026-11-26 v4.4.1 published; marketplace, plugins and Codex guards updated on the first machine ([RELEASE-4.4.1](RELEASE-4.4.1.md), [PR #92](https://github.com/PossibLaw/possibnow-dev-harness/pull/92))
 - 2026-11-26 H-GR86: Bash guard follows `cd`, ignores heredocs and redirections ([PR #91](https://github.com/PossibLaw/possibnow-dev-harness/pull/91), merged)
 - 2026-11-26 v4.4.0 published; marketplace, plugins and Codex guards updated on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md), [PR #87](https://github.com/PossibLaw/possibnow-dev-harness/pull/87))
 - 2026-11-26 Private dispatch prompt asks for one HANDOFF line ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7), merged)
@@ -34,12 +33,12 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - 2026-11-13 v4.3.6 published: PRs #66, #70, #72, #74 ([RELEASE-4.3.6](RELEASE-4.3.6.md))
 
 ## Unresolved work
-- Second machine (unreachable 2026-11-26): update the plugin to 4.4.0, refresh Codex guards if installed, apply the `~/.claude/hooks/context-guard.py` one-line wording edit (logged in `~/.claude/CHANGELOG.md`, 2026-11-25). UNCONFIRMED until done (Sal; [RELEASE-4.4.0](RELEASE-4.4.0.md)).
+- Second machine (unreachable 2026-11-26): update the plugin to 4.4.1, refresh Codex guards if installed, apply the `~/.claude/hooks/context-guard.py` one-line wording edit (logged in `~/.claude/CHANGELOG.md`, 2026-11-25). UNCONFIRMED until done (Sal; [RELEASE-4.4.0](RELEASE-4.4.0.md)).
 - Customized installed projects need their own reviewed migration (H-MIG01, [#51](https://github.com/PossibLaw/possibnow-dev-harness/issues/51); Sal). Live client compliance and semantic optimize apply: UNCONFIRMED since v4.2.1.
 - Codex: no linked-issue or takeover hook; a Codex autonomous run stays guarded until its marker is removed by hand (H-CDX01, [#55](https://github.com/PossibLaw/possibnow-dev-harness/issues/55)). Codex parity of the Pocock-derived skills: UNCONFIRMED.
 - Morning brief answers and the "close stale" proposal (H-TR02, [#54](https://github.com/PossibLaw/possibnow-dev-harness/issues/54); Sal). Apply with `answering-the-morning-brief`.
 - Widen Trazomo's Claude Code check and freshness watch to other tool modules (H-FR03, [#53](https://github.com/PossibLaw/possibnow-dev-harness/issues/53); Sal decides after a few Claude work-order PRs).
-- Owed after v4.4.0: restart running Claude sessions; run `/hooks` in Codex once if it asks to re-trust ([RELEASE-4.4.0](RELEASE-4.4.0.md)).
+- Owed after v4.4.1: restart running Claude sessions; run `/hooks` in Codex once if it asks to re-trust ([RELEASE-4.4.0](RELEASE-4.4.0.md)).
 - Second machine: private Git login unavailable; its checkout was updated by verified Git bundle ([RELEASE-4.3.8](RELEASE-4.3.8.md)). Follow up on authentication.
 - Scheduled jobs moving to an always-on second machine: tracked privately (operator's Aleph issue and private runbook).
 - Autonomous queue of October 28: auto-131 and auto-790 started; Aleph #142, #168 and Trazomo #851, #866 queued. Their outcome is UNCONFIRMED. Next, when the batch merges cleanly: add paths to the 36 "no paths named" issues (Sal approved; via register PRs where a register is the source).
@@ -70,7 +69,6 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - Previous checkpoint archived byte for byte by `checkpoint.py`; locator in [HISTORY](HISTORY.md).
 
 ## Next actions
-0. Merge the `release/4.4.1` PR; Sal tags v4.4.1 on that merge and publishes; then smoke, receipt, marketplace, plugin updates, Codex guard refresh.
 1. Sal: second-machine rollout (see Unresolved work).
 2. Other installs: compact once with a carry-forward list; set `required_headings` only where tooling needs a heading that no test enforces. Trazomo needs nothing: its own test (PR #929) covers the limits and `## Session Timeline`.
 3. Sal answers the morning brief decisions (H-TR02, #54).
@@ -79,4 +77,4 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `release/4.4.1` off main a6a3ba6 (PR #91 merge).
+- Branch `docs/release-4.4.1-receipt` off main 865bcf6 (PR #92 merge, tagged v4.4.1).

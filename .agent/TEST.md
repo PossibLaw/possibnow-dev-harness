@@ -150,3 +150,9 @@ allows a short one. Full receipts: RELEASE-4.4.0.md.
 - R441-1: installer tests repointed to 4.4.1 failed first (8 failed, 12 passed); after the pin bump, 20 passed.
 - R441-2: `uvx --with pytest pytest -q` 580 passed; `scripts/verify-pack.sh` DONE; `claude plugin validate .` passed; `git diff --check` clean.
 - R441-3 (public bootstrap from the tag, installed guard smoke) runs after Sal tags; recorded in RELEASE-4.4.1.md.
+
+## v4.4.1 published verification (November 26, 2026)
+Tag object b6b09b3, peeled 865bcf6 (PR #92 merge). Public bootstrap byte-identical to
+the tag; customized files preserved; repeat install unchanged; installed plugin files
+and Codex guards match the tag; installed hook allows the November 25 cd + heredoc
+commit and refuses an over-limit HANDOFF after cd. Full receipts: RELEASE-4.4.1.md.
