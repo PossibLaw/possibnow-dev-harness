@@ -17,12 +17,14 @@ holding the detail. A close replaces this file through `checkpoint.py`; it never
 Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 
 ## Status
-- 2026-11-25: branch `Fix-Handoff-Size` makes HANDOFF a pointer, not a log: size check, commit guard, rule text. Plan: [PLAN](PLAN.md). Unreleased; ships as 4.4.0 in a separate release PR.
-- main is v4.3.8, published and installed on both machines ([RELEASE-4.3.8](RELEASE-4.3.8.md)).
+- 2026-11-26: v4.4.0 version and pins prepared on branch `release/4.4.0` ([RELEASE-4.4.0](RELEASE-4.4.0.md)). Publication waits on Sal's tag of the release PR merge.
+- Last published: v4.3.8, installed on both machines ([RELEASE-4.3.8](RELEASE-4.3.8.md)).
 - This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
-- 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86); [PLAN](PLAN.md))
+- 2026-11-26 v4.4.0 version and pins (branch `release/4.4.0`; [RELEASE-4.4.0](RELEASE-4.4.0.md))
+- 2026-11-26 Private dispatch prompt asks for one HANDOFF line ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7), merged)
+- 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86), merged)
 - 2026-11-23 v4.3.8 published, marketplace and installs updated ([RELEASE-4.3.8](RELEASE-4.3.8.md), [PR #84](https://github.com/PossibLaw/possibnow-dev-harness/pull/84))
 - 2026-11-23 Shared-continuity commit diagnostics ([#82](https://github.com/PossibLaw/possibnow-dev-harness/issues/82), [PR #83](https://github.com/PossibLaw/possibnow-dev-harness/pull/83))
 - 2026-11-16 v4.3.7: plugin hooks under a path with a space ([#78](https://github.com/PossibLaw/possibnow-dev-harness/issues/78), [PR #79](https://github.com/PossibLaw/possibnow-dev-harness/pull/79); [RELEASE-4.3.7](RELEASE-4.3.7.md))
@@ -30,11 +32,9 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - 2026-11-13 v4.3.6 published: PRs #66, #70, #72, #74 ([RELEASE-4.3.6](RELEASE-4.3.6.md))
 - 2026-11-10 Config paths may use `$REPOS` ([PR #72](https://github.com/PossibLaw/possibnow-dev-harness/pull/72); `docs/orca.md`)
 - 2026-11-04 Issue sync: no duplicate mirror for a row that links its issue ([#69](https://github.com/PossibLaw/possibnow-dev-harness/issues/69), [PR #70](https://github.com/PossibLaw/possibnow-dev-harness/pull/70))
-- 2026-10-28 Board planner and morning brief live ([#56](https://github.com/PossibLaw/possibnow-dev-harness/issues/56), [PR #58](https://github.com/PossibLaw/possibnow-dev-harness/pull/58))
-- 2026-10-27 v4.3.5: auto-clean (PR #49), board and brief (PR #58), linked-issue hook (PR #60) ([RELEASE-4.3.5](RELEASE-4.3.5.md))
 
 ## Unresolved work
-- Merge the private dispatch-prompt change with this release ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7); Sal). Apply the same `~/.claude/hooks/context-guard.py` wording edit on the second machine (logged in `~/.claude/CHANGELOG.md`, 2026-11-25).
+- Apply the `~/.claude/hooks/context-guard.py` one-line wording edit on the second machine (logged in `~/.claude/CHANGELOG.md`, 2026-11-25).
 - Guard false positive (found 2026-11-25): `validate-bash.py` checks the payload cwd, not a `cd` target in the command, and reads a heredoc marker after `git commit -F -` as a pathspec ("path-limited commit"). Workaround: `git -C <repo> commit -F <file>`. Needs an issue and a failing test.
 - Customized installed projects need their own reviewed migration (H-MIG01, [#51](https://github.com/PossibLaw/possibnow-dev-harness/issues/51); Sal). Live client compliance and semantic optimize apply: UNCONFIRMED since v4.2.1.
 - Codex: no linked-issue or takeover hook; a Codex autonomous run stays guarded until its marker is removed by hand (H-CDX01, [#55](https://github.com/PossibLaw/possibnow-dev-harness/issues/55)). Codex parity of the Pocock-derived skills: UNCONFIRMED.
@@ -63,15 +63,15 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - Release order: 1. merge the version-and-pins PR; 2. annotated tag and GitHub Release only with Sal's authorization (auto mode refuses them); 3. smoke, receipt, marketplace entry, `claude plugin update` (user scope and Trazomo local scope), Codex guard refresh. Tags are immutable; Claude Code updates a plugin only when the marketplace version changes.
 - Ordinary `git push` stays allowed. Pocock-derived files keep MIT attribution and pinned source commit 49dd158. Creating GitHub Issues from splitting-work-into-tickets is a remote write: confirm first.
 - v4.2.1 constraints: preserve project content and continuity; entries of at most 150 lines; no incidental model, effort, global, permission, learning or Scale changes; disposable fixtures only.
-- HANDOFF limits (this branch): 24,000 bytes; `## Status` 30 lines / 4,000 bytes; lines 1,500 characters. Changes to `.agent/handoff-limits.json` need review.
+- HANDOFF limits (v4.4.0): 24,000 bytes; `## Status` 30 lines / 4,000 bytes; lines 1,500 characters. Changes to `.agent/handoff-limits.json` need review.
 
 ## Evidence
-- Current branch: [PLAN](PLAN.md) evals HS-1 to HS-12; test receipts go in [TEST](TEST.md) before the PR.
-- Last release: [RELEASE-4.3.8](RELEASE-4.3.8.md); earlier receipts `RELEASE-4.2.1.md` to `RELEASE-4.3.7.md`.
+- v4.4.0: [PLAN](PLAN.md) evals HS-1 to HS-12 and R440; receipts in [TEST](TEST.md).
+- Last published release: [RELEASE-4.3.8](RELEASE-4.3.8.md); v4.4.0 in progress: [RELEASE-4.4.0](RELEASE-4.4.0.md).
 - Previous checkpoint archived byte for byte by `checkpoint.py`; locator in [HISTORY](HISTORY.md).
 
 ## Next actions
-1. Review and merge [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86) (draft); then a release PR for 4.4.0 with the migration note.
+1. Merge the `release/4.4.0` PR; Sal tags v4.4.0 on that merge and publishes the GitHub Release; then smoke, receipt, marketplace entry, plugin updates, Codex guard refresh.
 2. After release: compact Trazomo-style installs once with a carry-forward list; set `required_headings` where tooling needs a heading (Trazomo: `## Session Timeline`).
 3. Sal answers the morning brief decisions (H-TR02, #54).
 4. Sal decides on `library-current/` (see Unresolved work).
@@ -79,4 +79,4 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `Fix-Handoff-Size` off main ee6ddda; draft [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86).
+- Branch `release/4.4.0` off main 8fa821f (PR #86 merge).
