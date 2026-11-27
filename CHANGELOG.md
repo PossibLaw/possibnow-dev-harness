@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## Unreleased (planned 4.4.0) — 2026-11-25 — HANDOFF is a pointer, not a log
+## 4.4.0 — 2026-11-26 — HANDOFF is a pointer, not a log
 
-Version bump and pins follow in a separate release PR.
+Bootstrap and pack pinned to v4.4.0.
 
 - **HANDOFF stays one short checkpoint** (November 25, 2026: every close and autonomous run prepended a narrative entry, so the current file only grew; Trazomo's reached 95 KB, its second regrowth, and this repository's Status held 72 lines of stacked context). A HANDOFF entry is now one line: date, what, and a link to the PR, issue, plan or runbook holding the detail. A close replaces the checkpoint through `checkpoint.py` and never prepends. Open work, owed items, pending decisions, UNCONFIRMED facts and active constraints carry forward until resolved with evidence; an item whose state cannot be confirmed is kept and marked UNCONFIRMED.
 - **Size check** `packs/project/.agent/integrations/handoff_size.py` (standard library; the limits of Trazomo PR #929): at most 24,000 bytes, `## Status` at most 30 lines and 4,000 bytes, no line over 1,500 characters, and any `required_headings` the repository's tooling needs. Per-repository limits in an optional `.agent/handoff-limits.json`; an invalid value keeps its default and says so. It only reports: it never archives, rewrites or prints HANDOFF content. A missing `## Status` is bounded by the file-size cap unless the repository requires the heading; variant Status headings (`## status (Nov 25)`) are still measured.

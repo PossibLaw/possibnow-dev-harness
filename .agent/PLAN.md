@@ -10,7 +10,17 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 25, 2026): keep HANDOFF a pointer, not a log (branch Fix-Handoff-Size)
+# Current (November 26, 2026): release v4.4.0
+
+Sal asked to merge PR #86 and agent-tasks PR #7 (both merged) and cut 4.4.0. Version and
+pins move from 4.3.8 to 4.4.0 on branch `release/4.4.0`; CHANGELOG section dated.
+Evals: R440-1 installer fixtures and bootstrap pin report 4.4.0 (failing first);
+R440-2 full suite and verify-pack pass; R440-3 after Sal's tag: public bootstrap from
+the tag matches tag bytes, customized files preserved, repeat install changes nothing.
+Release order: merge this PR, Sal tags and publishes, then smoke, receipt, marketplace,
+plugin updates, Codex guard refresh ([RELEASE-4.4.0](RELEASE-4.4.0.md)).
+
+# Earlier (November 25, 2026): keep HANDOFF a pointer, not a log (PR #86, merged)
 
 Rule: a HANDOFF entry is one line (date, what, link); a close replaces the checkpoint
 through checkpoint.py; open work, owed items, pending decisions, UNCONFIRMED facts and

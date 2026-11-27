@@ -129,3 +129,8 @@ Evals HS-1 to HS-12 from [PLAN](PLAN.md).
 - Full suite: `uvx --with pytest pytest -q` 559 passed (baseline 522). `scripts/verify-pack.sh`: DONE (554 passed, 5 skipped in its interpreter).
 - Sonnet review (read-only): no blocking defects. Fixed with failing-first tests: variant `## Status` headings now measured (4 cases red, then green); guard sets `dont_write_bytecode` (red, then green); a notice when the size module is missing. The staged-versus-disk case was already covered by the unstaged-HANDOFF guard (regression test added). Not changed: limits can be loosened in the same commit (documented as review-required).
 - After review: `uvx --with pytest pytest -q` 566 passed; `scripts/verify-pack.sh` DONE (561 passed, 5 skipped).
+
+## v4.4.0 release validation (November 26, 2026)
+- R440-1: installer tests repointed to 4.4.0 failed first (8 failed, 12 passed); after the pin bump, 20 passed.
+- R440-2: `uvx --with pytest pytest -q` 566 passed; `scripts/verify-pack.sh` DONE (561 passed, 5 Python-version skips); `claude plugin validate .` passed; `git diff --check` clean.
+- R440-3 (public bootstrap from the tag) runs after Sal tags; recorded in RELEASE-4.4.0.md.
