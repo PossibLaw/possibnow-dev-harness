@@ -71,7 +71,7 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 
 ## Next actions
 1. Sal: second-machine rollout (see Unresolved work).
-2. Trazomo: add `.agent/handoff-limits.json` with `required_headings: ["## Session Timeline"]`; other installs: compact Trazomo-style installs once with a carry-forward list; set `required_headings` where tooling needs a heading (Trazomo: `## Session Timeline`).
+2. Other installs: compact once with a carry-forward list; set `required_headings` only where tooling needs a heading that no test enforces. Trazomo needs nothing: its own test (PR #929) covers the limits and `## Session Timeline`.
 3. Sal answers the morning brief decisions (H-TR02, #54).
 4. Sal decides on `library-current/` (see Unresolved work).
 5. Check the issue sync summary for scbrand E8 to E15 drift (H-ORC03, #69).
