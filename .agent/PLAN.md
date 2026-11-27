@@ -10,7 +10,15 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 26, 2026): release v4.4.0
+# Current (November 26, 2026): H-GR86 guard follows cd, ignores heredocs (branch fix/guard-cd-heredoc-h-gr86)
+
+Sal asked to fix H-GR86. Evals: GR86-1 `cd <repo> && git commit` checks the cd target,
+not the session repo (absolute, quoted, relative, newline-separated; size guard too);
+GR86-2 heredoc bodies, `2>&1`/`>` redirections and newline-separated commands are not
+pathspecs; GR86-3 a real pathspec after a heredoc is still path-limited; GR86-4 an
+unresolvable cd skips checks rather than judging the session repo. Ships unreleased.
+
+# Earlier (November 26, 2026): release v4.4.0
 
 Sal asked to merge PR #86 and agent-tasks PR #7 (both merged) and cut 4.4.0. Version and
 pins move from 4.3.8 to 4.4.0 on branch `release/4.4.0`; CHANGELOG section dated.

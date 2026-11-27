@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- **The Bash guard follows `cd` and ignores heredocs and redirections** (H-GR86, found November 25, 2026: `cd <other repo> && git commit -F - <<'EOF' ...` was judged against the session's repository, and the heredoc marker and message words were read as pathspecs, refusing a valid commit as "path-limited"). Commit checks (continuity staging and HANDOFF size) now run against the directory a `cd` or `pushd` moves to, resolved like the shell (relative paths, `~`, environment variables the hook can see). After a `cd` the hook cannot resolve (an unset variable, `cd -`), later commands are skipped instead of judged against the wrong repository. Heredoc bodies are dropped, unquoted newlines separate commands, and redirections (`> file`, `2>&1`, `<< WORD`) are never arguments; quoted `"$(cat <<'EOF' ... EOF)"` messages stay whole. A real pathspec such as `git commit app.py -F - <<EOF` is still refused. Fourteen tests; eleven failed first.
+
 ## 4.4.0 — 2026-11-26 — HANDOFF is a pointer, not a log
 
 Bootstrap and pack pinned to v4.4.0.

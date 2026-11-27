@@ -32,9 +32,67 @@ _SHELL_OPERATORS = {"&&", "||", ";", ";;", "|", "|&", "&"}
 _GIT_GLOBAL_OPTS_WITH_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 
 
+_HEREDOC_WORD = re.compile(r"<<(-?)[ \t]*(?:'([^']*)'|\"([^\"]*)\"|([A-Za-z_][A-Za-z0-9_]*))")
+
+
+def _prepare(command):
+    """Drop heredoc bodies and turn unquoted newlines into `;`, so a message body is
+    never read as arguments and each line is its own command. Quoted text, including
+    `"$(cat <<'EOF' ... EOF)"`, is left whole."""
+    out, pending, i, quote = [], [], 0, None
+    n = len(command)
+    while i < n:
+        ch = command[i]
+        if quote:
+            out.append(ch)
+            if ch == "\\" and quote == '"' and i + 1 < n:
+                out.append(command[i + 1])
+                i += 2
+                continue
+            if ch == quote:
+                quote = None
+            i += 1
+            continue
+        if ch == "\\" and i + 1 < n:
+            if command[i + 1] == "\n":  # line continuation
+                i += 2
+                continue
+            out.append(command[i:i + 2])
+            i += 2
+            continue
+        if ch in ("'", '"'):
+            quote = ch
+            out.append(ch)
+            i += 1
+            continue
+        if command.startswith("<<", i) and not command.startswith("<<<", i):
+            m = _HEREDOC_WORD.match(command, i)
+            if m:
+                pending.append((m.group(2) or m.group(3) or m.group(4) or "", m.group(1) == "-"))
+                out.append(" << HEREDOC ")
+                i = m.end()
+                continue
+        if ch == "\n":
+            out.append(" ; ")
+            i += 1
+            for word, strip_tabs in pending:  # skip each body through its delimiter line
+                while i < n:
+                    end = command.find("\n", i)
+                    line = command[i:] if end == -1 else command[i:end]
+                    i = n if end == -1 else end + 1
+                    if (line.lstrip("\t") if strip_tabs else line) == word:
+                        break
+            pending = []
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def _tokenize(command):
     """Split a shell command into tokens, keeping quoted strings intact and
     surfacing operators (&&, ||, ;, |) as their own tokens."""
+    command = _prepare(command)
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     try:
@@ -43,10 +101,24 @@ def _tokenize(command):
         return command.split()
 
 
+def _is_redirection(tok):
+    return bool(tok) and set(tok) <= set("<>&|") and ("<" in tok or ">" in tok)
+
+
 def _segments(tokens):
-    """Group tokens into simple commands separated by shell operators."""
+    """Group tokens into simple commands separated by shell operators. Redirections
+    (`> file`, `2>&1`, `<< HEREDOC`) and their targets are dropped, never arguments."""
     segments, current = [], []
+    skip = False
     for tok in tokens:
+        if skip:
+            skip = False
+            continue
+        if _is_redirection(tok):
+            if current and current[-1].isdigit():  # the fd in `2>&1`, `2>/dev/null`
+                current.pop()
+            skip = True
+            continue
         if tok in _SHELL_OPERATORS:
             if current:
                 segments.append(current)
@@ -76,6 +148,31 @@ def _parse_git_segment(segment):
             continue
         return tok, segment[i + 1 :], chdir
     return None
+
+
+def _git_commands(command, base_dir):
+    """Yield (subcommand, args, repo_dir) for each `git` command, following `cd` the way
+    the shell would. After a `cd` this hook cannot resolve (an unset variable, `cd -`),
+    later commands are skipped rather than judged against the wrong repository."""
+    current = base_dir
+    for segment in _segments(_tokenize(command)):
+        if segment[0] in ("cd", "pushd"):
+            targets = [tok for tok in segment[1:] if tok == "-" or not tok.startswith("-")]
+            target = targets[0] if targets else "~"
+            if current is None or target == "-":
+                current = None
+                continue
+            path = os.path.normpath(os.path.join(current, os.path.expanduser(os.path.expandvars(target))))
+            current = path if "$" not in path and os.path.isdir(path) else None
+            continue
+        if current is None:
+            continue
+        parsed = _parse_git_segment(segment)
+        if not parsed:
+            continue
+        sub, args, chdir = parsed
+        repo_dir = os.path.normpath(os.path.join(current, chdir)) if chdir else current
+        yield sub, args, repo_dir
 
 
 def _run_git(repo_dir, *args):
@@ -234,12 +331,7 @@ def check_handoff_commit(command, cwd):
     try:
         base_dir = cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
         adds = []
-        for segment in _segments(_tokenize(command)):
-            parsed = _parse_git_segment(segment)
-            if not parsed:
-                continue
-            sub, args, chdir = parsed
-            repo_dir = os.path.normpath(os.path.join(base_dir, chdir)) if chdir else base_dir
+        for sub, args, repo_dir in _git_commands(command, base_dir):
             if sub == "add":
                 adds.append((args, repo_dir))
                 continue
@@ -293,16 +385,13 @@ def check_handoff_size(command, cwd):
     """
     try:
         base_dir = cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-        for segment in _segments(_tokenize(command)):
-            parsed = _parse_git_segment(segment)
-            if not parsed or parsed[0] != "commit":
+        for sub, _args, repo_dir in _git_commands(command, base_dir):
+            if sub != "commit":
                 continue
             if handoff_size is None:
                 print("NOTICE: handoff_size.py not found beside the guard; HANDOFF size not checked. "
                       "Re-run the guard installer.", file=sys.stderr)
                 return None
-            chdir = parsed[2]
-            repo_dir = os.path.normpath(os.path.join(base_dir, chdir)) if chdir else base_dir
             root = _run_git(repo_dir, "rev-parse", "--show-toplevel")
             if not root:
                 continue
