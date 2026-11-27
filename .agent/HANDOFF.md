@@ -17,12 +17,11 @@ holding the detail. A close replaces this file through `checkpoint.py`; it never
 Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 
 ## Status
-- 2026-11-26: v4.4.0 version and pins prepared on branch `release/4.4.0` ([RELEASE-4.4.0](RELEASE-4.4.0.md)). Publication waits on Sal's tag of the release PR merge.
-- Last published: v4.3.8, installed on both machines ([RELEASE-4.3.8](RELEASE-4.3.8.md)).
+- main is v4.4.0, published 2026-11-26 and installed on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md)). Second machine owed (Sal).
 - This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
-- 2026-11-26 v4.4.0 version and pins (branch `release/4.4.0`; [RELEASE-4.4.0](RELEASE-4.4.0.md))
+- 2026-11-26 v4.4.0 published; marketplace, plugins and Codex guards updated on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md), [PR #87](https://github.com/PossibLaw/possibnow-dev-harness/pull/87))
 - 2026-11-26 Private dispatch prompt asks for one HANDOFF line ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7), merged)
 - 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86), merged)
 - 2026-11-23 v4.3.8 published, marketplace and installs updated ([RELEASE-4.3.8](RELEASE-4.3.8.md), [PR #84](https://github.com/PossibLaw/possibnow-dev-harness/pull/84))
@@ -34,13 +33,13 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - 2026-11-04 Issue sync: no duplicate mirror for a row that links its issue ([#69](https://github.com/PossibLaw/possibnow-dev-harness/issues/69), [PR #70](https://github.com/PossibLaw/possibnow-dev-harness/pull/70))
 
 ## Unresolved work
-- Apply the `~/.claude/hooks/context-guard.py` one-line wording edit on the second machine (logged in `~/.claude/CHANGELOG.md`, 2026-11-25).
+- Second machine (unreachable 2026-11-26): update the plugin to 4.4.0, refresh Codex guards if installed, apply the `~/.claude/hooks/context-guard.py` one-line wording edit (logged in `~/.claude/CHANGELOG.md`, 2026-11-25). UNCONFIRMED until done (Sal; [RELEASE-4.4.0](RELEASE-4.4.0.md)).
 - Guard false positive (found 2026-11-25): `validate-bash.py` checks the payload cwd, not a `cd` target in the command, and reads a heredoc marker after `git commit -F -` as a pathspec ("path-limited commit"). Workaround: `git -C <repo> commit -F <file>`. Needs an issue and a failing test.
 - Customized installed projects need their own reviewed migration (H-MIG01, [#51](https://github.com/PossibLaw/possibnow-dev-harness/issues/51); Sal). Live client compliance and semantic optimize apply: UNCONFIRMED since v4.2.1.
 - Codex: no linked-issue or takeover hook; a Codex autonomous run stays guarded until its marker is removed by hand (H-CDX01, [#55](https://github.com/PossibLaw/possibnow-dev-harness/issues/55)). Codex parity of the Pocock-derived skills: UNCONFIRMED.
 - Morning brief answers and the "close stale" proposal (H-TR02, [#54](https://github.com/PossibLaw/possibnow-dev-harness/issues/54); Sal). Apply with `answering-the-morning-brief`.
 - Widen Trazomo's Claude Code check and freshness watch to other tool modules (H-FR03, [#53](https://github.com/PossibLaw/possibnow-dev-harness/issues/53); Sal decides after a few Claude work-order PRs).
-- Owed after v4.3.7/v4.3.8: restart running Claude sessions; run `/hooks` in Codex once to confirm trust ([RELEASE-4.3.8](RELEASE-4.3.8.md)).
+- Owed after v4.4.0: restart running Claude sessions; run `/hooks` in Codex once if it asks to re-trust ([RELEASE-4.4.0](RELEASE-4.4.0.md)).
 - Second machine: private Git login unavailable; its checkout was updated by verified Git bundle ([RELEASE-4.3.8](RELEASE-4.3.8.md)). Follow up on authentication.
 - Scheduled jobs moving to an always-on second machine: tracked privately (operator's Aleph issue and private runbook).
 - Autonomous queue of October 28: auto-131 and auto-790 started; Aleph #142, #168 and Trazomo #851, #866 queued. Their outcome is UNCONFIRMED. Next, when the batch merges cleanly: add paths to the 36 "no paths named" issues (Sal approved; via register PRs where a register is the source).
@@ -66,17 +65,17 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - HANDOFF limits (v4.4.0): 24,000 bytes; `## Status` 30 lines / 4,000 bytes; lines 1,500 characters. Changes to `.agent/handoff-limits.json` need review.
 
 ## Evidence
-- v4.4.0: [PLAN](PLAN.md) evals HS-1 to HS-12 and R440; receipts in [TEST](TEST.md).
-- Last published release: [RELEASE-4.3.8](RELEASE-4.3.8.md); v4.4.0 in progress: [RELEASE-4.4.0](RELEASE-4.4.0.md).
+- v4.4.0: [PLAN](PLAN.md) evals HS-1 to HS-12 and R440-1 to R440-3; receipts in [TEST](TEST.md) and [RELEASE-4.4.0](RELEASE-4.4.0.md).
+- Earlier receipts: `RELEASE-4.2.1.md` to `RELEASE-4.3.8.md`.
 - Previous checkpoint archived byte for byte by `checkpoint.py`; locator in [HISTORY](HISTORY.md).
 
 ## Next actions
-1. Merge the `release/4.4.0` PR; Sal tags v4.4.0 on that merge and publishes the GitHub Release; then smoke, receipt, marketplace entry, plugin updates, Codex guard refresh.
-2. After release: compact Trazomo-style installs once with a carry-forward list; set `required_headings` where tooling needs a heading (Trazomo: `## Session Timeline`).
+1. Sal: second-machine rollout (see Unresolved work).
+2. Trazomo: add `.agent/handoff-limits.json` with `required_headings: ["## Session Timeline"]`; other installs: compact Trazomo-style installs once with a carry-forward list; set `required_headings` where tooling needs a heading (Trazomo: `## Session Timeline`).
 3. Sal answers the morning brief decisions (H-TR02, #54).
 4. Sal decides on `library-current/` (see Unresolved work).
 5. Check the issue sync summary for scbrand E8 to E15 drift (H-ORC03, #69).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `release/4.4.0` off main 8fa821f (PR #86 merge).
+- Branch `docs/release-4.4.0-receipt` off main 9aa3fa7 (PR #87 merge, tagged v4.4.0).
