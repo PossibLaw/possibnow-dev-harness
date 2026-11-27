@@ -18,10 +18,12 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 
 ## Status
 - main is v4.4.0, published 2026-11-26 and installed on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md)). Second machine owed (Sal).
+- 2026-11-26: v4.4.1 (H-GR86 guard fix, PR #91) version and pins prepared on branch `release/4.4.1` ([RELEASE-4.4.1](RELEASE-4.4.1.md)); waits on Sal's tag.
 - This file was compacted from the stacked November 23 checkpoint; the carry-forward ledger is in [PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86)'s body.
 
 ## Recent work
-- 2026-11-26 H-GR86: Bash guard follows `cd`, ignores heredocs and redirections (branch `fix/guard-cd-heredoc-h-gr86`; unreleased; [TEST](TEST.md))
+- 2026-11-26 v4.4.1 version and pins (branch `release/4.4.1`; [RELEASE-4.4.1](RELEASE-4.4.1.md))
+- 2026-11-26 H-GR86: Bash guard follows `cd`, ignores heredocs and redirections ([PR #91](https://github.com/PossibLaw/possibnow-dev-harness/pull/91), merged)
 - 2026-11-26 v4.4.0 published; marketplace, plugins and Codex guards updated on the first machine ([RELEASE-4.4.0](RELEASE-4.4.0.md), [PR #87](https://github.com/PossibLaw/possibnow-dev-harness/pull/87))
 - 2026-11-26 Private dispatch prompt asks for one HANDOFF line ([agent-tasks PR #7](https://github.com/AtticusDundee/agent-tasks/pull/7), merged)
 - 2026-11-25 HANDOFF pointer rule, `handoff_size.py`, commit guard and compaction ([PR #86](https://github.com/PossibLaw/possibnow-dev-harness/pull/86), merged)
@@ -30,7 +32,6 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - 2026-11-16 v4.3.7: plugin hooks under a path with a space ([#78](https://github.com/PossibLaw/possibnow-dev-harness/issues/78), [PR #79](https://github.com/PossibLaw/possibnow-dev-harness/pull/79); [RELEASE-4.3.7](RELEASE-4.3.7.md))
 - 2026-11-13 Dispatcher counts a bare folder only when it exists ([PR #77](https://github.com/PossibLaw/possibnow-dev-harness/pull/77))
 - 2026-11-13 v4.3.6 published: PRs #66, #70, #72, #74 ([RELEASE-4.3.6](RELEASE-4.3.6.md))
-- 2026-11-10 Config paths may use `$REPOS` ([PR #72](https://github.com/PossibLaw/possibnow-dev-harness/pull/72); `docs/orca.md`)
 
 ## Unresolved work
 - Second machine (unreachable 2026-11-26): update the plugin to 4.4.0, refresh Codex guards if installed, apply the `~/.claude/hooks/context-guard.py` one-line wording edit (logged in `~/.claude/CHANGELOG.md`, 2026-11-25). UNCONFIRMED until done (Sal; [RELEASE-4.4.0](RELEASE-4.4.0.md)).
@@ -69,6 +70,7 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 - Previous checkpoint archived byte for byte by `checkpoint.py`; locator in [HISTORY](HISTORY.md).
 
 ## Next actions
+0. Merge the `release/4.4.1` PR; Sal tags v4.4.1 on that merge and publishes; then smoke, receipt, marketplace, plugin updates, Codex guard refresh.
 1. Sal: second-machine rollout (see Unresolved work).
 2. Other installs: compact once with a carry-forward list; set `required_headings` only where tooling needs a heading that no test enforces. Trazomo needs nothing: its own test (PR #929) covers the limits and `## Session Timeline`.
 3. Sal answers the morning brief decisions (H-TR02, #54).
@@ -77,4 +79,4 @@ Previous checkpoints: [HISTORY](HISTORY.md). Register: [TASKS](TASKS.md).
 6. Watch the October 28 autonomous batch; then add paths to the near-miss issues.
 
 ## Sprint / Git Cycle
-- Branch `fix/guard-cd-heredoc-h-gr86` off main 11cb106; PR after checks pass.
+- Branch `release/4.4.1` off main a6a3ba6 (PR #91 merge).
