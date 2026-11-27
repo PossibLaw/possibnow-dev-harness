@@ -10,7 +10,15 @@ memory:
   tags: [plan]
 ---
 
-# Current (November 26, 2026): H-GR86 guard follows cd, ignores heredocs (branch fix/guard-cd-heredoc-h-gr86)
+# Current (November 26, 2026): release v4.4.1
+
+Sal asked to cut 4.4.1 for the H-GR86 guard fix (PR #91). Version and pins 4.4.0 → 4.4.1
+on branch `release/4.4.1`. Evals: R441-1 installer fixtures and bootstrap pin report 4.4.1
+(failing first); R441-2 full suite and verify-pack pass; R441-3 after Sal's tag: public
+bootstrap matches tag bytes, customized files preserved, repeat install unchanged;
+installed guard allows `cd <repo> && git commit -F - <<EOF` ([RELEASE-4.4.1](RELEASE-4.4.1.md)).
+
+# Earlier (November 26, 2026): H-GR86 guard follows cd, ignores heredocs (PR #91, merged)
 
 Sal asked to fix H-GR86. Evals: GR86-1 `cd <repo> && git commit` checks the cd target,
 not the session repo (absolute, quoted, relative, newline-separated; size guard too);
