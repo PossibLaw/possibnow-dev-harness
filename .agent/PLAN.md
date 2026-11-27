@@ -18,6 +18,9 @@ on branch `release/4.4.1`. Evals: R441-1 installer fixtures and bootstrap pin re
 bootstrap matches tag bytes, customized files preserved, repeat install unchanged;
 installed guard allows `cd <repo> && git commit -F - <<EOF` ([RELEASE-4.4.1](RELEASE-4.4.1.md)).
 
+Completed 2026-11-26: tagged and published by Sal; R441-3 passed; marketplace PR #19 merged;
+first-machine plugins and Codex guards at 4.4.1. Second machine owed (Sal).
+
 # Earlier (November 26, 2026): H-GR86 guard follows cd, ignores heredocs (PR #91, merged)
 
 Sal asked to fix H-GR86. Evals: GR86-1 `cd <repo> && git commit` checks the cd target,
